@@ -62,7 +62,7 @@
 /* Centered Form Card */
 .signup-card {
   width: 627px; /* Exact card width from Figma */
-  height: 643px; /* Exact card height from Figma */
+  min-height: 643px; /* Minimum matches Figma; expands for extra fields */
   background-color: #F3EDED; /* Exact beige background color */
   box-shadow: 0px 4px 4px rgba(206, 196, 178, 0.50); /* Exact shadow */
   border-radius: 12px; /* Exact border radius */
@@ -181,6 +181,24 @@
 
 .back-btn:active {
   transform: scale(0.98);
+}
+
+/* Role dropdown — overrides browser default select appearance */
+.form-select {
+  appearance: none;
+  cursor: pointer;
+  color: #656565;
+}
+
+/* Error message shown above form fields */
+.form-error {
+  width: 385px;
+  font-family: 'Kollektif', sans-serif;
+  font-size: 16px;
+  color: #c0392b;
+  text-align: center;
+  margin: 0 auto;
+  padding: 0;
 }
 
 /* Responsive adjustments for smaller screens */
