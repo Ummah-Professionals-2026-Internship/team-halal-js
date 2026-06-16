@@ -1,0 +1,19 @@
+# Backend
+server/node_modules/
+server/.env
+
+# Frontend
+client/node_modules/
+client/dist/
+client/.vite/
+
+# Editor/OS directories
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
