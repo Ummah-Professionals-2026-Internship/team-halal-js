@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema({
     profilePicture: {type: String},
     additionalInfo: {type: String},
     hasCompletedProfile: {type: Boolean},
+    matchStatus: { type: String, enum: ['unmatched', 'matched'], default: 'unmatched' },
     linkedinUrl: {type: String},
     university: {type: String},
     majors: [{type: String}],
