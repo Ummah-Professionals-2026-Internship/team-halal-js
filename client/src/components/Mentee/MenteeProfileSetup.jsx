@@ -82,7 +82,7 @@ const MenteeProfileSetup = () => {
 
         const storedAcademic = {
           university: parsedData.university || '',
-          majors: parsedData.majors || '',
+          majors: parsedData.majors ? (Array.isArray(parsedData.majors) ? parsedData.majors : [parsedData.majors]) : [],
           desiredCareer: parsedData.desiredCareer || '',
           resumePath: filePath,
           resumeName: file.name

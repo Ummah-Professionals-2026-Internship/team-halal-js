@@ -30,7 +30,7 @@ const MentorProfileSetup = () => {
     gender: '',
     state: '',
     university: '',
-    majors: '',
+    majors: [],
     linkedinUrl: '',
     phone: '',
     referralSource: '',
@@ -74,16 +74,22 @@ const MentorProfileSetup = () => {
         const data = await response.json()
         const { filePath, parsedData } = data
 
-        setFormData(prev => ({
-          ...prev,
-          resume: file,
-          resumePath: filePath,
-          resumeName: file.name,
-          phone: parsedData.phone ? formatPhoneNumber(parsedData.phone) : prev.phone,
-          linkedinUrl: parsedData.linkedinUrl || prev.linkedinUrl,
-          university: parsedData.university || prev.university,
-          majors: parsedData.majors || prev.majors
-        }))
+        setFormData(prev => {
+          let parsedMajors = prev.majors;
+          if (parsedData.majors) {
+            parsedMajors = Array.isArray(parsedData.majors) ? parsedData.majors : [parsedData.majors];
+          }
+          return {
+            ...prev,
+            resume: file,
+            resumePath: filePath,
+            resumeName: file.name,
+            phone: parsedData.phone ? formatPhoneNumber(parsedData.phone) : prev.phone,
+            linkedinUrl: parsedData.linkedinUrl || prev.linkedinUrl,
+            university: parsedData.university || prev.university,
+            majors: parsedMajors
+          };
+        })
 
         const storedCareer = {
           jobTitle: parsedData.desiredCareer || '',
@@ -204,6 +210,7 @@ const MentorProfileSetup = () => {
               placeholder="Type to search major..."
               onChange={handleChange}
               required
+              isMulti={true}
             />
 
             <label className="block mb-1">LinkedIn URL</label>

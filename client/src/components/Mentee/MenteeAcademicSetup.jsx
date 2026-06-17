@@ -12,7 +12,7 @@ const MenteeAcademicSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     university: '',
-    majors: '',
+    majors: [],
     academicStatus: '',
     desiredCareer: '',
     calendarAccess: false,
@@ -24,12 +24,18 @@ const MenteeAcademicSetup = () => {
     const savedResume = localStorage.getItem('menteeResumeData')
     if (savedResume) {
       const parsed = JSON.parse(savedResume)
-      setFormData(prev => ({
-        ...prev,
-        university: parsed.university || prev.university,
-        majors: parsed.majors || prev.majors,
-        desiredCareer: parsed.desiredCareer || prev.desiredCareer
-      }))
+      setFormData(prev => {
+        let parsedMajors = prev.majors;
+        if (parsed.majors) {
+          parsedMajors = Array.isArray(parsed.majors) ? parsed.majors : [parsed.majors];
+        }
+        return {
+          ...prev,
+          university: parsed.university || prev.university,
+          majors: parsedMajors,
+          desiredCareer: parsed.desiredCareer || prev.desiredCareer
+        };
+      })
     }
   }, [])
 
@@ -148,6 +154,7 @@ const MenteeAcademicSetup = () => {
             placeholder="Type to search major..."
             onChange={handleChange}
             required
+            isMulti={true}
           />
 
           <label className="block mb-1">Current Academic Year</label>
