@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@import "remixicon/fonts/remixicon.css";
+
 @font-face {
   font-family: 'Kollektif';
   src: url('./assets/fonts/Kollektif.ttf') format('truetype');

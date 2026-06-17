@@ -31,6 +31,7 @@ router.post('/register', async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        hasCompletedProfile: user.hasCompletedProfile
       },
     });
   } catch (error) {
@@ -67,6 +68,7 @@ router.post('/login', async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        hasCompletedProfile: user.hasCompletedProfile
       },
     });
   } catch (error) {
