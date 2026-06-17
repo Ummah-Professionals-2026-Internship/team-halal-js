@@ -21,11 +21,11 @@ router.post('/', requireAuth, async (req, res) => {
     mentee.university = req.body.university;
     mentee.majors = req.body.majors;
     mentee.calendarAccess = req.body.calendarAccess;
+    mentee.resume = req.body.resume;
     mentee.hasCompletedProfile = true;
     mentee.menteeProfile = {
       academicStatus: req.body.academicStatus,
-      desiredCareer: req.body.desiredCareer,
-      resume: req.body.resume
+      desiredCareer: req.body.desiredCareer
     }
     await mentee.save();
     res.status(201).json({ message: 'Mentee saved successfully' });

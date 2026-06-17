@@ -21,6 +21,7 @@ router.post('/', requireAuth, async (req, res) => {
     mentor.university = req.body.university;
     mentor.majors = req.body.majors;
     mentor.calendarAccess = req.body.calendarAccess;
+    mentor.resume = req.body.resume;
     mentor.hasCompletedProfile = true;
     mentor.mentorProfile = {
       jobTitle: req.body.jobTitle,

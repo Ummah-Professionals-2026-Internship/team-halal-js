@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
+import googleCalIcon from '../../assets/google-cal-icon.png'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -30,6 +31,7 @@ const MentorAvailabilitySetup = () => {
       if (response.ok) {
         localStorage.removeItem('mentorStep1')
         localStorage.removeItem('mentorStep2')
+        localStorage.removeItem('mentorResumeData')
         navigate('/mentor-dashboard')
       } else {
         alert('Failed to save profile')
@@ -60,19 +62,27 @@ const MentorAvailabilitySetup = () => {
           </select>
         </div>
 
-        <div className="flex justify-center items-start gap-6 mb-5">
-          <div className="text-left">
-            <p className="text-base font-medium">Allow Access to Google Calendar?</p>
-            <p className="text-xs text-gray-500 mt-1">
-              This helps make scheduling your available times for mentoring easier.
-            </p>
+        {/* Google Calendar Connection Card */}
+        <div className="mb-6 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between text-left shadow-sm">
+          <div className="flex items-center gap-3">
+            <img src={googleCalIcon} alt="Google Calendar" className="w-10 h-10 object-contain shrink-0" />
+            <div>
+              <h4 className="text-sm font-semibold text-slate-800">Google Calendar Sync</h4>
+              <p className="text-xs text-slate-500">Link your calendar to simplify scheduling.</p>
+            </div>
           </div>
-          <input
-            type="checkbox"
-            checked={calendarAccess}
-            onChange={(e) => setCalendarAccess(e.target.checked)}
-            className="w-5 h-5 mt-1 accent-[#007CA6]"
-          />
+          
+          <button
+            type="button"
+            onClick={() => setCalendarAccess(prev => !prev)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all ${
+              calendarAccess 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            {calendarAccess ? '✓ Connected' : 'Connect'}
+          </button>
         </div>
 
 
