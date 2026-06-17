@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
@@ -14,6 +14,17 @@ const MentorCareerSetup = () => {
     yearsOfProfExp: '',
     additionalInfo: '',
   })
+
+  useEffect(() => {
+    const savedResume = localStorage.getItem('mentorResumeData')
+    if (savedResume) {
+      const parsed = JSON.parse(savedResume)
+      setFormData(prev => ({
+        ...prev,
+        jobTitle: parsed.jobTitle || prev.jobTitle
+      }))
+    }
+  }, [])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })

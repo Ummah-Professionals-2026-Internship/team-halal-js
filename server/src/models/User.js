@@ -1,6 +1,8 @@
 // User model schema placeholder
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 const userSchema = new mongoose.Schema({
 
     firstName: {
@@ -55,16 +57,33 @@ const userSchema = new mongoose.Schema({
     phone: {type: String},
     referralSource: {type: String},
     profilePicture: {type: String},
+    resume: {type: String},
     additionalInfo: {type: String},
     hasCompletedProfile: {type: Boolean},
     matchStatus: { type: String, enum: ['unmatched', 'matched'], default: 'unmatched' },
     linkedinUrl: {type: String},
     university: {type: String},
     majors: [{type: String}],
-    calendarAccess: { type: Boolean, default: false },
 
+    calendarAccess: { type: Boolean, default: false },
+    googleCalendarTokens: {
+        accessToken: String,
+        refreshToken: String,
+        expiryDate: Number,
+        email: String
+    },
+    calendarBusySlots: [{
+        day: String,
+        start: Date,
+        end: Date
+    }],
     //availabilty is an array slots with each slot being at a certain day, and starting and ending at a certain time
-    availabilitySlots: [{
+    manualAvailabilitySlots: [{
+        day: String,
+        startTime: String,
+        endTime: String
+    }],
+    manualBlockedSlots: [{
         day: String,
         startTime: String,
         endTime: String
@@ -81,8 +100,7 @@ const userSchema = new mongoose.Schema({
 
     menteeProfile: {
         academicStatus: String,
-        desiredCareer: String,
-        resume: String //will eventually make it a file not a string
+        desiredCareer: String
     }
 },{timestamps:true})
 
@@ -95,5 +113,52 @@ userSchema.pre('save', async function () {
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Hook to clean up files when user document is deleted via user.deleteOne()
+userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+  try {
+    if (this.profilePicture) {
+      const picPath = path.join(__dirname, '../..', this.profilePicture);
+      if (fs.existsSync(picPath)) {
+        fs.unlinkSync(picPath);
+      }
+    }
+    if (this.resume) {
+      const resumePath = path.join(__dirname, '../..', this.resume);
+      if (fs.existsSync(resumePath)) {
+        fs.unlinkSync(resumePath);
+      }
+    }
+    next();
+  } catch (err) {
+    console.error('Error during user pre-deleteOne hook file cleanup:', err);
+    next(err);
+  }
+});
+
+// Hook to clean up files when user document is deleted via queries (like findByIdAndDelete)
+userSchema.pre('findOneAndDelete', async function (next) {
+  try {
+    const docToDelete = await this.model.findOne(this.getQuery());
+    if (docToDelete) {
+      if (docToDelete.profilePicture) {
+        const picPath = path.join(__dirname, '../..', docToDelete.profilePicture);
+        if (fs.existsSync(picPath)) {
+          fs.unlinkSync(picPath);
+        }
+      }
+      if (docToDelete.resume) {
+        const resumePath = path.join(__dirname, '../..', docToDelete.resume);
+        if (fs.existsSync(resumePath)) {
+          fs.unlinkSync(resumePath);
+        }
+      }
+    }
+    next();
+  } catch (err) {
+    console.error('Error during user pre-findOneAndDelete hook file cleanup:', err);
+    next(err);
+  }
+});
 
 module.exports = mongoose.model('User', userSchema);

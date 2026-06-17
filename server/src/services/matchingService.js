@@ -95,7 +95,7 @@ function scoreCandidate(mentor, mentee) {
   }
 
   // Availability overlap (0–20 pts; 3 overlapping slots earns full marks)
-  const overlaps = countAvailabilityOverlap(mentor.availabilitySlots, mentee.availabilitySlots);
+  const overlaps = countAvailabilityOverlap(mentor.manualAvailabilitySlots, mentee.manualAvailabilitySlots);
   score += Math.round(Math.min(overlaps, 3) / 3 * WEIGHTS.AVAILABILITY);
 
   return Math.round((score / MAX_SCORE) * 100);
