@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import googleCalIcon from '../../assets/google-cal-icon.png'
 
@@ -7,9 +7,55 @@ const API = import.meta.env.VITE_API_URL || ''
 
 const MentorAvailabilitySetup = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [frequency, setFrequency] = useState('')
   const [calendarAccess, setCalendarAccess] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const savedTemp = localStorage.getItem('mentorStep3Temp')
+    if (savedTemp) {
+      const parsed = JSON.parse(savedTemp)
+      if (parsed.frequency) setFrequency(parsed.frequency)
+      localStorage.removeItem('mentorStep3Temp')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (searchParams.get('calendarConnected') === 'true') {
+      setCalendarAccess(true)
+    }
+  }, [searchParams])
+
+  const handleConnectCalendar = () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      alert('Please log in again to connect your calendar.')
+      return;
+    }
+    localStorage.setItem('mentorStep3Temp', JSON.stringify({ frequency }))
+    window.location.href = `${API}/api/auth/google?token=${token}`
+  }
+
+  const handleDisconnectCalendar = async () => {
+    const token = localStorage.getItem('token')
+    try {
+      const response = await fetch(`${API}/api/auth/google/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        setCalendarAccess(false)
+      } else {
+        alert('Failed to disconnect calendar.')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error disconnecting calendar.')
+    }
+  }
 
   const handleSubmit = async () => {
     if (loading) return
@@ -32,6 +78,7 @@ const MentorAvailabilitySetup = () => {
         localStorage.removeItem('mentorStep1')
         localStorage.removeItem('mentorStep2')
         localStorage.removeItem('mentorResumeData')
+        localStorage.removeItem('mentorStep3Temp')
         navigate('/mentor-dashboard')
       } else {
         alert('Failed to save profile')
@@ -74,7 +121,7 @@ const MentorAvailabilitySetup = () => {
           
           <button
             type="button"
-            onClick={() => setCalendarAccess(prev => !prev)}
+            onClick={calendarAccess ? handleDisconnectCalendar : handleConnectCalendar}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all ${
               calendarAccess 
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
