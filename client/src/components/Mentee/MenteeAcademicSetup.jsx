@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
@@ -10,6 +10,7 @@ const API = import.meta.env.VITE_API_URL || ''
 
 const MenteeAcademicSetup = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [formData, setFormData] = useState({
     university: '',
     majors: [],
@@ -19,6 +20,52 @@ const MenteeAcademicSetup = () => {
     profilePicture: null,
     additionalInfo: '',
   })
+
+  useEffect(() => {
+    const savedTemp = localStorage.getItem('menteeStep2Temp');
+    if (savedTemp) {
+      const { formData: savedFormData, profilePictureName: savedPicName } = JSON.parse(savedTemp);
+      if (savedFormData) setFormData(savedFormData);
+      if (savedPicName) setProfilePictureName(savedPicName);
+      localStorage.removeItem('menteeStep2Temp');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get('calendarConnected') === 'true') {
+      setFormData(prev => ({ ...prev, calendarAccess: true }));
+    }
+  }, [searchParams]);
+
+  const handleConnectCalendar = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in again to connect your calendar.');
+      return;
+    }
+    localStorage.setItem('menteeStep2Temp', JSON.stringify({ formData, profilePictureName }));
+    window.location.href = `${API}/api/auth/google?token=${token}`;
+  };
+
+  const handleDisconnectCalendar = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${API}/api/auth/google/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        setFormData(prev => ({ ...prev, calendarAccess: false }));
+      } else {
+        alert('Failed to disconnect calendar.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error disconnecting calendar.');
+    }
+  };
 
   useEffect(() => {
     const savedResume = localStorage.getItem('menteeResumeData')
@@ -119,6 +166,7 @@ const MenteeAcademicSetup = () => {
       if (response.ok) {
         localStorage.removeItem('menteeStep1')
         localStorage.removeItem('menteeResumeData')
+        localStorage.removeItem('menteeStep2Temp')
         navigate('/mentee-dashboard')
       } else {
         alert('Failed to save profile')
@@ -200,7 +248,7 @@ const MenteeAcademicSetup = () => {
             
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, calendarAccess: !prev.calendarAccess }))}
+              onClick={formData.calendarAccess ? handleDisconnectCalendar : handleConnectCalendar}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all ${
                 formData.calendarAccess 
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'

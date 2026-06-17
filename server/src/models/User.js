@@ -63,10 +63,26 @@ const userSchema = new mongoose.Schema({
     linkedinUrl: {type: String},
     university: {type: String},
     majors: [{type: String}],
-    calendarAccess: { type: Boolean, default: false },
 
+    calendarAccess: { type: Boolean, default: false },
+    googleCalendarTokens: {
+        accessToken: String,
+        refreshToken: String,
+        expiryDate: Number,
+        email: String
+    },
+    calendarBusySlots: [{
+        day: String,
+        start: Date,
+        end: Date
+    }],
     //availabilty is an array slots with each slot being at a certain day, and starting and ending at a certain time
-    availabilitySlots: [{
+    manualAvailabilitySlots: [{
+        day: String,
+        startTime: String,
+        endTime: String
+    }],
+    manualBlockedSlots: [{
         day: String,
         startTime: String,
         endTime: String

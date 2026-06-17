@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const mentorRoutes = require('./routes/Mentor');
 const menteeRoutes = require('./routes/Mentee');
 const uploadRoutes = require('./routes/upload');
+const calendarRoutes = require('./routes/calendar');
 
 // Connect to database
 connectDB();
@@ -22,6 +23,7 @@ app.get('/api/test', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', calendarRoutes);
 app.use('/api/mentors', mentorRoutes);
 app.use('/api/mentees', menteeRoutes);
 app.use('/api/upload', uploadRoutes);
