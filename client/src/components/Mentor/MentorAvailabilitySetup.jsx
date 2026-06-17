@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import googleCalIcon from '../../assets/google-cal-icon.png'
+import AvailabilityPick from '../availability/AvailabilityPick'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -131,8 +132,8 @@ const MentorAvailabilitySetup = () => {
             {calendarAccess ? '✓ Connected' : 'Connect'}
           </button>
         </div>
-
-
+        
+        <AvailabilityPick />
         <button 
           onClick={handleSubmit} 
           disabled={loading}
