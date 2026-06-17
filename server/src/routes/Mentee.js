@@ -1,13 +1,34 @@
-const express = require('express')
-const router = express.Router()
-const Mentee = require('../models/Mentee')
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
+const requireAuth = require('../middleware/requireAuth');
 
 // Save a new mentee
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
-    const mentee = new Mentee(req.body)
-    await mentee.save()
-    res.status(201).json({ message: 'Mentee saved successfully' })
+    const mentee = await User.findById(req.user.id);
+    if(!mentee){
+      return res.status(404).json({error: 'Mentee profile not found'});
+    }
+    mentee.gender = req.body.gender;
+    mentee.phone = req.body.phone;
+    mentee.linkedinUrl = req.body.linkedinUrl;
+    mentee.referralSource = req.body.referralSource;
+    mentee.profilePicture = req.body.profilePicture;
+    mentee.state = req.body.state;
+    mentee.timeZone = req.body.timeZone;
+    mentee.additionalInfo = req.body.additionalInfo;
+    mentee.university = req.body.university;
+    mentee.majors = req.body.majors;
+    mentee.calendarAccess = req.body.calendarAccess;
+    mentee.hasCompletedProfile = true;
+    mentee.menteeProfile = {
+      academicStatus: req.body.academicStatus,
+      desiredCareer: req.body.desiredCareer,
+      resume: req.body.resume
+    }
+    await mentee.save();
+    res.status(201).json({ message: 'Mentee saved successfully' });
   } catch (err) {
     res.status(400).json({ error: err.message })
   }
@@ -16,11 +37,11 @@ router.post('/', async (req, res) => {
 // Get all mentees
 router.get('/', async (req, res) => {
   try {
-    const mentees = await Mentee.find()
-    res.json(mentees)
+    const mentees = await User.find({role: 'mentee', hasCompletedProfile: true});
+    res.json(mentees);
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
 })
 
-module.exports = router
+module.exports = router;

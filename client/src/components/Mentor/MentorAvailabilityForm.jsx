@@ -2,32 +2,42 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 
-const API = import.meta.env.VITE_API_URL
+const API = import.meta.env.VITE_API_URL || ''
 
 const MentorAvailabilityForm = () => {
   const navigate = useNavigate()
   const [frequency, setFrequency] = useState('')
   const [calendarAccess, setCalendarAccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
+    if (loading) return
+    setLoading(true)
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
     const toSave = { ...saved, frequency, calendarAccess }
+
+    const token = localStorage.getItem('token')
 
     try {
       const response = await fetch(API + '/api/mentors', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(toSave),
       })
       if (response.ok) {
         localStorage.removeItem('mentorStep1')
         localStorage.removeItem('mentorStep2')
-        alert('Profile saved successfully!')
+        navigate('/mentor-dashboard')
       } else {
         alert('Failed to save profile')
+        setLoading(false)
       }
     } catch (error) {
       alert('Something went wrong')
+      setLoading(false)
     }
   }
 
@@ -66,8 +76,12 @@ const MentorAvailabilityForm = () => {
         </div>
 
 
-        <button onClick={handleSubmit} className="bg-[#007CA6] text-white w-full py-3 rounded font-bold">
-          Confirm and Start Matching
+        <button 
+          onClick={handleSubmit} 
+          disabled={loading}
+          className="bg-[#007CA6] text-white w-full py-3 rounded font-bold disabled:opacity-50"
+        >
+          {loading ? 'Saving Profile...' : 'Confirm and Start Matching'}
         </button>
       </div>
     </PageLayout>

@@ -8,6 +8,8 @@ import NextPageMentor from './components/Mentor/NextPageMentor';
 import MentorAvailabilityForm from './components/Mentor/MentorAvailabilityForm';
 import MenteeInfoForm from './components/Mentee/MenteeInfoForm';
 import NextPageMentee from './components/Mentee/NextPageMentee';
+import MentorDashboard from './components/Mentor/MentorDashboard';
+import MenteeDashboard from './components/Mentee/MenteeDashboard';
 
 function App() {
   return (
@@ -23,6 +25,10 @@ function App() {
         <Route path="/mentor-availability" element={<MentorAvailabilityForm />} />
         <Route path="/mentee-info" element={<MenteeInfoForm />} />
         <Route path="/nextpageMentee" element={<NextPageMentee />} />
+        
+        {/* Dashboard Routes */}
+        <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+        <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
 
         {/* Redirect any other path to /login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -3,9 +3,9 @@ import logo from '../assets/logo.svg';
 
 const Navbar = () => {
   return (
-    <header className="navbar">
-      <div className="logo-container">
-        <img src={logo} className="navbar-logo" alt="Ummah Professionals Logo" />
+    <header className="w-full h-[126px] bg-[#003F55] flex justify-between items-center px-[42px] box-border">
+      <div className="flex items-center">
+        <img src={logo} className="h-[74px] w-auto object-contain" alt="Ummah Professionals Logo" />
       </div>
     </header>
   );
