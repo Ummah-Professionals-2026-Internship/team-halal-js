@@ -45,10 +45,10 @@ const Login = () => {
       }
       else {
         if (role === 'mentor') {
-          navigate('/mentor-info');
+          navigate('/mentor/profile-setup');
         }
         else {
-          navigate('/mentee-info');
+          navigate('/mentee/profile-setup');
         }
 
       }

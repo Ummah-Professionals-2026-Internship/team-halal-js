@@ -2,19 +2,16 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
-import SearchableSelect from '../SearchableSelect'
-import { STATES_LIST, MAJORS_LIST } from '../../constants/lists'
+import { STATES_LIST } from '../../constants/lists'
 
-const MentorInfoForm = () => {
+const MenteeProfileSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     gender: '',
     state: '',
-    university: '',
-    majors: '',
-    linkedinUrl: '',
     phone: '',
-    referralSource: '',
+    linkedinUrl: '',
+    referralSource: ''
   })
 
   const handleChange = (e) => {
@@ -23,13 +20,13 @@ const MentorInfoForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    localStorage.setItem('mentorStep1', JSON.stringify(formData))
-    navigate('/nextpageMentor')
+    localStorage.setItem('menteeStep1', JSON.stringify(formData))
+    navigate('/mentee/academic-setup')
   }
 
   return (
     <PageLayout onBack={() => navigate(-1)}>
-      <Card title="Create Your Mentor Profile">
+      <Card title="Create Your Mentee Profile">
         <div className="w-full text-left">
           <form onSubmit={handleSubmit}>
 
@@ -72,28 +69,7 @@ const MentorInfoForm = () => {
               required
             />
 
-            <label className="block mb-1">Alma Mater / University</label>
-            <input
-              name="university"
-              type="text"
-              value={formData.university}
-              onChange={handleChange}
-              placeholder="e.g. Stanford University"
-              className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-              required
-            />
-
-            <SearchableSelect
-              label="Major(s)"
-              name="majors"
-              value={formData.majors}
-              options={MAJORS_LIST}
-              placeholder="Type to search major..."
-              onChange={handleChange}
-              required
-            />
-
-            <label className="block mb-1">LinkedIn URL</label>
+            <label className="block mb-1">LinkedIn URL (Optional)</label>
             <input
               type="text"
               name="linkedinUrl"
@@ -101,7 +77,6 @@ const MentorInfoForm = () => {
               value={formData.linkedinUrl}
               onChange={handleChange}
               className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-              required
             />
 
             <label className="block mb-1">How did you hear about this service?</label>
@@ -128,4 +103,4 @@ const MentorInfoForm = () => {
   )
 }
 
-export default MentorInfoForm
+export default MenteeProfileSetup

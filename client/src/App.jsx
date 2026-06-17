@@ -3,11 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Register from './components/Register';
 import Login from './components/Login';
 import MentorMenteeProfile from './MentorMenteeProfile';
-import MentorInfoForm from './components/Mentor/MentorInfoForm';
-import NextPageMentor from './components/Mentor/NextPageMentor';
-import MentorAvailabilityForm from './components/Mentor/MentorAvailabilityForm';
-import MenteeInfoForm from './components/Mentee/MenteeInfoForm';
-import NextPageMentee from './components/Mentee/NextPageMentee';
+import MentorProfileSetup from './components/Mentor/MentorProfileSetup';
+import MentorCareerSetup from './components/Mentor/MentorCareerSetup';
+import MentorAvailabilitySetup from './components/Mentor/MentorAvailabilitySetup';
+import MenteeProfileSetup from './components/Mentee/MenteeProfileSetup';
+import MenteeAcademicSetup from './components/Mentee/MenteeAcademicSetup';
 import MentorDashboard from './components/Mentor/MentorDashboard';
 import MenteeDashboard from './components/Mentee/MenteeDashboard';
 
@@ -20,11 +20,11 @@ function App() {
         
         {/* Profile Wizard Routes */}
         <Route path="/create-profile" element={<MentorMenteeProfile />} />
-        <Route path="/mentor-info" element={<MentorInfoForm />} />
-        <Route path="/nextpageMentor" element={<NextPageMentor />} />
-        <Route path="/mentor-availability" element={<MentorAvailabilityForm />} />
-        <Route path="/mentee-info" element={<MenteeInfoForm />} />
-        <Route path="/nextpageMentee" element={<NextPageMentee />} />
+        <Route path="/mentor/profile-setup" element={<MentorProfileSetup />} />
+        <Route path="/mentor/career-setup" element={<MentorCareerSetup />} />
+        <Route path="/mentor/availability-setup" element={<MentorAvailabilitySetup />} />
+        <Route path="/mentee/profile-setup" element={<MenteeProfileSetup />} />
+        <Route path="/mentee/academic-setup" element={<MenteeAcademicSetup />} />
         
         {/* Dashboard Routes */}
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />

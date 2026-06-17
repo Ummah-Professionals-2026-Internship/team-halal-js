@@ -59,9 +59,9 @@ const Register = () => {
 
       localStorage.setItem('token', data.token);
       if(formData.role === 'mentor'){
-        navigate('/mentor-info');
+        navigate('/mentor/profile-setup');
       } else {
-        navigate('/mentee-info');
+        navigate('/mentee/profile-setup');
       }
     } catch (err) {
       setError('Could not connect to server. Please try again.');

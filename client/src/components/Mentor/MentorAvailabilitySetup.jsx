@@ -4,7 +4,7 @@ import PageLayout from '../PageLayout'
 
 const API = import.meta.env.VITE_API_URL || ''
 
-const MentorAvailabilityForm = () => {
+const MentorAvailabilitySetup = () => {
   const navigate = useNavigate()
   const [frequency, setFrequency] = useState('')
   const [calendarAccess, setCalendarAccess] = useState(false)
@@ -88,4 +88,4 @@ const MentorAvailabilityForm = () => {
   )
 }
 
-export default MentorAvailabilityForm
+export default MentorAvailabilitySetup

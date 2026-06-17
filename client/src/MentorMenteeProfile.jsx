@@ -12,13 +12,13 @@ const MentorMenteeProfile = () => {
       <Card title="Are you a professional looking to mentor or a student seeking mentorship?">
         <div className="flex flex-col w-full gap-4">
           <button
-            onClick={() => navigate('/mentor-info')}
+            onClick={() => navigate('/mentor/profile-setup')}
             className="bg-[#007CA6] px-5 py-4 w-full rounded font-semibold"
           >
             Mentor
           </button>
           <button
-            onClick={() => navigate('/mentee-info')}
+            onClick={() => navigate('/mentee/profile-setup')}
             className="bg-[#007CA6] px-5 py-4 w-full rounded font-semibold"
           >
             Mentee

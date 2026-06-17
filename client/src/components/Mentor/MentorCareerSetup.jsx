@@ -5,7 +5,7 @@ import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { INDUSTRIES_LIST } from '../../constants/lists'
 
-const NextPageMentor = () => {
+const MentorCareerSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     jobTitle: '',
@@ -23,7 +23,7 @@ const NextPageMentor = () => {
     e.preventDefault()
     const step1 = JSON.parse(localStorage.getItem('mentorStep1') ?? '{}')
     localStorage.setItem('mentorStep2', JSON.stringify({ ...step1, ...formData }))
-    navigate('/mentor-availability')
+    navigate('/mentor/availability-setup')
   }
 
   return (
@@ -92,4 +92,4 @@ const NextPageMentor = () => {
   )
 }
 
-export default NextPageMentor
+export default MentorCareerSetup

@@ -7,7 +7,7 @@ import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
 
 const API = import.meta.env.VITE_API_URL || ''
 
-const NextPageMentee = () => {
+const MenteeAcademicSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     university: '',
@@ -191,4 +191,4 @@ const NextPageMentee = () => {
   )
 }
 
-export default NextPageMentee
+export default MenteeAcademicSetup
