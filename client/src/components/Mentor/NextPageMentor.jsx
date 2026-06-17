@@ -2,33 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
-
-const INDUSTRIES_LIST = [
-  'Aerospace',
-  'Agriculture',
-  'Automotive',
-  'Biotechnology',
-  'Construction',
-  'Consulting',
-  'Education',
-  'Energy',
-  'Entertainment',
-  'Finance',
-  'Government',
-  'Healthcare',
-  'Hospitality',
-  'Information Technology',
-  'Insurance',
-  'Legal',
-  'Manufacturing',
-  'Media',
-  'Non-profit',
-  'Real Estate',
-  'Retail',
-  'Software Engineering / Technology',
-  'Telecommunications',
-  'Transportation'
-]
+import SearchableSelect from '../SearchableSelect'
+import { INDUSTRIES_LIST } from '../../constants/lists'
 
 const NextPageMentor = () => {
   const navigate = useNavigate()
@@ -40,8 +15,6 @@ const NextPageMentor = () => {
     additionalInfo: '',
   })
 
-  const [showIndustryDropdown, setShowIndustryDropdown] = useState(false)
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
@@ -52,10 +25,6 @@ const NextPageMentor = () => {
     localStorage.setItem('mentorStep2', JSON.stringify({ ...step1, ...formData }))
     navigate('/mentor-availability')
   }
-
-  const filteredIndustries = INDUSTRIES_LIST.filter((ind) =>
-    ind.toLowerCase().includes(formData.industry.toLowerCase())
-  )
 
   return (
     <PageLayout onBack={() => navigate(-1)}>
@@ -82,36 +51,15 @@ const NextPageMentor = () => {
             required
           />
 
-          <div className="relative mb-3">
-            <label className="block mb-1">Industry</label>
-            <input
-              name="industry"
-              type="text"
-              value={formData.industry}
-              onChange={handleChange}
-              onFocus={() => setShowIndustryDropdown(true)}
-              onBlur={() => setTimeout(() => setShowIndustryDropdown(false), 200)}
-              placeholder="Type to search industry..."
-              className="border border-gray-300 rounded px-3 py-1.5 w-full text-sm bg-white"
-              required
-            />
-            {showIndustryDropdown && filteredIndustries.length > 0 && (
-              <div className="absolute z-10 w-full max-h-40 overflow-y-auto bg-white border border-gray-300 rounded mt-1 shadow-lg">
-                {filteredIndustries.map((ind) => (
-                  <div
-                    key={ind}
-                    onMouseDown={() => {
-                      setFormData((prev) => ({ ...prev, industry: ind }))
-                      setShowIndustryDropdown(false)
-                    }}
-                    className="px-3 py-1.5 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {ind}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <SearchableSelect
+            label="Industry"
+            name="industry"
+            value={formData.industry}
+            options={INDUSTRIES_LIST}
+            placeholder="Type to search industry..."
+            onChange={handleChange}
+            required
+          />
 
           <label className="block mb-1">Years of Experience</label>
           <input

@@ -2,64 +2,10 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
+import SearchableSelect from '../SearchableSelect'
+import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
 
 const API = import.meta.env.VITE_API_URL || ''
-
-const MAJORS_LIST = [
-  'Accounting',
-  'Art & Design',
-  'Biology',
-  'Biomedical Engineering',
-  'Business Administration',
-  'Chemical Engineering',
-  'Chemistry',
-  'Civil Engineering',
-  'Communications',
-  'Computer Engineering',
-  'Computer Science',
-  'Cybersecurity',
-  'Data Science',
-  'Economics',
-  'Electrical Engineering',
-  'Finance',
-  'Information Technology',
-  'Marketing',
-  'Mathematics',
-  'Mechanical Engineering',
-  'Nursing',
-  'Physics',
-  'Political Science',
-  'Psychology',
-  'Pre-Law',
-  'Pre-Med',
-  'Software Engineering'
-]
-
-const UNIVERSITIES_LIST = [
-  'Boston University',
-  'Columbia University',
-  'Cornell University',
-  'Georgia Institute of Technology',
-  'Harvard University',
-  'Massachusetts Institute of Technology (MIT)',
-  'New York University (NYU)',
-  'Ohio State University',
-  'Penn State University',
-  'Princeton University',
-  'Purdue University',
-  'Rutgers University',
-  'Stanford University',
-  'University of California, Berkeley',
-  'University of California, Los Angeles (UCLA)',
-  'University of Florida',
-  'University of Illinois Urbana-Champaign',
-  'University of Maryland',
-  'University of Michigan',
-  'University of Southern California (USC)',
-  'University of Texas at Austin',
-  'University of Washington',
-  'Yale University'
-]
 
 const NextPageMentee = () => {
   const navigate = useNavigate()
@@ -74,9 +20,6 @@ const NextPageMentee = () => {
     additionalInfo: '',
   })
   const [loading, setLoading] = useState(false)
-
-  const [showMajorDropdown, setShowMajorDropdown] = useState(false)
-  const [showUniDropdown, setShowUniDropdown] = useState(false)
 
   const handleChange = (e) => {
     const { name, type, value, checked, files } = e.target
@@ -128,80 +71,30 @@ const NextPageMentee = () => {
     }
   }
 
-  const filteredMajors = MAJORS_LIST.filter((m) =>
-    m.toLowerCase().includes(formData.majors.toLowerCase())
-  )
-
-  const filteredUnis = UNIVERSITIES_LIST.filter((u) =>
-    u.toLowerCase().includes(formData.university.toLowerCase())
-  )
-
   return (
     <PageLayout onBack={() => navigate(-1)}>
       <Card title="Finalize Mentee Profile">
         <form onSubmit={handleSubmit} className="w-full text-left">
 
-          <div className="relative mb-3">
-            <label className="block mb-1">University / Institution</label>
-            <input
-              name="university"
-              type="text"
-              value={formData.university}
-              onChange={handleChange}
-              onFocus={() => setShowUniDropdown(true)}
-              onBlur={() => setTimeout(() => setShowUniDropdown(false), 200)}
-              placeholder="Type to search university..."
-              className="border border-gray-300 rounded px-3 py-1.5 w-full text-sm bg-white"
-              required
-            />
-            {showUniDropdown && filteredUnis.length > 0 && (
-              <div className="absolute z-10 w-full max-h-40 overflow-y-auto bg-white border border-gray-300 rounded mt-1 shadow-lg">
-                {filteredUnis.map((u) => (
-                  <div
-                    key={u}
-                    onMouseDown={() => {
-                      setFormData((prev) => ({ ...prev, university: u }))
-                      setShowUniDropdown(false)
-                    }}
-                    className="px-3 py-1.5 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {u}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <SearchableSelect
+            label="University / Institution"
+            name="university"
+            value={formData.university}
+            options={UNIVERSITIES_LIST}
+            placeholder="Type to search university..."
+            onChange={handleChange}
+            required
+          />
 
-          <div className="relative mb-3">
-            <label className="block mb-1">Majors (s)</label>
-            <input
-              name="majors"
-              type="text"
-              value={formData.majors}
-              onChange={handleChange}
-              onFocus={() => setShowMajorDropdown(true)}
-              onBlur={() => setTimeout(() => setShowMajorDropdown(false), 200)}
-              placeholder="Type to search major..."
-              className="border border-gray-300 rounded px-3 py-1.5 w-full text-sm bg-white"
-              required
-            />
-            {showMajorDropdown && filteredMajors.length > 0 && (
-              <div className="absolute z-10 w-full max-h-40 overflow-y-auto bg-white border border-gray-300 rounded mt-1 shadow-lg">
-                {filteredMajors.map((m) => (
-                  <div
-                    key={m}
-                    onMouseDown={() => {
-                      setFormData((prev) => ({ ...prev, majors: m }))
-                      setShowMajorDropdown(false)
-                    }}
-                    className="px-3 py-1.5 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {m}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <SearchableSelect
+            label="Major(s)"
+            name="majors"
+            value={formData.majors}
+            options={MAJORS_LIST}
+            placeholder="Type to search major..."
+            onChange={handleChange}
+            required
+          />
 
           <label className="block mb-1">Current Academic Year</label>
           <select

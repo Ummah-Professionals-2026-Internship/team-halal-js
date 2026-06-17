@@ -2,62 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
-
-const MAJORS_LIST = [
-  'Accounting',
-  'Art & Design',
-  'Biology',
-  'Biomedical Engineering',
-  'Business Administration',
-  'Chemical Engineering',
-  'Chemistry',
-  'Civil Engineering',
-  'Communications',
-  'Computer Engineering',
-  'Computer Science',
-  'Cybersecurity',
-  'Data Science',
-  'Economics',
-  'Electrical Engineering',
-  'Finance',
-  'Information Technology',
-  'Marketing',
-  'Mathematics',
-  'Mechanical Engineering',
-  'Nursing',
-  'Physics',
-  'Political Science',
-  'Psychology',
-  'Pre-Law',
-  'Pre-Med',
-  'Software Engineering'
-]
-
-const UNIVERSITIES_LIST = [
-  'Boston University',
-  'Columbia University',
-  'Cornell University',
-  'Georgia Institute of Technology',
-  'Harvard University',
-  'Massachusetts Institute of Technology (MIT)',
-  'New York University (NYU)',
-  'Ohio State University',
-  'Penn State University',
-  'Princeton University',
-  'Purdue University',
-  'Rutgers University',
-  'Stanford University',
-  'University of California, Berkeley',
-  'University of California, Los Angeles (UCLA)',
-  'University of Florida',
-  'University of Illinois Urbana-Champaign',
-  'University of Maryland',
-  'University of Michigan',
-  'University of Southern California (USC)',
-  'University of Texas at Austin',
-  'University of Washington',
-  'Yale University'
-]
+import { STATES_LIST } from '../../constants/lists'
 
 const MenteeInfoForm = () => {
   const navigate = useNavigate()
@@ -109,7 +54,7 @@ const MenteeInfoForm = () => {
               required
             >
               <option value="">Select State</option>
-              {['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'].map(st => (
+              {STATES_LIST.map(st => (
                 <option key={st} value={st}>{st}</option>
               ))}
             </select>
