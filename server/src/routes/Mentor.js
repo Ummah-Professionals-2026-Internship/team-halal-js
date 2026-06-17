@@ -40,7 +40,7 @@ router.post('/', requireAuth, async (req, res) => {
 })
 
 // Get all mentors
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const mentors = await User.find({ role: 'mentor', hasCompletedProfile: true})
     res.json(mentors)

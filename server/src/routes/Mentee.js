@@ -35,7 +35,7 @@ router.post('/', requireAuth, async (req, res) => {
 })
 
 // Get all mentees
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const mentees = await User.find({role: 'mentee', hasCompletedProfile: true});
     res.json(mentees);
