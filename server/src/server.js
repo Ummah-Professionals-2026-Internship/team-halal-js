@@ -5,6 +5,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const mentorRoutes = require('./routes/Mentor');
 const menteeRoutes = require('./routes/Mentee');
+const matchRoutes = require('./routes/matches');
 const uploadRoutes = require('./routes/upload');
 const calendarRoutes = require('./routes/calendar');
 
@@ -27,6 +28,7 @@ app.use('/api/auth', calendarRoutes);
 app.use('/api/mentors', mentorRoutes);
 app.use('/api/mentees', menteeRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/matches', matchRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
