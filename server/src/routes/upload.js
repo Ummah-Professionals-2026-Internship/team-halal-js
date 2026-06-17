@@ -3,7 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
+const mammoth = require('mammoth');
 const requireAuth = require('../middleware/requireAuth');
 const User = require('../models/User');
 
@@ -233,7 +234,8 @@ router.post('/resume', requireAuth, upload.single('resume'), async (req, res) =>
     if (ext === '.pdf') {
       try {
         const dataBuffer = fs.readFileSync(absolutePath);
-        const data = await pdfParse(dataBuffer);
+        const parser = new PDFParse({ data: dataBuffer });
+        const data = await parser.getText();
         parsedText = cleanText(data.text);
         performHeuristicMatching(parsedText, parsedData);
       } catch (parseErr) {
@@ -247,25 +249,16 @@ router.post('/resume', requireAuth, upload.single('resume'), async (req, res) =>
       } catch (parseErr) {
         console.error('TXT parsing error:', parseErr);
       }
-    } else {
-      // DOC/DOCX parsing fallback (optional or empty)
+    } else if (ext === '.docx') {
       try {
-        const rawContent = fs.readFileSync(absolutePath, 'utf8');
-        for (const uni of universities) {
-          if (rawContent.includes(uni)) {
-            parsedData.university = uni;
-            break;
-          }
-        }
-        for (const major of majors) {
-          if (rawContent.includes(major)) {
-            parsedData.majors = major;
-            break;
-          }
-        }
-      } catch (e) {
-        // ignore
+        const result = await mammoth.extractRawText({ path: absolutePath });
+        parsedText = cleanText(result.value);
+        performHeuristicMatching(parsedText, parsedData);
+      } catch (parseErr) {
+        console.error('DOCX parsing error:', parseErr);
       }
+    } else {
+      console.warn('Legacy .doc parsing is not supported. Please upload a .docx, .pdf, or .txt file for auto-fill.');
     }
 
     res.status(200).json({
