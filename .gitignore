@@ -1,6 +1,7 @@
 # Backend
 server/node_modules/
 server/.env
+server/uploads/
 
 # Frontend
 client/node_modules/

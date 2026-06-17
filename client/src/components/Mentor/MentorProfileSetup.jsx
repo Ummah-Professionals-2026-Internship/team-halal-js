@@ -5,10 +5,28 @@ import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { STATES_LIST, MAJORS_LIST } from '../../constants/lists'
 
+const API = import.meta.env.VITE_API_URL || ''
+
+const formatPhoneNumber = (value) => {
+  if (!value) return value
+  let phoneNumber = value.replace(/[^\d]/g, '')
+  if (phoneNumber.length === 11 && phoneNumber.startsWith('1')) {
+    phoneNumber = phoneNumber.slice(1)
+  }
+  const len = phoneNumber.length
+  if (len < 4) return phoneNumber
+  if (len < 7) {
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`
+  }
+  return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`
+}
+
 const MentorProfileSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     resume: null,
+    resumePath: '',
+    resumeName: '',
     gender: '',
     state: '',
     university: '',
@@ -17,18 +35,80 @@ const MentorProfileSetup = () => {
     phone: '',
     referralSource: '',
   })
+  const [uploading, setUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState('')
 
   const handleChange = (e) => {
     const { name, type, value, files } = e.target
-    const newValue = type === 'file' ? files[0] : value
+    let newValue = type === 'file' ? files[0] : value
+    if (name === 'phone') {
+      newValue = formatPhoneNumber(newValue)
+    }
     setFormData({ ...formData, [name]: newValue })
+  }
+
+  const handleResumeChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Reset value immediately so selecting the same file triggers onChange again
+    e.target.value = ''
+
+    setUploading(true)
+    setUploadMessage('Uploading and parsing resume...')
+
+    const token = localStorage.getItem('token')
+    const fData = new FormData()
+    fData.append('resume', file)
+
+    try {
+      const response = await fetch(API + '/api/upload/resume', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: fData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const { filePath, parsedData } = data
+
+        setFormData(prev => ({
+          ...prev,
+          resume: file,
+          resumePath: filePath,
+          resumeName: file.name,
+          phone: parsedData.phone ? formatPhoneNumber(parsedData.phone) : prev.phone,
+          linkedinUrl: parsedData.linkedinUrl || prev.linkedinUrl,
+          university: parsedData.university || prev.university,
+          majors: parsedData.majors || prev.majors
+        }))
+
+        const storedCareer = {
+          jobTitle: parsedData.desiredCareer || '',
+          resumePath: filePath,
+          resumeName: file.name
+        }
+        localStorage.setItem('mentorResumeData', JSON.stringify(storedCareer))
+
+        setUploadMessage('Resume parsed! Fields pre-filled.')
+      } else {
+        setUploadMessage('Upload failed. You can still enter details manually.')
+      }
+    } catch (err) {
+      console.error(err)
+      setUploadMessage('Error uploading file. You can still enter details manually.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const toSave = {
       ...formData,
-      resume: formData.resume ? formData.resume.name : ''
+      resume: formData.resumePath || ''
     }
     localStorage.setItem('mentorStep1', JSON.stringify(toSave))
     navigate('/mentor/career-setup')
@@ -46,19 +126,20 @@ const MentorProfileSetup = () => {
               <p className="text-xs text-slate-500 mb-3">Please upload your resume file (PDF, DOC, DOCX, or TXT) to get started.</p>
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <label className="cursor-pointer bg-[#007CA6] hover:bg-[#006080] text-white px-4 py-2 rounded text-xs font-semibold tracking-wide transition-colors whitespace-nowrap">
-                  Choose File
+                  {uploading ? 'Uploading...' : 'Choose File'}
                   <input 
                     id="resume-upload"
                     type="file" 
                     accept=".pdf,.doc,.docx,.txt" 
                     className="hidden" 
                     name="resume"
-                    onChange={handleChange}
-                    required
+                    onChange={handleResumeChange}
+                    required={!formData.resumePath}
+                    disabled={uploading}
                   />
                 </label>
                 <span className="text-xs text-slate-600 font-medium truncate max-w-xs">
-                  {formData.resume ? formData.resume.name : 'No file selected'}
+                  {uploadMessage ? uploadMessage : (formData.resumeName || 'No file selected')}
                 </span>
               </div>
             </div>
@@ -98,6 +179,8 @@ const MentorProfileSetup = () => {
               type="tel"
               value={formData.phone}
               onChange={handleChange}
+              placeholder="(XXX) XXX-XXXX"
+              maxLength={14}
               className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
               required
             />

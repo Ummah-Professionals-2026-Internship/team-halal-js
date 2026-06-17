@@ -1,6 +1,8 @@
 // User model schema placeholder
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 const userSchema = new mongoose.Schema({
 
     firstName: {
@@ -55,6 +57,7 @@ const userSchema = new mongoose.Schema({
     phone: {type: String},
     referralSource: {type: String},
     profilePicture: {type: String},
+    resume: {type: String},
     additionalInfo: {type: String},
     hasCompletedProfile: {type: Boolean},
     linkedinUrl: {type: String},
@@ -80,8 +83,7 @@ const userSchema = new mongoose.Schema({
 
     menteeProfile: {
         academicStatus: String,
-        desiredCareer: String,
-        resume: String //will eventually make it a file not a string
+        desiredCareer: String
     }
 },{timestamps:true})
 
@@ -94,5 +96,52 @@ userSchema.pre('save', async function () {
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Hook to clean up files when user document is deleted via user.deleteOne()
+userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+  try {
+    if (this.profilePicture) {
+      const picPath = path.join(__dirname, '../..', this.profilePicture);
+      if (fs.existsSync(picPath)) {
+        fs.unlinkSync(picPath);
+      }
+    }
+    if (this.resume) {
+      const resumePath = path.join(__dirname, '../..', this.resume);
+      if (fs.existsSync(resumePath)) {
+        fs.unlinkSync(resumePath);
+      }
+    }
+    next();
+  } catch (err) {
+    console.error('Error during user pre-deleteOne hook file cleanup:', err);
+    next(err);
+  }
+});
+
+// Hook to clean up files when user document is deleted via queries (like findByIdAndDelete)
+userSchema.pre('findOneAndDelete', async function (next) {
+  try {
+    const docToDelete = await this.model.findOne(this.getQuery());
+    if (docToDelete) {
+      if (docToDelete.profilePicture) {
+        const picPath = path.join(__dirname, '../..', docToDelete.profilePicture);
+        if (fs.existsSync(picPath)) {
+          fs.unlinkSync(picPath);
+        }
+      }
+      if (docToDelete.resume) {
+        const resumePath = path.join(__dirname, '../..', docToDelete.resume);
+        if (fs.existsSync(resumePath)) {
+          fs.unlinkSync(resumePath);
+        }
+      }
+    }
+    next();
+  } catch (err) {
+    console.error('Error during user pre-findOneAndDelete hook file cleanup:', err);
+    next(err);
+  }
+});
 
 module.exports = mongoose.model('User', userSchema);

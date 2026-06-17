@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import googleCalIcon from '../../assets/google-cal-icon.png'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -18,16 +19,72 @@ const MenteeAcademicSetup = () => {
     profilePicture: null,
     additionalInfo: '',
   })
+
+  useEffect(() => {
+    const savedResume = localStorage.getItem('menteeResumeData')
+    if (savedResume) {
+      const parsed = JSON.parse(savedResume)
+      setFormData(prev => ({
+        ...prev,
+        university: parsed.university || prev.university,
+        majors: parsed.majors || prev.majors,
+        desiredCareer: parsed.desiredCareer || prev.desiredCareer
+      }))
+    }
+  }, [])
+
   const [loading, setLoading] = useState(false)
+  const [uploadingPic, setUploadingPic] = useState(false)
+  const [picMessage, setPicMessage] = useState('')
+  const [profilePictureName, setProfilePictureName] = useState('')
 
   const handleChange = (e) => {
-    const { name, type, value, checked, files } = e.target
+    const { name, type, value, checked } = e.target
     let newValue = value
     if (type === 'checkbox') newValue = checked
-    if (type === 'file') newValue = files[0]
     setFormData(function(prev) {
       return { ...prev, [name]: newValue }
     })
+  }
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    e.target.value = ''
+    setUploadingPic(true)
+    setPicMessage('Uploading picture...')
+
+    const token = localStorage.getItem('token')
+    const fData = new FormData()
+    fData.append('profilePicture', file)
+
+    try {
+      const response = await fetch(API + '/api/upload/profile-picture', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: fData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFormData(prev => ({
+          ...prev,
+          profilePicture: data.filePath
+        }))
+        setProfilePictureName(file.name)
+        setPicMessage('')
+      } else {
+        setPicMessage('Upload failed.')
+      }
+    } catch (err) {
+      console.error(err)
+      setPicMessage('Error uploading picture.')
+    } finally {
+      setUploadingPic(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -36,11 +93,9 @@ const MenteeAcademicSetup = () => {
     setLoading(true)
 
     const oldData = JSON.parse(localStorage.getItem('menteeStep1')) || {}
-    const pictureName = formData.profilePicture ? formData.profilePicture.name : null
     const toSave = {
       ...oldData,
-      ...formData,
-      profilePicture: pictureName,
+      ...formData
     }
 
     const token = localStorage.getItem('token')
@@ -57,12 +112,14 @@ const MenteeAcademicSetup = () => {
 
       if (response.ok) {
         localStorage.removeItem('menteeStep1')
+        localStorage.removeItem('menteeResumeData')
         navigate('/mentee-dashboard')
       } else {
         alert('Failed to save profile')
         setLoading(false)
       }
     } catch (error) {
+      console.error(error)
       alert('Something went wrong')
       setLoading(false)
     }
@@ -124,27 +181,100 @@ const MenteeAcademicSetup = () => {
 
 
 
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="calendarAccess" className="text-sm">Allow Google Calendar Access?</label>
-              <input
-                name="calendarAccess"
-                type="checkbox"
-                id="calendarAccess"
-                className="w-4 h-4 accent-gray-400"
-                checked={formData.calendarAccess}
-                onChange={handleChange}
-              />
+          {/* Google Calendar Connection Card */}
+          <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-3 text-left">
+              <img src={googleCalIcon} alt="Google Calendar" className="w-10 h-10 object-contain shrink-0" />
+              <div>
+                <h4 className="text-sm font-semibold text-slate-800">Google Calendar Sync</h4>
+                <p className="text-xs text-slate-500">Link your calendar to simplify scheduling.</p>
+              </div>
             </div>
-            <p className="text-gray-400 text-xs mt-1">This helps schedule mentorship sessions more effectively</p>
+            
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, calendarAccess: !prev.calendarAccess }))}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all ${
+                formData.calendarAccess 
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              {formData.calendarAccess ? '✓ Connected' : 'Connect'}
+            </button>
           </div>
           
-          <div className="flex items-center gap-3 mb-3">
-            <label className="text-sm">Upload a Profile Picture?</label>
-            <label className="cursor-pointer text-sm text-[#0D3B5E] underline">
-              Upload
-              <input name="profilePicture" type="file" accept="image/*" className="hidden" onChange={handleChange} />
+          {/* Profile Picture Upload Card */}
+          <div className="mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <label className="block text-sm font-semibold text-slate-700 mb-3 text-center">
+              Profile Picture
             </label>
+            
+            <div className="relative w-28 h-28 mx-auto mb-3">
+              <label 
+                className={`relative flex flex-col items-center justify-center w-full h-full rounded-full border-2 border-dashed ${
+                  formData.profilePicture ? 'border-transparent' : 'border-slate-300 hover:border-[#007CA6]'
+                } bg-white transition-all cursor-pointer overflow-hidden group`}
+              >
+                <input 
+                  name="profilePicture" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleProfilePictureChange}
+                  disabled={uploadingPic}
+                />
+                
+                {formData.profilePicture ? (
+                  <>
+                    <img 
+                      src={API + formData.profilePicture} 
+                      alt="Profile Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Hover camera overlay */}
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-6 h-6 text-white mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-[10px] text-white font-medium">Change Photo</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-400 group-hover:text-[#007CA6] transition-colors">
+                    <svg className="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">Add Photo</span>
+                  </div>
+                )}
+
+                {/* Uploading Spinner */}
+                {uploadingPic && (
+                  <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                    <svg className="animate-spin h-6 w-6 text-[#007CA6] mb-1" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span className="text-[9px] text-[#007CA6] font-semibold">Uploading...</span>
+                  </div>
+                )}
+              </label>
+            </div>
+
+            {/* Helper messages / filename display */}
+            <div className="text-center">
+              {picMessage ? (
+                <p className="text-xs font-medium text-slate-500">{picMessage}</p>
+              ) : profilePictureName ? (
+                <p className="text-xs font-semibold text-emerald-600 truncate max-w-xs mx-auto">
+                  ✓ {profilePictureName}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400">Square images work best (JPG, PNG, GIF)</p>
+              )}
+            </div>
           </div>
 
           <label className="block mb-1 text-sm text-center">Any additional information you would like to share with mentors?</label>
