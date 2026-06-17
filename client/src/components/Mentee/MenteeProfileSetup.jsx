@@ -7,6 +7,7 @@ import { STATES_LIST } from '../../constants/lists'
 const MenteeProfileSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
+    resume: null,
     gender: '',
     state: '',
     phone: '',
@@ -15,12 +16,18 @@ const MenteeProfileSetup = () => {
   })
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    const { name, type, value, files } = e.target
+    const newValue = type === 'file' ? files[0] : value
+    setFormData({ ...formData, [name]: newValue })
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    localStorage.setItem('menteeStep1', JSON.stringify(formData))
+    const toSave = {
+      ...formData,
+      resume: formData.resume ? formData.resume.name : ''
+    }
+    localStorage.setItem('menteeStep1', JSON.stringify(toSave))
     navigate('/mentee/academic-setup')
   }
 
@@ -29,6 +36,29 @@ const MenteeProfileSetup = () => {
       <Card title="Create Your Mentee Profile">
         <div className="w-full text-left">
           <form onSubmit={handleSubmit}>
+
+            {/* Resume Upload Box */}
+            <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-dashed border-slate-300 text-center sm:text-left">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Upload Your Resume</h3>
+              <p className="text-xs text-slate-500 mb-3">Please upload your resume file (PDF, DOC, DOCX, or TXT) to get started.</p>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <label className="cursor-pointer bg-[#007CA6] hover:bg-[#006080] text-white px-4 py-2 rounded text-xs font-semibold tracking-wide transition-colors whitespace-nowrap">
+                  Choose File
+                  <input 
+                    id="resume-upload"
+                    type="file" 
+                    accept=".pdf,.doc,.docx,.txt" 
+                    className="hidden" 
+                    name="resume"
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
+                <span className="text-xs text-slate-600 font-medium truncate max-w-xs">
+                  {formData.resume ? formData.resume.name : 'No file selected'}
+                </span>
+              </div>
+            </div>
 
             <div className="mb-3">
               <label className="block mb-1">Gender</label>

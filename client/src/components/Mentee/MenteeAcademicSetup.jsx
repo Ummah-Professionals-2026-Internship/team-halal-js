@@ -14,7 +14,6 @@ const MenteeAcademicSetup = () => {
     majors: '',
     academicStatus: '',
     desiredCareer: '',
-    resume: null,
     calendarAccess: false,
     profilePicture: null,
     additionalInfo: '',
@@ -37,12 +36,10 @@ const MenteeAcademicSetup = () => {
     setLoading(true)
 
     const oldData = JSON.parse(localStorage.getItem('menteeStep1')) || {}
-    const resumeName = formData.resume ? formData.resume.name : null
     const pictureName = formData.profilePicture ? formData.profilePicture.name : null
     const toSave = {
       ...oldData,
       ...formData,
-      resume: resumeName,
       profilePicture: pictureName,
     }
 
@@ -125,26 +122,7 @@ const MenteeAcademicSetup = () => {
             required
           />
 
-          <label className="block mb-1">Upload Your Resume</label>
-          <div className="flex border border-gray-300 rounded w-full mb-3 overflow-hidden bg-white">
-            <input
-              type="text"
-              readOnly
-              value={formData.resume ? formData.resume.name : ''}
-              className="flex-1 px-4 py-1.5 outline-none text-sm bg-white"
-            />
-            <label htmlFor="resume-upload" className="cursor-pointer px-4 py-2 flex items-center">
-              <i className="ri-upload-2-line text-xl" />
-            </label>
-            <input
-              id="resume-upload"
-              type="file"
-              accept=".pdf,.doc,.docx"
-              name="resume"
-              onChange={handleChange}
-              className="hidden"
-            />
-          </div>
+
 
           <div className="mb-3">
             <div className="flex items-center justify-between">
