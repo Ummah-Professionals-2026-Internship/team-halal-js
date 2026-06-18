@@ -43,7 +43,7 @@ const Login = () => {
 
       }
     } catch (err) {
-      setError('Could not connect to server. Please try again.');
+      setError(err.message || 'Could not connect to server. Please try again.');
     } finally {
       setLoading(false);
     }
