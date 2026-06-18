@@ -1,10 +1,10 @@
 import React from 'react'
 import Navbar from './Navbar'
 
-const PageLayoutDashboard = ({ children, onBack, userName, userRole, userPhoto }) => {
+const PageLayoutDashboard = ({ children, onBack, userName, userRole, userPhoto, onPhotoUpdate}) => {
   return (
     <div className="h-screen flex flex-col bg-[#f6f6f6] overflow-hidden">
-      <Navbar userName={userName} userRole={userRole} userPhoto={userPhoto} />
+      <Navbar userName={userName} userRole={userRole} userPhoto={userPhoto} onPhotoUpdate={onPhotoUpdate} />
       <div className="flex-1 flex flex-col w-full px-4 py-3 overflow-hidden">
         {children}
       </div>

@@ -1,8 +1,26 @@
-import React from 'react';
+import React, {useRef} from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 
-const Navbar = ({ userName, userRole, userPhoto }) => {
+
+const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
+
+  const fileInputRef = useRef(null);
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    const token = localStorage.getItem('token');
+    await fetch('/api/upload/profile-picture', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`},
+      body: formData,
+    });
+
+    if(onPhotoUpdate) onPhotoUpdate();
+  };
   return (
     <header className="w-full h-[126px] bg-[#003F55] flex justify-between items-center px-[42px] box-border">
       <Link to="/login" className="flex items-center cursor-pointer">
@@ -16,12 +34,29 @@ const Navbar = ({ userName, userRole, userPhoto }) => {
             </p>
             <p className="text-[#8ACBDB] text-sm cursor-pointer hover:underline">View Profile</p>
           </div>
-          {userPhoto
+
+          <input 
+            type="file"
+            accept = "image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+
+          <div onClick={()=>fileInputRef.current.click()} className="cursor-pointer relative group">
+            {userPhoto
             ? <img src={userPhoto} alt={userName} className="w-12 h-12 rounded-full object-cover shrink-0" />
             : <div className="w-12 h-12 rounded-full bg-gray-400 shrink-0 flex items-center justify-center text-white text-lg font-bold">
                 {userName?.[0] ?? '?'}
               </div>
-          }
+            }
+
+            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              📷
+            </div>
+          </div>
+          
+          
         </div>
       )}
     </header>

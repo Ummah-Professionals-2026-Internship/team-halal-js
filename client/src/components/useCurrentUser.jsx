@@ -1,17 +1,20 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 const useCurrentUser = () => {
+  const [user, setUser] = useState({ firstName: '', lastName: '' })
 
-    const [user, setUser]=useState({firstName:'',lastName:''})
-    useEffect (()=>{
-      const token = localStorage.getItem('token')
-      fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(res=>res.json())
-      .then(data=>setUser(data))
-    },[])
+  const fetchUser = useCallback(() => {
+    const token = localStorage.getItem('token')
+    fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setUser(data) })
+  }, [])
 
+  useEffect(() => {
+    fetchUser()
+  }, [fetchUser])
 
-  return user}
+  return { user, refreshUser: fetchUser }
+}
 
 export default useCurrentUser
