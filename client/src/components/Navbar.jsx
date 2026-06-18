@@ -19,7 +19,7 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
       body: formData,
     });
 
-    if(onPhotoUpdate) onPhotoUpdate();
+    onPhotoUpdate?.();
   };
   return (
     <header className="w-full h-[126px] bg-[#003F55] flex justify-between items-center px-[42px] box-border">
