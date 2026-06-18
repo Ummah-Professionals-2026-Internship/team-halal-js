@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import AuthCard from './AuthCard';
+import { register } from '../api-calls/auth';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -38,24 +39,13 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || 'Registration failed');
-        return;
-      }
+      const data = await register(
+        formData.firstName,
+        formData.lastName,
+        formData.email,
+        formData.password,
+        formData.role
+      );
 
       localStorage.setItem('token', data.token);
       if(formData.role === 'mentor'){

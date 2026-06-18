@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import googleCalIcon from '../../assets/google-cal-icon.png'
+import { disconnectGoogle } from '../../api-calls/auth'
+import { createMentorProfile } from '../../api-calls/mentors'
 
-const API = import.meta.env.VITE_API_URL || ''
+const apiBaseUrl = import.meta.env.VITE_API_URL || ''
 
 const MentorAvailabilitySetup = () => {
   const navigate = useNavigate()
@@ -34,23 +36,13 @@ const MentorAvailabilitySetup = () => {
       return;
     }
     localStorage.setItem('mentorStep3Temp', JSON.stringify({ frequency }))
-    window.location.href = `${API}/api/auth/google?token=${token}`
+    window.location.href = `${apiBaseUrl}/api/auth/google?token=${token}`
   }
 
   const handleDisconnectCalendar = async () => {
-    const token = localStorage.getItem('token')
     try {
-      const response = await fetch(`${API}/api/auth/google/disconnect`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (response.ok) {
-        setCalendarAccess(false)
-      } else {
-        alert('Failed to disconnect calendar.')
-      }
+      await disconnectGoogle();
+      setCalendarAccess(false)
     } catch (err) {
       console.error(err)
       alert('Error disconnecting calendar.')
@@ -63,27 +55,13 @@ const MentorAvailabilitySetup = () => {
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
     const toSave = { ...saved, frequency, calendarAccess }
 
-    const token = localStorage.getItem('token')
-
     try {
-      const response = await fetch(API + '/api/mentors', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(toSave),
-      })
-      if (response.ok) {
-        localStorage.removeItem('mentorStep1')
-        localStorage.removeItem('mentorStep2')
-        localStorage.removeItem('mentorResumeData')
-        localStorage.removeItem('mentorStep3Temp')
-        navigate('/mentor-dashboard')
-      } else {
-        alert('Failed to save profile')
-        setLoading(false)
-      }
+      await createMentorProfile(toSave);
+      localStorage.removeItem('mentorStep1')
+      localStorage.removeItem('mentorStep2')
+      localStorage.removeItem('mentorResumeData')
+      localStorage.removeItem('mentorStep3Temp')
+      navigate('/mentor-dashboard')
     } catch (error) {
       alert('Something went wrong')
       setLoading(false)
