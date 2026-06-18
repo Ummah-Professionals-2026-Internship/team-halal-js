@@ -1,20 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PageLayoutDashboard from '../PageLayoutDashboard';
 import UpcomingSessions from '../UpcomingSessions/UpcomingSessions';
 import MentorAvailabilityCard from './MentorAvailabilityCard';
-
-const API = import.meta.env.VITE_API_URL || ''
+import useCurrentUser from '../useCurrentUser';
 
 const MentorDashboard = () => {
-  const [userName, setUserName] = useState('')
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => setUserName(`${data.firstName} ${data.lastName}`))
-      .catch(() => {})
-  }, [])
+  const user = useCurrentUser()
+  const userName = `${user.firstName} ${user.lastName}`
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentor">

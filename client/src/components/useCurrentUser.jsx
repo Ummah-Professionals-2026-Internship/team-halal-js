@@ -14,4 +14,4 @@ const useCurrentUser = () => {
 
   return user}
 
-export default CurrentUser
+export default useCurrentUser
