@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import googleCalIcon from '../../assets/google-cal-icon.png'
+import AvailabilityPick from '../availability/AvailabilityPick'
+import { createMentorProfile } from '../../api-calls/mentors'
+import { disconnectGoogle } from '../../api-calls/auth'
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || ''
 
