@@ -4,8 +4,7 @@ import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { STATES_LIST, MAJORS_LIST } from '../../constants/lists'
-
-const API = import.meta.env.VITE_API_URL || ''
+import { uploadResume } from '../../api-calls/upload'
 
 const formatPhoneNumber = (value) => {
   if (!value) return value
@@ -57,51 +56,38 @@ const MentorProfileSetup = () => {
     setUploading(true)
     setUploadMessage('Uploading and parsing resume...')
 
-    const token = localStorage.getItem('token')
     const fData = new FormData()
     fData.append('resume', file)
 
     try {
-      const response = await fetch(API + '/api/upload/resume', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: fData
+      const data = await uploadResume(fData);
+      const { filePath, parsedData } = data
+
+      setFormData(prev => {
+        let parsedMajors = prev.majors;
+        if (parsedData.majors) {
+          parsedMajors = Array.isArray(parsedData.majors) ? parsedData.majors : [parsedData.majors];
+        }
+        return {
+          ...prev,
+          resume: file,
+          resumePath: filePath,
+          resumeName: file.name,
+          phone: parsedData.phone ? formatPhoneNumber(parsedData.phone) : prev.phone,
+          linkedinUrl: parsedData.linkedinUrl || prev.linkedinUrl,
+          university: parsedData.university || prev.university,
+          majors: parsedMajors
+        };
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        const { filePath, parsedData } = data
-
-        setFormData(prev => {
-          let parsedMajors = prev.majors;
-          if (parsedData.majors) {
-            parsedMajors = Array.isArray(parsedData.majors) ? parsedData.majors : [parsedData.majors];
-          }
-          return {
-            ...prev,
-            resume: file,
-            resumePath: filePath,
-            resumeName: file.name,
-            phone: parsedData.phone ? formatPhoneNumber(parsedData.phone) : prev.phone,
-            linkedinUrl: parsedData.linkedinUrl || prev.linkedinUrl,
-            university: parsedData.university || prev.university,
-            majors: parsedMajors
-          };
-        })
-
-        const storedCareer = {
-          jobTitle: parsedData.desiredCareer || '',
-          resumePath: filePath,
-          resumeName: file.name
-        }
-        localStorage.setItem('mentorResumeData', JSON.stringify(storedCareer))
-
-        setUploadMessage('Resume parsed! Fields pre-filled.')
-      } else {
-        setUploadMessage('Upload failed. You can still enter details manually.')
+      const storedCareer = {
+        jobTitle: parsedData.desiredCareer || '',
+        resumePath: filePath,
+        resumeName: file.name
       }
+      localStorage.setItem('mentorResumeData', JSON.stringify(storedCareer))
+
+      setUploadMessage('Resume parsed! Fields pre-filled.')
     } catch (err) {
       console.error(err)
       setUploadMessage('Error uploading file. You can still enter details manually.')
