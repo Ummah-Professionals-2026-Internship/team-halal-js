@@ -1,10 +1,5 @@
 import { apiFetch } from './client';
 
-/**
- * Log in a user with email and password.
- * @returns {Promise<{token: string, user: object}>} The token and user object on success.
- * @throws Will throw an error with a message if the request fails.
- */
 export async function login(email, password) {
   const res = await apiFetch('/api/auth/login', {
     method: 'POST',
@@ -18,14 +13,9 @@ export async function login(email, password) {
     throw new Error(data.message || 'Login failed');
   }
 
-  return data; // { token, user }
+  return data;
 }
 
-/**
- * Register a new user.
- * @returns {Promise<{token: string, user: object}>} The token and user object on success.
- * @throws Will throw an error with a message if the request fails.
- */
 export async function register(firstName, lastName, email, password, role) {
   const res = await apiFetch('/api/auth/register', {
     method: 'POST',
@@ -39,35 +29,58 @@ export async function register(firstName, lastName, email, password, role) {
     throw new Error(data.message || 'Registration failed');
   }
 
-  return data; // { token, user }
+  return data;
 }
 
-/**
- * Fetch the currently logged-in user from the token in localStorage.
- * @returns {Promise<object>} The user object.
- * @throws Will throw if the request fails or the token is invalid.
- */
 export async function getMe() {
   const res = await apiFetch('/api/auth/me');
+  const data = await res.json();
 
   if (!res.ok) {
-    throw new Error('Failed to fetch current user');
+    throw new Error(data.message || 'Failed to fetch current user');
   }
 
-  return res.json(); // user object
+  return data;
 }
 
-/**
- * Disconnect the Google Calendar from the current user's account.
- * @returns {Promise<void>}
- * @throws Will throw if the request fails.
- */
+export async function changePassword(currentPassword, newPassword) {
+  const res = await apiFetch('/api/auth/change-password', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to change password');
+  }
+
+  return data;
+}
+
+export async function deleteAccount() {
+  const res = await apiFetch('/api/auth/delete-account', {
+    method: 'DELETE',
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to delete account');
+  }
+
+  return data;
+}
+
 export async function disconnectGoogle() {
   const res = await apiFetch('/api/auth/google/disconnect', {
     method: 'POST',
   });
 
+  const data = await res.json();
+
   if (!res.ok) {
-    throw new Error('Failed to disconnect Google Calendar');
+    throw new Error(data.message || 'Failed to disconnect Google Calendar');
   }
 }
