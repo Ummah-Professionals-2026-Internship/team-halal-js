@@ -1,0 +1,55 @@
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import PageLayoutDashboard from '../PageLayoutDashboard';
+import useCurrentUser from '../useCurrentUser';
+import MentorProfileCard from './MentorProfileCard';
+import AvailabilityPick from '../availability/AvailabilityPick';
+
+const MenteeSchedulePage = () => {
+  const { user } = useCurrentUser();
+  const userName = `${user.firstName} ${user.lastName}`;
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const mentor = state?.mentor;
+  const mentorName = mentor ? `${mentor.firstName} ${mentor.lastName}` : 'Mentor';
+
+  return (
+    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture}>
+      <div className="flex flex-col h-full">
+        <div className="flex flex-col items-center flex-1 overflow-y-auto gap-4 pb-4">
+          <h1 className="text-2xl font-bold text-[#00212C]">
+            Schedule a Mentorship Session With {mentorName}
+          </h1>
+
+          <div className="flex w-full max-w-4xl gap-6 items-center">
+            {mentor && <MentorProfileCard mentor={mentor} />}
+
+            <div className="flex-1 bg-[#C5DCE8] rounded-2xl p-4 flex flex-col gap-3">
+              <AvailabilityPick title={`${mentorName}'s Availability`} readOnly />
+
+              <div className="text-center">
+                <p className="font-semibold text-[#00212C] text-sm">Auto-Selected Meeting Time:</p>
+                <p className="text-xs text-[#00212C] mt-1">Click to Select Another Time on The Calendar</p>
+              </div>
+
+              <button className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full">
+                Confirm Booking
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="pb-2 pl-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-[#003F55] text-white px-6 py-2 rounded font-bold shadow"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    </PageLayoutDashboard>
+  );
+};
+
+export default MenteeSchedulePage;

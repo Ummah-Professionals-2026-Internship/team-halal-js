@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageLayoutDashboard from '../PageLayoutDashboard';
 import useCurrentUser from '../useCurrentUser';
 import { getMatchSuggestions } from '../../api-calls/mentees';
 import MentorCard from './MentorCard';
 
 const MenteeDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useCurrentUser();
   const userName = `${user.firstName} ${user.lastName}`;
 
@@ -20,7 +22,7 @@ const MenteeDashboard = () => {
   }, []);
 
   const handleSchedule = (mentor) => {
-    // TODO: navigate to schedule session page once built
+    navigate('/mentee/schedule', { state: { mentor } });
   };
 
   const recommended = mentors[0] || null;

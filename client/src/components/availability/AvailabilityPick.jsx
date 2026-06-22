@@ -29,7 +29,7 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [] }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [] }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
 
@@ -123,12 +123,13 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={() => handleMouseDown(slotId, isSelected)}
-                      onMouseEnter={() => handleMouseEnter(slotId)}
+                      onMouseDown={readOnly ? undefined : () => handleMouseDown(slotId, isSelected)}
+                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
                       className={`h-4 rounded-none select-none transition ${
                         conflicts.includes(slotId) ? 'bg-red-400' :
                         sessions.includes(slotId) ? 'bg-purple-300' :
-                        isSelected ? 'bg-green-300' : 'bg-gray-300 hover:bg-green-100'
+                        (readOnly ? mentorSlots : selectedSlots).includes(slotId) ? 'bg-green-300' :
+                        readOnly ? 'bg-gray-300' : 'bg-gray-300 hover:bg-green-100'
                       }`}
                     />
                   )
@@ -143,13 +144,13 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             <div className="w-2 h-2 rounded-full bg-red-400" /> Your Conflicts
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-300" /> Your Mentoring Hours
+            <div className="w-2 h-2 rounded-full bg-green-300" /> {readOnly ? "Mentor's Availability" : 'Your Mentoring Hours'}
           </div>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-purple-300" /> Your Sessions
           </div>
         </div>
-        <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>
+        {!readOnly && <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>}
 
         {selectedSlots.length > 0 && (
           <div className="mt-2 border-t pt-2">

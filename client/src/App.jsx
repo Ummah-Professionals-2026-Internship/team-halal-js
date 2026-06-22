@@ -10,6 +10,7 @@ import MenteeProfileSetup from './components/Mentee/MenteeProfileSetup';
 import MenteeAcademicSetup from './components/Mentee/MenteeAcademicSetup';
 import MentorDashboard from './components/Mentor/MentorDashboard';
 import MenteeDashboard from './components/Mentee/MenteeDashboard';
+import MenteeSchedulePage from './components/Mentee/MenteeSchedulePage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         {/* Dashboard Routes */}
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />
         <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
+        <Route path="/mentee/schedule" element={<MenteeSchedulePage />} />
 
         {/* Redirect any other path to /login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
