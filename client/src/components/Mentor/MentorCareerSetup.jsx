@@ -38,7 +38,7 @@ const MentorCareerSetup = () => {
   }
 
   return (
-    <PageLayout onBack={() => navigate(-1)}>
+    <PageLayout onBack={() => navigate('/mentor/profile-setup')}>
       <Card title="Create Your Mentor Profile">
         <form onSubmit={handleSubmit} className="w-full text-left">
 

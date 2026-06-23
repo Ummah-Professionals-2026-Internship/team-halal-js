@@ -10,7 +10,7 @@ export async function uploadProfilePicture(formData) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Profile picture upload failed');
+    throw new Error(data.error || data.message || 'Profile picture upload failed');
   }
 
   return data;
@@ -26,7 +26,7 @@ export async function uploadResume(formData) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Resume upload failed');
+    throw new Error(data.error || data.message || 'Resume upload failed');
   }
 
   return data;

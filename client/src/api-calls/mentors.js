@@ -10,7 +10,7 @@ export async function createMentorProfile(profileData) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Failed to save mentor profile');
+    throw new Error(data.error || 'Failed to save mentor profile');
   }
 
   return data;
@@ -28,7 +28,7 @@ export async function updateMentorProfile(updates) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Failed to update mentor profile');
+    throw new Error(data.error || data.message || 'Failed to update mentor profile');
   }
 
   return data;

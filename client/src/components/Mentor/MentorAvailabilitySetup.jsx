@@ -70,7 +70,7 @@ const MentorAvailabilitySetup = () => {
   }
 
   return (
-    <PageLayout onBack={() => navigate(-1)}>
+    <PageLayout onBack={() => navigate('/mentor/career-setup')}>
       <div className="bg-[#f5eeee] w-full max-w-162.5 rounded-lg px-10 py-7 text-center shadow-sm">
         <h1 className="text-3xl font-extrabold mb-5">Select Your Availability</h1>
 

@@ -21,7 +21,8 @@ const formatPhoneNumber = (value) => {
 }
 
 const MentorProfileSetup = () => {
-  const navigate = useNavigate()
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     resume: null,
     resumePath: '',
@@ -33,6 +34,7 @@ const MentorProfileSetup = () => {
     linkedinUrl: '',
     phone: '',
     referralSource: '',
+    volunteeringFor: [],
   })
   const [uploading, setUploading] = useState(false)
   const [uploadMessage, setUploadMessage] = useState('')
@@ -44,6 +46,16 @@ const MentorProfileSetup = () => {
       newValue = formatPhoneNumber(newValue)
     }
     setFormData({ ...formData, [name]: newValue })
+  }
+
+  const handleCheckbox = (e) => {
+    const {name, value, checked} = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+      ? [...prev[name], value]
+      : prev[name].filter(v=> v !== value)
+    }))
   }
 
   const handleResumeChange = async (e) => {
@@ -97,17 +109,34 @@ const MentorProfileSetup = () => {
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    if(!formData.resumePath){
+      setError('Please update your resume');
+      return;
+    }
+    if(!formData.gender){
+      setError('Gender is required.');
+      return;
+    }
+    if(!formData.referralSource){
+      setError('Referral Source is required.');
+      return;
+    }
+    if(!formData.majors.length){
+      setError('Please select at least one major');
+      return;
+    }
+    setError('');
     const toSave = {
       ...formData,
       resume: formData.resumePath || ''
     }
-    localStorage.setItem('mentorStep1', JSON.stringify(toSave))
-    navigate('/mentor/career-setup')
+    localStorage.setItem('mentorStep1', JSON.stringify(toSave));
+    navigate('/mentor/career-setup');
   }
 
   return (
-    <PageLayout onBack={() => navigate(-1)}>
+    <PageLayout onBack={() => navigate('/login')}>
       <Card title="Create Your Mentor Profile">
         <div className="w-full text-left">
           <form onSubmit={handleSubmit}>
@@ -126,7 +155,6 @@ const MentorProfileSetup = () => {
                     className="hidden" 
                     name="resume"
                     onChange={handleResumeChange}
-                    required={!formData.resumePath}
                     disabled={uploading}
                   />
                 </label>
@@ -143,9 +171,8 @@ const MentorProfileSetup = () => {
                 value={formData.gender}
                 onChange={handleChange}
                 className="border border-gray-300 rounded px-3 py-1.5 w-full text-sm bg-white"
-                required
               >
-                <option value=""></option>
+                <option value="" disabled hidden>Select an option</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
@@ -195,7 +222,6 @@ const MentorProfileSetup = () => {
               options={MAJORS_LIST}
               placeholder="Type to search major..."
               onChange={handleChange}
-              required
               isMulti={true}
             />
 
@@ -216,13 +242,29 @@ const MentorProfileSetup = () => {
               value={formData.referralSource}
               onChange={handleChange}
               className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-              required
             >
-              <option value=""></option>
+              <option value="" disabled hidden>Select an option</option>
               <option value="Social Media">Social Media</option>
               <option value="Friend or Family">Friend or Family</option>
               <option value="Other">Other</option>
             </select>
+
+            <label className="block mb-1">What services would you like to volunteer for?</label>
+          <div className="mb-3 flex flex-col gap-1 text-sm">
+            {['healthcare service', 'mentorship program', 'resume review', 'mock interview', 'general career advice'].map(service => (
+              <label key={service} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="volunteeringFor"
+                  value={service}
+                  checked={formData.volunteeringFor.includes(service)}
+                  onChange={handleCheckbox}
+                />
+                {service.charAt(0).toUpperCase() + service.slice(1)}
+              </label>
+            ))}
+          </div>
+          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
             <button type="submit" className="bg-[#007CA6] px-5 py-2 w-full rounded font-semibold mt-2 text-white">
               Next
