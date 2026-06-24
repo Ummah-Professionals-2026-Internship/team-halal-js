@@ -102,8 +102,11 @@ const MentorAvailabilitySetup = () => {
   }
 
   return (
-    <PageLayout onBack={() => navigate('/mentor/career-setup')}>
+    <PageLayout onBack={() => navigate('/mentor/career-setup')} backVariant="accent">
       <div className="bg-white w-full max-w-[650px] rounded-xl px-8 py-7 shadow-sm">
+
+        {/* Brand accent */}
+        <div className="w-10 h-1.5 rounded-full bg-[#fdbb36] mx-auto mb-4" />
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center gap-1.5 mb-1">

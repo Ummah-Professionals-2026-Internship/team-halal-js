@@ -41,9 +41,12 @@ const MentorCareerSetup = () => {
   }
 
   return (
-    <PageLayout onBack={() => navigate('/mentor/profile-setup')}>
+    <PageLayout onBack={() => navigate('/mentor/profile-setup')} backVariant="accent">
       <Card>
         <div className="w-full text-left">
+
+          {/* Brand accent */}
+          <div className="w-10 h-1.5 rounded-full bg-[#fdbb36] mx-auto mb-4" />
 
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-1.5 mb-1">

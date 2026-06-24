@@ -22,6 +22,7 @@ const formatPhoneNumber = (value) => {
 
 const SectionDivider = ({ label }) => (
   <div className="flex items-center gap-2 mt-5 mb-3">
+    <span className="w-1.5 h-1.5 rounded-sm bg-[#fdbb36] shrink-0" />
     <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 whitespace-nowrap">{label}</span>
     <div className="flex-1 h-px bg-slate-100" />
   </div>
@@ -145,9 +146,12 @@ const MentorProfileSetup = () => {
   }
 
   return (
-    <PageLayout onBack={() => navigate('/login')}>
+    <PageLayout onBack={() => navigate('/login')} backVariant="accent">
       <Card>
         <div className="w-full text-left">
+
+          {/* Brand accent */}
+          <div className="w-10 h-1.5 rounded-full bg-[#fdbb36] mx-auto mb-4" />
 
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-1.5 mb-1">

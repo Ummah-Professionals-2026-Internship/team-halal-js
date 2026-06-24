@@ -1,22 +1,39 @@
-import React from 'react'
 import SessionCard from './SessionCard'
+import SectionHeading from '../SectionHeading'
+import { upcomingSessions, completedSessions } from './sessionsData'
 
-const upcomingSessions = [
-  { id: 1, name: 'Zainab Khan', topic: 'Resume Advice', date: 'Saturday June 5th', time: '6:30 P.M.', daysUntil: 2 },
-  { id: 2, name: 'Yasmin Yusuf', topic: 'Career Advice', date: 'Saturday June 29th', time: '7:00 P.M.', daysUntil: 6 },
-]
+const CountBadge = ({ count }) => (
+  <span className="shrink-0 rounded-full bg-[#fdbb36]/15 px-3 py-1 text-xs font-bold text-[#00212C]">
+    {count}
+  </span>
+)
+
+const EmptyState = ({ text }) => (
+  <div className="bg-white rounded-xl border border-dashed border-slate-200 p-6 text-center">
+    <p className="text-sm text-slate-400">{text}</p>
+  </div>
+)
 
 const UpcomingSessions = () => {
   return (
-    <div className="mt-10">
-      <h2 className="text-xl font-bold text-center text-[#00212C] mb-4">Upcoming Sessions</h2>
-      {upcomingSessions.length > 0
-        ? upcomingSessions.map(session => <SessionCard key={session.id} {...session} />)
-        : <p className="text-center text-gray-500 text-sm">No upcoming sessions.</p>
-      }
+    <div className="flex flex-col gap-6">
+      <div>
+        <SectionHeading
+          title="Upcoming Sessions"
+          right={<CountBadge count={upcomingSessions.length} />}
+          className="mb-4"
+        />
+        {upcomingSessions.length > 0
+          ? upcomingSessions.map(session => <SessionCard key={session.id} {...session} />)
+          : <EmptyState text="No upcoming sessions yet." />}
+      </div>
 
-      <h2 className="text-xl font-bold text-center text-[#00212C] mt-8 mb-2">Completed Sessions</h2>
-      <p className="text-center text-gray-500 text-sm">No Completed Sessions so far.</p>
+      <div>
+        <SectionHeading title="Completed Sessions" className="mb-4" />
+        {completedSessions.length > 0
+          ? completedSessions.map(session => <SessionCard key={session.id} {...session} />)
+          : <EmptyState text="No completed sessions so far." />}
+      </div>
     </div>
   )
 }
