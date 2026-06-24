@@ -6,6 +6,7 @@ import useCurrentUser from '../useCurrentUser';
 
 const MentorDashboard = () => {
   const { user, refreshUser } = useCurrentUser()
+  if(!user.firstName) return <div>Loading ...</div>
   const userName = `${user.firstName} ${user.lastName}`
   const services = Array.isArray(user.mentorProfile?.volunteeringFor) ? user.mentorProfile.volunteeringFor : []
 

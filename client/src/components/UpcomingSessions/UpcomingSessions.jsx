@@ -1,6 +1,6 @@
 import SessionCard from './SessionCard'
 import SectionHeading from '../SectionHeading'
-import { upcomingSessions, completedSessions } from './sessionsData'
+import useSessions from './useSessions'
 
 const CountBadge = ({ count }) => (
   <span className="shrink-0 rounded-full bg-[#fdbb36]/15 px-3 py-1 text-xs font-bold text-[#00212C]">
@@ -15,6 +15,10 @@ const EmptyState = ({ text }) => (
 )
 
 const UpcomingSessions = () => {
+  const {sessions} = useSessions();
+  const upcomingSessions =  sessions.filter(s => s.status === 'scheduled');
+  const completedSessions = sessions.filter(s => s.status === 'completed');
+
   return (
     <div className="flex flex-col gap-6">
       <div>
