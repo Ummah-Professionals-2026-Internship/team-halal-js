@@ -19,6 +19,7 @@ const MentorAvailabilitySetup = () => {
   const [picMessage, setPicMessage] = useState('')
   const [profilePictureName, setProfilePictureName] = useState('')
   const [profilePicture, setProfilePicture] = useState('')
+  const [error, setError] = useState('');
   
 
   useEffect(() => {
@@ -39,7 +40,7 @@ const MentorAvailabilitySetup = () => {
   const handleConnectCalendar = () => {
     const token = localStorage.getItem('token')
     if (!token) {
-      alert('Please log in again to connect your calendar.')
+      setError('Please log in again to connect your calendar.')
       return;
     }
     localStorage.setItem('mentorStep3Temp', JSON.stringify({ frequency }))
@@ -52,7 +53,7 @@ const MentorAvailabilitySetup = () => {
       setCalendarAccess(false)
     } catch (err) {
       console.error(err)
-      alert('Error disconnecting calendar.')
+      setError('Error disconnecting calendar.')
     }
   }
 
@@ -94,7 +95,7 @@ const MentorAvailabilitySetup = () => {
       localStorage.removeItem('mentorStep3Temp')
       navigate('/mentor-dashboard')
     } catch (error) {
-      alert('Something went wrong')
+      setError('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
@@ -142,6 +143,78 @@ const MentorAvailabilitySetup = () => {
         </div>
         
         <AvailabilityPick />
+
+        {/* Profile Picture Upload Card */}
+        <div className="mb-6 p-5 bg-white border border-gray-200 rounded-xl text-center shadow-sm">
+          <label className="block text-sm font-semibold text-slate-700 mb-3">
+            Profile Picture
+          </label>
+
+          <div className="relative w-28 h-28 mx-auto mb-3">
+            <label
+              className={`relative flex flex-col items-center justify-center w-full h-full rounded-full border-2 border-dashed ${
+                profilePicture ? 'border-transparent' : 'border-slate-300 hover:border-[#007CA6]'
+              } bg-white transition-all cursor-pointer overflow-hidden group`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleProfilePictureChange}
+                disabled={uploadingPic}
+              />
+
+              {profilePicture ? (
+                <>
+                  <img
+                    src={apiBaseUrl + profilePicture}
+                    alt="Profile Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg className="w-6 h-6 text-white mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-[10px] text-white font-medium">Change Photo</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-slate-400 group-hover:text-[#007CA6] transition-colors">
+                  <svg className="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">Add Photo</span>
+                </div>
+              )}
+
+              {uploadingPic && (
+                <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                  <svg className="animate-spin h-6 w-6 text-[#007CA6] mb-1" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="text-[9px] text-[#007CA6] font-semibold">Uploading...</span>
+                </div>
+              )}
+            </label>
+          </div>
+
+          <div className="text-center">
+            {picMessage ? (
+              <p className="text-xs font-medium text-slate-500">{picMessage}</p>
+            ) : profilePictureName ? (
+              <p className="text-xs font-semibold text-emerald-600 truncate max-w-xs mx-auto">
+                ✓ {profilePictureName}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-400">Square images work best (JPG, PNG, GIF)</p>
+            )}
+          </div>
+        </div>
+
+        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+
         <button 
           onClick={handleSubmit} 
           disabled={loading}
