@@ -29,7 +29,8 @@ router.post('/', requireAuth, async (req, res) => {
       industry: req.body.industry,
       yearsOfProfExp: req.body.yearsOfProfExp,
       maxMentees: req.body.maxMentees,
-      frequency: req.body.frequency
+      frequency: req.body.frequency,
+      volunteeringFor: req.body.volunteeringFor
     }
 
     await mentor.save()

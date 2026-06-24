@@ -93,7 +93,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
 
   return (
     <div className="w-full">
-      <h2 className="text-xs font-bold text-gray-900 text-center mb-1">{title}</h2>
+      {title && <h2 className="text-xs font-bold text-gray-900 text-center mb-1">{title}</h2>}
       <div className="rounded-xl bg-white p-1.5 shadow-md">
         <div className="flex items-center justify-between mb-1 px-1">
           <span className="text-xs text-gray-600">{formatWeekLabel(weekStart)}</span>
