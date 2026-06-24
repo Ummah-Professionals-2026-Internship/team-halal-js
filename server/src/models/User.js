@@ -102,7 +102,7 @@ const userSchema = new mongoose.Schema({
     menteeProfile: {
         academicStatus: String,
         desiredCareer: String,
-        desiredServices: {type: [String], enum: ['general career advice', 'resume review', 'interview prep']}
+        desiredServices: {type: [String], enum: ['healthcare service', 'mentorship program', 'general career advice', 'resume review', 'interview prep']}
     }
 },{timestamps:true})
 
