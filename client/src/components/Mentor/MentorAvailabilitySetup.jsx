@@ -5,6 +5,7 @@ import googleCalIcon from '../../assets/google-cal-icon.png'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import { createMentorProfile } from '../../api-calls/mentors'
 import { disconnectGoogle } from '../../api-calls/auth'
+import { uploadProfilePicture } from '../../api-calls/upload'
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || ''
 
@@ -14,6 +15,11 @@ const MentorAvailabilitySetup = () => {
   const [frequency, setFrequency] = useState('')
   const [calendarAccess, setCalendarAccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadingPic, setUploadingPic] = useState(false)
+  const [picMessage, setPicMessage] = useState('')
+  const [profilePictureName, setProfilePictureName] = useState('')
+  const [profilePicture, setProfilePicture] = useState('')
+  
 
   useEffect(() => {
     const savedTemp = localStorage.getItem('mentorStep3Temp')
@@ -50,11 +56,35 @@ const MentorAvailabilitySetup = () => {
     }
   }
 
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    e.target.value = ''
+    setUploadingPic(true)
+    setPicMessage('Uploading picture...')
+
+    const fData = new FormData()
+    fData.append('profilePicture', file)
+
+    try {
+      const data = await uploadProfilePicture(fData)
+      setProfilePicture(data.filePath)
+      setProfilePictureName(file.name)
+      setPicMessage('')
+    } catch (err) {
+      console.error(err)
+      setPicMessage('Error uploading picture.')
+    } finally {
+      setUploadingPic(false)
+    }
+  }
+
   const handleSubmit = async () => {
     if (loading) return
     setLoading(true)
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
-    const toSave = { ...saved, frequency, calendarAccess }
+    const toSave = { ...saved, frequency, calendarAccess, profilePicture }
 
     try {
       await createMentorProfile(toSave);
