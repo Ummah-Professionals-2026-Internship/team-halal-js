@@ -214,11 +214,25 @@ const MentorProfileSetup = () => {
 
             <div className="mb-4">
               <label className={labelClass}>Gender</label>
-              <select name="gender" value={formData.gender} onChange={handleChange} className={inputClass}>
-                <option value="" disabled hidden>Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+              <div className="flex gap-3">
+                {['male', 'female'].map(option => (
+                  <label key={option} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border-2 cursor-pointer transition-colors ${
+                    formData.gender === option
+                      ? 'border-[#007CA6] bg-[#007CA6]/5 text-[#007CA6]'
+                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={option}
+                      checked={formData.gender === option}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <span className="text-sm font-medium capitalize">{option}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="mb-4">
