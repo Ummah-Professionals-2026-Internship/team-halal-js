@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
 import PageLayoutDashboard from '../PageLayoutDashboard';
 import useCurrentUser from '../useCurrentUser';
 import MentorProfileCard from './MentorProfileCard';
@@ -14,9 +15,8 @@ const MenteeSchedulePage = () => {
   const mentorName = mentor ? `${mentor.firstName} ${mentor.lastName}` : 'Mentor';
 
   return (
-    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture}>
-      <div className="flex flex-col h-full">
-        <div className="flex flex-col items-center flex-1 overflow-y-auto gap-4 pb-4">
+    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
+      <div className="flex flex-col items-center gap-4 pb-4">
           <h1 className="text-2xl font-bold text-[#00212C]">
             Schedule a Mentorship Session With {mentorName}
           </h1>
@@ -32,22 +32,15 @@ const MenteeSchedulePage = () => {
                 <p className="text-xs text-[#00212C] mt-1">Click to Select Another Time on The Calendar</p>
               </div>
 
-              <button className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full">
+              <button
+                onClick={() => navigate('/mentee/booking', { state: { mentor } })}
+                className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full"
+              >
                 Confirm Booking
               </button>
             </div>
           </div>
         </div>
-
-        <div className="pb-2 pl-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-[#003F55] text-white px-6 py-2 rounded font-bold shadow"
-          >
-            Back
-          </button>
-        </div>
-      </div>
     </PageLayoutDashboard>
   );
 };

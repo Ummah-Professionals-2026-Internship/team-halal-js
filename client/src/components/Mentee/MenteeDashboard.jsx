@@ -7,7 +7,7 @@ import MentorCard from './MentorCard';
 
 const MenteeDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useCurrentUser();
+  const { user, refreshUser } = useCurrentUser();
   const userName = `${user.firstName} ${user.lastName}`;
 
   const [mentors, setMentors] = useState([]);
@@ -29,9 +29,17 @@ const MenteeDashboard = () => {
   const moreMentors = mentors.slice(1);
 
   return (
-    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture}>
-      <div className="flex flex-col items-center w-full max-w-3xl mx-auto mt-6 gap-3">
-        <h1 className="text-2xl font-bold text-[#00212C]">Find a Mentor to Meet With</h1>
+    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser}>
+      <div className="max-w-3xl mx-auto w-full pb-4">
+        <div className="mb-6 mt-2">
+          <div className="w-12 h-1.5 rounded-full bg-[#fdbb36] mb-3" />
+          <h1 className="text-2xl font-bold text-[#00212C]">
+            Welcome back{user.firstName ? `, ${user.firstName}` : ''}
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Find your best mentor match.</p>
+        </div>
+
+        <div className="flex flex-col items-center w-full gap-3">
 
         {loading && (
           <p className="text-gray-500 mt-4">Finding your best mentors...</p>
@@ -72,6 +80,7 @@ const MenteeDashboard = () => {
             </div>
           </>
         )}
+        </div>
       </div>
     </PageLayoutDashboard>
   );
