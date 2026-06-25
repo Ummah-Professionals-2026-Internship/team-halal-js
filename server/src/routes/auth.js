@@ -1,8 +1,20 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
+
+// GET /api/auth/me - Get current user
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('firstName lastName role profilePicture mentorProfile')
+    if (!user) return res.status(404).json({ message: 'User not found' })
+    res.json(user)
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' })
+  }
+})
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {

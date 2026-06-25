@@ -5,6 +5,9 @@ import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { INDUSTRIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
 
+const inputClass = "border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors"
+const labelClass = "block text-sm font-medium text-slate-700 mb-1.5"
+
 const MentorCareerSetup = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -39,40 +42,55 @@ const MentorCareerSetup = () => {
   }
 
   return (
-    <PageLayout onBack={() => navigate(-1)}>
-      <Card title="Create Your Mentor Profile">
-        <form onSubmit={handleSubmit} className="w-full text-left">
+    <PageLayout onBack={() => navigate('/mentor/profile-setup')} backVariant="accent">
+      <Card>
+        <div className="w-full text-left">
 
-          <label className="block mb-1">Employer</label>
-          <input
-            type="text"
-            name="employer"
-            value={formData.employer}
-            onChange={handleChange}
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-            required
-          />
+          {/* Brand accent */}
+          <div className="w-10 h-1.5 rounded-full bg-[#fdbb36] mx-auto mb-4" />
 
-          <label className="block mb-1">Job Title</label>
-          <input
-            type="text"
-            name="jobTitle"
-            value={formData.jobTitle}
-            onChange={handleChange}
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-            required
-          />
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            {[1, 2, 3].map((s) => (
+              <React.Fragment key={s}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  s < 2
+                    ? 'bg-emerald-500 text-white'
+                    : s === 2
+                    ? 'bg-[#007CA6] text-white'
+                    : 'bg-slate-100 text-slate-400'
+                }`}>
+                  {s < 2 ? (
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : s}
+                </div>
+                {s < 3 && (
+                  <div className={`w-10 h-0.5 rounded-full ${s < 2 ? 'bg-emerald-300' : 'bg-slate-100'}`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-400 text-center mb-5">Step 2 of 3 — Career Details</p>
+          <h2 className="text-xl font-bold text-slate-800 text-center mb-5">Your Career Background</h2>
 
-          <SearchableSelect
-            label="Industry"
-            name="industry"
-            value={formData.industry}
-            options={INDUSTRIES_LIST}
-            placeholder="Type to search industry..."
-            onChange={handleChange}
-            required
-          />
+          <form onSubmit={handleSubmit} className="w-full">
 
+<<<<<<< HEAD
+            <div className="mb-4">
+              <label className={labelClass}>Job Title</label>
+              <input
+                type="text"
+                name="jobTitle"
+                value={formData.jobTitle}
+                onChange={handleChange}
+                placeholder="e.g. Software Engineer"
+                className={inputClass}
+                required
+              />
+            </div>
+=======
           <SearchableSelect
             label="Areas you can help mentees with"
             name="volunteeringFor"
@@ -93,22 +111,65 @@ const MentorCareerSetup = () => {
             className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
             required
           />
+>>>>>>> origin/main
 
-          <label className="block mb-1 text-sm text-center">
-            Any additional information you would like to share with mentees?
-          </label>
-          <textarea
-            name="additionalInfo"
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm"
-            rows={4}
-            value={formData.additionalInfo}
-            onChange={handleChange}
-          />
+            <div className="mb-4">
+              <label className={labelClass}>Employer</label>
+              <input
+                type="text"
+                name="employer"
+                value={formData.employer}
+                onChange={handleChange}
+                placeholder="e.g. Google"
+                className={inputClass}
+                required
+              />
+            </div>
 
-          <button type="submit" className="bg-[#007CA6] px-5 py-2 w-full rounded font-semibold mt-2 text-white">
-            Next
-          </button>
-        </form>
+            <SearchableSelect
+              label="Industry"
+              name="industry"
+              value={formData.industry}
+              options={INDUSTRIES_LIST}
+              placeholder="Type to search industry..."
+              onChange={handleChange}
+              required
+            />
+
+            <div className="mb-4">
+              <label className={labelClass}>Years of Professional Experience</label>
+              <input
+                type="number"
+                name="yearsOfProfExp"
+                min="0"
+                value={formData.yearsOfProfExp}
+                onChange={handleChange}
+                placeholder="e.g. 5"
+                className={inputClass}
+                required
+              />
+            </div>
+
+            <div className="mb-5">
+              <label className={labelClass}>Anything else you'd like mentees to know?</label>
+              <textarea
+                name="additionalInfo"
+                className={`${inputClass} resize-none`}
+                rows={4}
+                value={formData.additionalInfo}
+                onChange={handleChange}
+                placeholder="Share your goals, areas of expertise, or what you hope to offer..."
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="bg-[#007CA6] hover:bg-[#006080] text-white w-full py-2.5 rounded-lg font-semibold text-sm transition-colors"
+            >
+              Next: Set Availability
+            </button>
+          </form>
+        </div>
       </Card>
     </PageLayout>
   )
