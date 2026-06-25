@@ -46,11 +46,14 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     if (!onChange) return
     const allTimes = [...times, '9 PM']
     const slots = selectedSlots.map(slotId => {
-      const dashIdx = slotId.indexOf('-')
-      const day = slotId.slice(0, dashIdx)
-      const startTime = slotId.slice(dashIdx + 1)
+      // slotId format: "YYYY-MM-DD-H AM/PM"
+      const parts = slotId.split('-')
+      const date = parts.slice(0, 3).join('-')   // "YYYY-MM-DD"
+      const startTime = parts.slice(3).join('-') // "H AM" or "H PM"
       const endTime = allTimes[times.indexOf(startTime) + 1] || '9 PM'
-      return { day, startTime, endTime }
+      const dayIndex = new Date(date + 'T00:00:00').getDay()
+      const day = days[dayIndex]
+      return { day, date, startTime, endTime }
     })
     onChange(slots)
   }, [selectedSlots])
@@ -88,8 +91,10 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
   const weekDates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart)
     d.setDate(weekStart.getDate() + i)
-    return d.getDate()
+    return d
   })
+
+  const isoDate = (d) => d.toISOString().slice(0, 10)
 
   return (
     <div className="w-full">
@@ -108,7 +113,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             <div className="font-semibold text-gray-500 py-0.5">Time</div>
             {days.map((day, i) => (
               <div key={day} className="text-center py-0.5">
-                <div className="text-gray-500">{weekDates[i]}</div>
+                <div className="text-gray-500">{weekDates[i].getDate()}</div>
                 <div className="font-semibold text-gray-700">{day}</div>
               </div>
             ))}
@@ -116,8 +121,8 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             {times.map((time) => (
               <React.Fragment key={time}>
                 <div className="flex h-4 items-center text-gray-500 whitespace-nowrap pr-1">{time}</div>
-                {days.map((day) => {
-                  const slotId = `${day}-${time}`
+                {days.map((day, i) => {
+                  const slotId = `${isoDate(weekDates[i])}-${time}`
                   const isSelected = selectedSlots.includes(slotId)
                   return (
                     <button
@@ -155,8 +160,11 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
           <div className="mt-2 border-t pt-2">
             <p className="text-center font-semibold text-gray-700 mb-1" style={{ fontSize: '9px' }}>Selected Hours</p>
             <div className="flex flex-col gap-0.5">
-              {days.map(day => {
-                const slots = selectedSlots.filter(s => s.startsWith(day + '-')).map(s => s.replace(day + '-', ''))
+              {days.map((day, i) => {
+                const dateStr = isoDate(weekDates[i])
+                const slots = selectedSlots
+                  .filter(s => s.startsWith(dateStr + '-'))
+                  .map(s => s.replace(dateStr + '-', ''))
                 if (slots.length === 0) return null
                 return (
                   <div key={day} className="flex gap-1 items-start" style={{ fontSize: '9px' }}>
