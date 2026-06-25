@@ -95,12 +95,14 @@ const userSchema = new mongoose.Schema({
         industry: String,
         yearsOfProfExp: Number,
         maxMentees: Number,
-        frequency: String
+        frequency: String,
+        volunteeringFor: [String]
     },
 
     menteeProfile: {
         academicStatus: String,
-        desiredCareer: String
+        desiredCareer: String,
+        lookingFor: [String]
     }
 },{timestamps:true})
 
@@ -160,5 +162,7 @@ userSchema.pre('findOneAndDelete', async function (next) {
     next(err);
   }
 });
+
+userSchema.index({ role: 1, hasCompletedProfile: 1 });
 
 module.exports = mongoose.model('User', userSchema);
