@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import { MAJORS_LIST, UNIVERSITIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
 import googleCalIcon from '../../assets/google-cal-icon.png'
 import { disconnectGoogle } from '../../api-calls/auth'
 import { createMenteeProfile } from '../../api-calls/mentees'
@@ -19,6 +19,7 @@ const MenteeAcademicSetup = () => {
     majors: [],
     academicStatus: '',
     desiredCareer: '',
+    lookingFor: [],
     calendarAccess: false,
     profilePicture: null,
     additionalInfo: '',
@@ -200,6 +201,16 @@ const MenteeAcademicSetup = () => {
           />
 
 
+
+          <SearchableSelect
+            label="What are you looking for in a mentor?"
+            name="lookingFor"
+            value={formData.lookingFor}
+            options={MENTORSHIP_TAGS}
+            placeholder="Select all that apply..."
+            onChange={handleChange}
+            isMulti={true}
+          />
 
           {/* Google Calendar Connection Card */}
           <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">

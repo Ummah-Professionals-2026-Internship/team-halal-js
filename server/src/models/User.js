@@ -163,4 +163,6 @@ userSchema.pre('findOneAndDelete', async function (next) {
   }
 });
 
+userSchema.index({ role: 1, hasCompletedProfile: 1 });
+
 module.exports = mongoose.model('User', userSchema);

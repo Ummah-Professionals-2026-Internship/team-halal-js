@@ -1,4 +1,18 @@
 // Auto-generated dropdown lists database. Do not edit manually.
+export const MENTORSHIP_TAGS = [
+  "Resume Review",
+  "Interview Prep",
+  "Networking",
+  "Career Exploration",
+  "Graduate School Advice",
+  "Industry Insights",
+  "Job Search Strategy",
+  "Entrepreneurship",
+  "Leadership Development",
+  "Work-Life Balance",
+  "Skill Building",
+  "Mentorship",
+];
 export const STATES_LIST = [
   "AL",
   "AK",
