@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { INDUSTRIES_LIST } from '../../constants/lists'
+import { INDUSTRIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
 
 const MentorCareerSetup = () => {
   const navigate = useNavigate()
@@ -13,6 +13,7 @@ const MentorCareerSetup = () => {
     industry: '',
     yearsOfProfExp: '',
     additionalInfo: '',
+    volunteeringFor: [],
   })
 
   useEffect(() => {
@@ -70,6 +71,16 @@ const MentorCareerSetup = () => {
             placeholder="Type to search industry..."
             onChange={handleChange}
             required
+          />
+
+          <SearchableSelect
+            label="Areas you can help mentees with"
+            name="volunteeringFor"
+            value={formData.volunteeringFor}
+            options={MENTORSHIP_TAGS}
+            placeholder="Select all that apply..."
+            onChange={handleChange}
+            isMulti={true}
           />
 
           <label className="block mb-1">Years of Experience</label>
