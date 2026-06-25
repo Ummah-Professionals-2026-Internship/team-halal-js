@@ -30,11 +30,7 @@ router.post('/', requireAuth, async (req, res) => {
       yearsOfProfExp: req.body.yearsOfProfExp,
       maxMentees: req.body.maxMentees,
       frequency: req.body.frequency,
-<<<<<<< HEAD
-      volunteeringFor: req.body.volunteeringFor
-=======
       volunteeringFor: req.body.volunteeringFor || []
->>>>>>> origin/main
     }
 
     await mentor.save()

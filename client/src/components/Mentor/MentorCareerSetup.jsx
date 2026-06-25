@@ -77,7 +77,6 @@ const MentorCareerSetup = () => {
 
           <form onSubmit={handleSubmit} className="w-full">
 
-<<<<<<< HEAD
             <div className="mb-4">
               <label className={labelClass}>Job Title</label>
               <input
@@ -90,28 +89,6 @@ const MentorCareerSetup = () => {
                 required
               />
             </div>
-=======
-          <SearchableSelect
-            label="Areas you can help mentees with"
-            name="volunteeringFor"
-            value={formData.volunteeringFor}
-            options={MENTORSHIP_TAGS}
-            placeholder="Select all that apply..."
-            onChange={handleChange}
-            isMulti={true}
-          />
-
-          <label className="block mb-1">Years of Experience</label>
-          <input
-            type="number"
-            name="yearsOfProfExp"
-            min="0"
-            value={formData.yearsOfProfExp}
-            onChange={handleChange}
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-            required
-          />
->>>>>>> origin/main
 
             <div className="mb-4">
               <label className={labelClass}>Employer</label>
