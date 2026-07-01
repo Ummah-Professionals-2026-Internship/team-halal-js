@@ -162,7 +162,7 @@ const Login = () => {
             type="button"
             id="google-signin-btn"
             onClick={handleGoogleSignIn}
-            className="w-full max-w-[385px] h-[69px] bg-white border border-[#CFC5B3] rounded-lg text-[#3c3c3c] text-[20px] font-semibold flex items-center justify-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] cursor-pointer transition-all duration-200 hover:bg-[#f7f3ee] hover:border-[#b0a899] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-[0.98] block mx-auto"
+            className="w-full max-w-[385px] h-[69px] bg-white border border-[#CFC5B3] rounded-lg text-[#3c3c3c] text-[20px] font-semibold flex items-center justify-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] cursor-pointer transition-all duration-200 hover:bg-[#f7f3ee] hover:border-[#b0a899] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-[0.98] mx-auto"
           >
             <GoogleIcon />
             Sign in with Google
