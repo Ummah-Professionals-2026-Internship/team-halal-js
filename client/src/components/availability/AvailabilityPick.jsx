@@ -29,9 +29,15 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [] }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [], initialSlots=[] }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
+
+  useEffect(()=>{
+    const ids=initialSlots.map(s => `${s.day}-${s.startTime}`)
+  setSelectedSlots(ids)},
+  [JSON.stringify(initialSlots)]
+  )
 
   const isDragging = useRef(false)
   const dragMode = useRef('add')
@@ -75,6 +81,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     })
   }
 
+
   const handleMouseDown = (slotId, isSelected) => {
     isDragging.current = true
     dragMode.current = isSelected ? 'remove' : 'add'
@@ -90,6 +97,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     d.setDate(weekStart.getDate() + i)
     return d.getDate()
   })
+
 
   return (
     <div className="w-full">

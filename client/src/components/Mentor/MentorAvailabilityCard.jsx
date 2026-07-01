@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect} from 'react'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import SectionHeading from '../SectionHeading'
+import useCurrentUser from '../useCurrentUser'
 
 const MentorAvailabilityCard = () => {
-  const [slots, setSlots] = useState([])
+  const {user}=useCurrentUser()
+  const [slots, setSlots] = useState(user?.manualAvailabilitySlots||[])
   const [saved, setSaved] = useState(false)
+  
 
   const handleChange = (next) => {
     setSlots(next)
@@ -14,6 +17,7 @@ const MentorAvailabilityCard = () => {
   const handleSubmit = () => {
     if (slots.length === 0) return
     // Backend wiring comes later — surface a confirmation for now.
+
     setSaved(true)
   }
 
@@ -26,7 +30,7 @@ const MentorAvailabilityCard = () => {
       />
 
       <div className="rounded-xl bg-[#8ACBDB]/25 p-3">
-        <AvailabilityPick title="" onChange={handleChange} />
+        <AvailabilityPick title="" onChange={handleChange}  initialSlots={user?.manualAvailabilitySlots || []}/>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">

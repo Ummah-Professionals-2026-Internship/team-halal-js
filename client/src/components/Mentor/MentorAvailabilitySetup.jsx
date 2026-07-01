@@ -20,6 +20,7 @@ const MentorAvailabilitySetup = () => {
   const [profilePictureName, setProfilePictureName] = useState('')
   const [profilePicture, setProfilePicture] = useState('')
   const [error, setError] = useState('')
+  const [manualAvailabilitySlots, setManualAvailabilitySlots] = useState([])
 
   useEffect(() => {
     const savedTemp = localStorage.getItem('mentorStep3Temp')
@@ -86,7 +87,7 @@ const MentorAvailabilitySetup = () => {
     if (loading) return
     setLoading(true)
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
-    const toSave = { ...saved, frequency, calendarAccess, profilePicture }
+    const toSave = { ...saved, frequency, calendarAccess, profilePicture, manualAvailabilitySlots }
 
     try {
       await createMentorProfile(toSave)
@@ -239,7 +240,7 @@ const MentorAvailabilitySetup = () => {
         {/* Availability Picker */}
         <div className="mb-5">
           <p className="text-sm font-semibold text-slate-700 mb-3">Your Availability</p>
-          <AvailabilityPick />
+          <AvailabilityPick onChange={setManualAvailabilitySlots} />
         </div>
 
         {error && (
