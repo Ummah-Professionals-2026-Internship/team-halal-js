@@ -2,6 +2,7 @@ import { useState, useEffect} from 'react'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import SectionHeading from '../SectionHeading'
 import useCurrentUser from '../useCurrentUser'
+import { apiFetch } from '../../api-calls/client'
 
 const MentorAvailabilityCard = () => {
   const {user}=useCurrentUser()
@@ -14,10 +15,14 @@ const MentorAvailabilityCard = () => {
     setSaved(false)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     if (slots.length === 0) return
-    // Backend wiring comes later — surface a confirmation for now.
-
+    
+    await apiFetch('/api/mentors/me',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({manualAvailabilitySlots:slots})
+     })
     setSaved(true)
   }
 

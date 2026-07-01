@@ -21,7 +21,6 @@ router.post('/', requireAuth, async (req, res) => {
     mentor.university = req.body.university;
     mentor.majors = req.body.majors;
     mentor.calendarAccess = req.body.calendarAccess;
-    mentor.manualAvailabilitySlots = req.body.manualAvailabilitySlots || [];
     mentor.resume = req.body.resume;
     mentor.hasCompletedProfile = true;
     mentor.mentorProfile = {
@@ -33,7 +32,7 @@ router.post('/', requireAuth, async (req, res) => {
       frequency: req.body.frequency,
       volunteeringFor: req.body.volunteeringFor
     }
-
+    mentor.manualAvailabilitySlots = req.body.manualAvailabilitySlots || [];
     await mentor.save()
     res.status(201).json(mentor)
   } catch (err) {
@@ -49,6 +48,26 @@ router.get('/', requireAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+router.patch('/me',requireAuth, async (req, res) => {
+  try{
+    const mentor=await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        manualAvailabilitySlots: req.body.manualAvailabilitySlots
+      },
+      {
+        new:true
+      }
+    )
+      res.json(mentor)
+
+      }
+      catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+    
 })
 
 module.exports = router
