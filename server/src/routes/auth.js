@@ -133,17 +133,17 @@ router.get('/google/signin/callback', async (req, res) => {
     }
 
     const profile = await profileResponse.json();
-    const { sub: googleId, email, given_name: firstName, family_name: lastName } = profile;
+    const { sub: googleId, email, given_name: firstName, family_name: lastName, picture } = profile;
 
     // Find existing user by googleId or email
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (user) {
-      // Link googleId if they previously signed up with email/password
-      if (!user.googleId) {
-        user.googleId = googleId;
-        await user.save();
-      }
+      // Link googleId and keep profile picture in sync with Google
+      let needsSave = false;
+      if (!user.googleId) { user.googleId = googleId; needsSave = true; }
+      if (picture) { user.profilePicture = picture; needsSave = true; }
+      if (needsSave) await user.save();
 
       // Issue JWT and redirect to the right dashboard
       const jwtToken = jwt.sign(
@@ -161,7 +161,7 @@ router.get('/google/signin/callback', async (req, res) => {
 
     // New user — send them to role-selection page with a short-lived temp token
     const tempToken = jwt.sign(
-      { googleId, email, firstName, lastName },
+      { googleId, email, firstName, lastName, picture },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -184,7 +184,7 @@ router.post('/google/register', async (req, res) => {
 
   try {
     const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
-    const { googleId, email, firstName, lastName } = decoded;
+    const { googleId, email, firstName, lastName, picture } = decoded;
 
     // Double-check they haven't registered in the meantime
     const existing = await User.findOne({ $or: [{ googleId }, { email }] });
@@ -192,7 +192,7 @@ router.post('/google/register', async (req, res) => {
       return res.status(400).json({ message: 'An account with this email already exists. Please log in.' });
     }
 
-    const user = new User({ firstName, lastName, email, googleId, role });
+    const user = new User({ firstName, lastName, email, googleId, role, ...(picture && { profilePicture: picture }) });
     await user.save();
 
     const jwtToken = jwt.sign(
