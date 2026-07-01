@@ -57,36 +57,47 @@ function industryCareerAligns(industry, career) {
 // ── Scoring ───────────────────────────────────────────────────────────────────
 
 function scoreCandidate(mentor, mentee) {
-  let score = 0;
+  // Tags are nested under profile subdocs (not top-level fields)
+  const mentorTags = new Set(mentor.mentorProfile?.volunteeringFor || []);
+  const menteeTags = mentee.menteeProfile?.desiredServices || [];
+  const sharedTagsList = menteeTags.filter(t => mentorTags.has(t));
+  const tagPoints = Math.min(sharedTagsList.length * WEIGHTS.TAG_PER_MATCH, WEIGHTS.TAG_CAP);
 
-  // Tag overlap — 10 pts per shared tag, cap 40
-  const mentorTags = new Set(mentor.volunteeringFor || []);
-  const tagHits = (mentee.lookingFor || []).filter(t => mentorTags.has(t)).length;
-  score += Math.min(tagHits * WEIGHTS.TAG_PER_MATCH, WEIGHTS.TAG_CAP);
-
-  // Shared majors — 10 pts each, cap 30
   const mentorMajorSet = new Set((mentor.majors || []).map(m => m.toLowerCase()));
-  const sharedMajors = (mentee.majors || [])
-    .filter(m => mentorMajorSet.has(m.toLowerCase())).length;
-  score += Math.min(sharedMajors * WEIGHTS.MAJOR_PER_MATCH, WEIGHTS.MAJOR_CAP);
+  const sharedMajorsList = (mentee.majors || []).filter(m => mentorMajorSet.has(m.toLowerCase()));
+  const majorPoints = Math.min(sharedMajorsList.length * WEIGHTS.MAJOR_PER_MATCH, WEIGHTS.MAJOR_CAP);
 
-  // Same university — 10 pts
-  if (mentor.university && mentee.university &&
-      mentor.university.toLowerCase() === mentee.university.toLowerCase()) {
-    score += WEIGHTS.UNIVERSITY;
-  }
+  const sameUniversity = !!(mentor.university && mentee.university &&
+    mentor.university.toLowerCase() === mentee.university.toLowerCase());
+  const universityPoints = sameUniversity ? WEIGHTS.UNIVERSITY : 0;
 
-  // Same state — 10 pts
-  if (mentor.state && mentor.state === mentee.state) {
-    score += WEIGHTS.STATE;
-  }
+  const sameState = !!(mentor.state && mentor.state === mentee.state);
+  const statePoints = sameState ? WEIGHTS.STATE : 0;
 
-  // Any availability overlap — 20 pts flat
-  if (hasAvailabilityOverlap(mentor.manualAvailabilitySlots, mentee.manualAvailabilitySlots)) {
-    score += WEIGHTS.AVAILABILITY;
-  }
+  const availabilityOverlap = hasAvailabilityOverlap(
+    mentor.manualAvailabilitySlots, mentee.manualAvailabilitySlots
+  );
+  const availabilityPoints = availabilityOverlap ? WEIGHTS.AVAILABILITY : 0;
 
-  return Math.round((score / MAX_SCORE) * 100);
+  const rawTotal = tagPoints + majorPoints + universityPoints + statePoints + availabilityPoints;
+
+  return {
+    score: Math.round((rawTotal / MAX_SCORE) * 100),
+    breakdown: {
+      sharedTags:          sharedTagsList,
+      sharedMajors:        sharedMajorsList,
+      sameUniversity,
+      sameState,
+      availabilityOverlap,
+      points: {
+        tags:         tagPoints,
+        majors:       majorPoints,
+        university:   universityPoints,
+        state:        statePoints,
+        availability: availabilityPoints
+      }
+    }
+  };
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -126,10 +137,10 @@ async function getRankedMentors(menteeId) {
   });
 
   // Score and rank survivors
-  const scored = capacityFiltered.map(mentor => ({
-    mentor,
-    compatibilityScore: scoreCandidate(mentor, mentee)
-  }));
+  const scored = capacityFiltered.map(mentor => {
+    const { score, breakdown } = scoreCandidate(mentor, mentee);
+    return { mentor, compatibilityScore: score, breakdown };
+  });
   scored.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
 
   return scored;
