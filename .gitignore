@@ -21,3 +21,6 @@ Thumbs.db
 
 # NPM Cache
 server/.npm-cache/
+
+#claude
+.claude
