@@ -150,10 +150,12 @@ router.get('/google/signin/callback', async (req, res) => {
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (user) {
-      // Link googleId and keep profile picture in sync with Google
+      // Link googleId and keep profile picture in sync with Google,
+      // but never overwrite a manually uploaded custom photo
+      const hasCustomPhoto = user.profilePicture && !user.profilePicture.startsWith('https://');
       let needsSave = false;
       if (!user.googleId) { user.googleId = googleId; needsSave = true; }
-      if (picture) { user.profilePicture = picture; needsSave = true; }
+      if (picture && !hasCustomPhoto) { user.profilePicture = picture; needsSave = true; }
       if (needsSave) await user.save();
 
       // Issue JWT and redirect to the right dashboard
