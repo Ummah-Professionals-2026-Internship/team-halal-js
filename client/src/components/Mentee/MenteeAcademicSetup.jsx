@@ -3,10 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import { MAJORS_LIST, UNIVERSITIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
 import googleCalIcon from '../../assets/google-cal-icon.png'
+import { disconnectGoogle } from '../../api-calls/auth'
+import { createMenteeProfile } from '../../api-calls/mentees'
+import { uploadProfilePicture } from '../../api-calls/upload'
 
-const API = import.meta.env.VITE_API_URL || ''
+const apiBaseUrl = import.meta.env.VITE_API_URL || ''
 
 const MenteeAcademicSetup = () => {
   const navigate = useNavigate()
@@ -16,6 +19,7 @@ const MenteeAcademicSetup = () => {
     majors: [],
     academicStatus: '',
     desiredCareer: '',
+    lookingFor: [],
     calendarAccess: false,
     profilePicture: null,
     additionalInfo: '',
@@ -44,23 +48,13 @@ const MenteeAcademicSetup = () => {
       return;
     }
     localStorage.setItem('menteeStep2Temp', JSON.stringify({ formData, profilePictureName }));
-    window.location.href = `${API}/api/auth/google?token=${token}`;
+    window.location.href = `${apiBaseUrl}/api/auth/google?token=${token}`;
   };
 
   const handleDisconnectCalendar = async () => {
-    const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`${API}/api/auth/google/disconnect`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        setFormData(prev => ({ ...prev, calendarAccess: false }));
-      } else {
-        alert('Failed to disconnect calendar.');
-      }
+      await disconnectGoogle();
+      setFormData(prev => ({ ...prev, calendarAccess: false }));
     } catch (err) {
       console.error(err);
       alert('Error disconnecting calendar.');
@@ -108,30 +102,17 @@ const MenteeAcademicSetup = () => {
     setUploadingPic(true)
     setPicMessage('Uploading picture...')
 
-    const token = localStorage.getItem('token')
     const fData = new FormData()
     fData.append('profilePicture', file)
 
     try {
-      const response = await fetch(API + '/api/upload/profile-picture', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: fData
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setFormData(prev => ({
-          ...prev,
-          profilePicture: data.filePath
-        }))
-        setProfilePictureName(file.name)
-        setPicMessage('')
-      } else {
-        setPicMessage('Upload failed.')
-      }
+      const data = await uploadProfilePicture(fData);
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: data.filePath
+      }))
+      setProfilePictureName(file.name)
+      setPicMessage('')
     } catch (err) {
       console.error(err)
       setPicMessage('Error uploading picture.')
@@ -151,27 +132,12 @@ const MenteeAcademicSetup = () => {
       ...formData
     }
 
-    const token = localStorage.getItem('token')
-
     try {
-      const response = await fetch(API + '/api/mentees', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(toSave),
-      })
-
-      if (response.ok) {
-        localStorage.removeItem('menteeStep1')
-        localStorage.removeItem('menteeResumeData')
-        localStorage.removeItem('menteeStep2Temp')
-        navigate('/mentee-dashboard')
-      } else {
-        alert('Failed to save profile')
-        setLoading(false)
-      }
+      await createMenteeProfile(toSave);
+      localStorage.removeItem('menteeStep1')
+      localStorage.removeItem('menteeResumeData')
+      localStorage.removeItem('menteeStep2Temp')
+      navigate('/mentee-dashboard')
     } catch (error) {
       console.error(error)
       alert('Something went wrong')
@@ -236,6 +202,16 @@ const MenteeAcademicSetup = () => {
 
 
 
+          <SearchableSelect
+            label="What are you looking for in a mentor?"
+            name="lookingFor"
+            value={formData.lookingFor}
+            options={MENTORSHIP_TAGS}
+            placeholder="Select all that apply..."
+            onChange={handleChange}
+            isMulti={true}
+          />
+
           {/* Google Calendar Connection Card */}
           <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-3 text-left">
@@ -283,7 +259,7 @@ const MenteeAcademicSetup = () => {
                 {formData.profilePicture ? (
                   <>
                     <img 
-                      src={API + formData.profilePicture} 
+                      src={apiBaseUrl + formData.profilePicture} 
                       alt="Profile Preview" 
                       className="w-full h-full object-cover"
                     />
