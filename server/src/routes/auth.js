@@ -4,6 +4,8 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -76,4 +78,147 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// GET /api/auth/google/signin - Initiate Google Sign-In OAuth flow (no JWT required)
+router.get('/google/signin', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = process.env.GOOGLE_SIGNIN_REDIRECT_URI;
+
+  if (!clientId || !redirectUri) {
+    return res.status(500).json({ message: 'Google Sign-In is not configured on the server.' });
+  }
+
+  const scope = 'openid profile email';
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=select_account`;
+
+  return res.redirect(url);
+});
+
+// GET /api/auth/google/signin/callback - Handle Google Sign-In callback
+router.get('/google/signin/callback', async (req, res) => {
+  const { code, error } = req.query;
+
+  if (error || !code) {
+    return res.redirect(`${FRONTEND_URL}/login?googleError=cancelled`);
+  }
+
+  try {
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_SIGNIN_REDIRECT_URI,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      console.error('Google token exchange failed:', await tokenResponse.text());
+      return res.redirect(`${FRONTEND_URL}/login?googleError=token`);
+    }
+
+    const tokenData = await tokenResponse.json();
+
+    // Get user's profile from Google
+    const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+
+    if (!profileResponse.ok) {
+      console.error('Google profile fetch failed:', await profileResponse.text());
+      return res.redirect(`${FRONTEND_URL}/login?googleError=profile`);
+    }
+
+    const profile = await profileResponse.json();
+    const { sub: googleId, email, given_name: firstName, family_name: lastName } = profile;
+
+    // Find existing user by googleId or email
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      // Link googleId if they previously signed up with email/password
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
+
+      // Issue JWT and redirect to the right dashboard
+      const jwtToken = jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const destination = user.hasCompletedProfile
+        ? (user.role === 'mentor' ? '/mentor-dashboard' : '/mentee-dashboard')
+        : (user.role === 'mentor' ? '/mentor/profile-setup' : '/mentee/profile-setup');
+
+      return res.redirect(`${FRONTEND_URL}/login?token=${jwtToken}&dest=${encodeURIComponent(destination)}`);
+    }
+
+    // New user — send them to role-selection page with a short-lived temp token
+    const tempToken = jwt.sign(
+      { googleId, email, firstName, lastName },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    return res.redirect(`${FRONTEND_URL}/google-register?tempToken=${tempToken}`);
+
+  } catch (err) {
+    console.error('Google sign-in callback error:', err);
+    return res.redirect(`${FRONTEND_URL}/login?googleError=server`);
+  }
+});
+
+// POST /api/auth/google/register - Complete registration for new Google users (role selection)
+router.post('/google/register', async (req, res) => {
+  const { tempToken, role } = req.body;
+
+  if (!tempToken || !role) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
+
+  try {
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    const { googleId, email, firstName, lastName } = decoded;
+
+    // Double-check they haven't registered in the meantime
+    const existing = await User.findOne({ $or: [{ googleId }, { email }] });
+    if (existing) {
+      return res.status(400).json({ message: 'An account with this email already exists. Please log in.' });
+    }
+
+    const user = new User({ firstName, lastName, email, googleId, role });
+    await user.save();
+
+    const jwtToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      token: jwtToken,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        hasCompletedProfile: user.hasCompletedProfile,
+      },
+    });
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Session expired. Please sign in with Google again.' });
+    }
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;
+
