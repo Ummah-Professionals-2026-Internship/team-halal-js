@@ -11,4 +11,6 @@ const matchSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+matchSchema.index({ mentor: 1, status: 1 });
+
 module.exports = mongoose.model('Match', matchSchema);

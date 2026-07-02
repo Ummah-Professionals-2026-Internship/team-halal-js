@@ -14,7 +14,7 @@ router.post('/', requireAuth, async (req, res) => {
     mentor.phone = req.body.phone;
     mentor.linkedinUrl = req.body.linkedinUrl;
     mentor.referralSource = req.body.referralSource;
-    mentor.profilePicture = req.body.profilePicture;
+    if (req.body.profilePicture) mentor.profilePicture = req.body.profilePicture;
     mentor.state = req.body.state;
     mentor.timeZone = req.body.timeZone;
     mentor.additionalInfo = req.body.additionalInfo;
@@ -30,7 +30,7 @@ router.post('/', requireAuth, async (req, res) => {
       yearsOfProfExp: req.body.yearsOfProfExp,
       maxMentees: req.body.maxMentees,
       frequency: req.body.frequency,
-      volunteeringFor: req.body.volunteeringFor
+      volunteeringFor: req.body.volunteeringFor || []
     }
     mentor.manualAvailabilitySlots = req.body.manualAvailabilitySlots || [];
     await mentor.save()

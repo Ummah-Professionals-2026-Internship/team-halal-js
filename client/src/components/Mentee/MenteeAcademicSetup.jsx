@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import { MAJORS_LIST, UNIVERSITIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
 import googleCalIcon from '../../assets/google-cal-icon.png'
 import { disconnectGoogle } from '../../api-calls/auth'
 import { createMenteeProfile } from '../../api-calls/mentees'
@@ -19,6 +19,7 @@ const MenteeAcademicSetup = () => {
     majors: [],
     academicStatus: '',
     desiredCareer: '',
+    lookingFor: [],
     calendarAccess: false,
     profilePicture: null,
     additionalInfo: '',
@@ -31,6 +32,19 @@ const MenteeAcademicSetup = () => {
       if (savedFormData) setFormData(savedFormData);
       if (savedPicName) setProfilePictureName(savedPicName);
       localStorage.removeItem('menteeStep2Temp');
+      return;
+    }
+    // Pre-fill with existing profile picture (e.g. Google photo) if no manual upload yet
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.profilePicture) {
+            setFormData(prev => ({ ...prev, profilePicture: data.profilePicture }));
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -201,6 +215,16 @@ const MenteeAcademicSetup = () => {
 
 
 
+          <SearchableSelect
+            label="What are you looking for in a mentor?"
+            name="lookingFor"
+            value={formData.lookingFor}
+            options={MENTORSHIP_TAGS}
+            placeholder="Select all that apply..."
+            onChange={handleChange}
+            isMulti={true}
+          />
+
           {/* Google Calendar Connection Card */}
           <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-3 text-left">
@@ -248,7 +272,8 @@ const MenteeAcademicSetup = () => {
                 {formData.profilePicture ? (
                   <>
                     <img 
-                      src={apiBaseUrl + formData.profilePicture} 
+                      src={formData.profilePicture.startsWith('http') ? formData.profilePicture : apiBaseUrl + formData.profilePicture} 
+                      referrerPolicy="no-referrer"
                       alt="Profile Preview" 
                       className="w-full h-full object-cover"
                     />

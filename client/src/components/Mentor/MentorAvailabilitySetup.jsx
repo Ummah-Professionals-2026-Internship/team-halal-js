@@ -30,6 +30,15 @@ const MentorAvailabilitySetup = () => {
       if (parsed.profilePicture) setProfilePicture(parsed.profilePicture)
       if (parsed.profilePictureName) setProfilePictureName(parsed.profilePictureName)
       localStorage.removeItem('mentorStep3Temp')
+      return
+    }
+    // Pre-fill with existing profile picture (e.g. Google photo) if no manual upload yet
+    const token = localStorage.getItem('token')
+    if (token) {
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data?.profilePicture && !profilePicture) setProfilePicture(data.profilePicture) })
+        .catch(() => {})
     }
   }, [])
 
@@ -151,7 +160,8 @@ const MentorAvailabilitySetup = () => {
               {profilePicture ? (
                 <>
                   <img
-                    src={apiBaseUrl + profilePicture}
+                    src={profilePicture.startsWith('http') ? profilePicture : apiBaseUrl + profilePicture}
+                    referrerPolicy="no-referrer"
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
                   />

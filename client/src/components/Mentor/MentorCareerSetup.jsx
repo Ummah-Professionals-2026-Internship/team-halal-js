@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { INDUSTRIES_LIST } from '../../constants/lists'
+import { INDUSTRIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
 
 const inputClass = "border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors"
 const labelClass = "block text-sm font-medium text-slate-700 mb-1.5"
@@ -16,6 +16,7 @@ const MentorCareerSetup = () => {
     industry: '',
     yearsOfProfExp: '',
     additionalInfo: '',
+    volunteeringFor: [],
   })
 
   useEffect(() => {

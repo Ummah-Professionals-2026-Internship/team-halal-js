@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import PageLayoutDashboard from '../PageLayoutDashboard';
@@ -13,6 +13,10 @@ const MenteeSchedulePage = () => {
   const navigate = useNavigate();
   const mentor = state?.mentor;
   const mentorName = mentor ? `${mentor.firstName} ${mentor.lastName}` : 'Mentor';
+  const mentorSlots = (mentor?.manualAvailabilitySlots||[]).map(
+    slot => `${slot.day}-${slot.startTime}`
+  )
+  const [selectedSlot, setSelectedSlot] = useState(null)
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
@@ -25,7 +29,7 @@ const MenteeSchedulePage = () => {
             {mentor && <MentorProfileCard mentor={mentor} />}
 
             <div className="flex-1 bg-[#C5DCE8] rounded-2xl p-4 flex flex-col gap-3">
-              <AvailabilityPick title={`${mentorName}'s Availability`} readOnly />
+              <AvailabilityPick title={`${mentorName}'s Availability`} mentorSlots={mentorSlots} readOnly onSlotSelect={setSelectedSlot} selectedSlot={selectedSlot} />
 
               <div className="text-center">
                 <p className="font-semibold text-[#00212C] text-sm">Auto-Selected Meeting Time:</p>
