@@ -9,7 +9,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // GET /api/auth/me - Get current user
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('firstName lastName role profilePicture mentorProfile')
+    const user = await User.findById(req.user.id).select('firstName lastName role profilePicture mentorProfile manualAvailabilitySlots')
     if (!user) return res.status(404).json({ message: 'User not found' })
     res.json(user)
   } catch (err) {

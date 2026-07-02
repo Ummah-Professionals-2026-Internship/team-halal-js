@@ -1,19 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect} from 'react'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import SectionHeading from '../SectionHeading'
+import useCurrentUser from '../useCurrentUser'
+import { apiFetch } from '../../api-calls/client'
 
 const MentorAvailabilityCard = () => {
-  const [slots, setSlots] = useState([])
+  const {user}=useCurrentUser()
+  const [slots, setSlots] = useState(user?.manualAvailabilitySlots||[])
   const [saved, setSaved] = useState(false)
+  
 
   const handleChange = (next) => {
     setSlots(next)
     setSaved(false)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     if (slots.length === 0) return
-    // Backend wiring comes later — surface a confirmation for now.
+    
+    await apiFetch('/api/mentors/me',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({manualAvailabilitySlots:slots})
+     })
     setSaved(true)
   }
 
@@ -26,7 +35,7 @@ const MentorAvailabilityCard = () => {
       />
 
       <div className="rounded-xl bg-[#8ACBDB]/25 p-3">
-        <AvailabilityPick title="" onChange={handleChange} />
+        <AvailabilityPick title="" onChange={handleChange}  initialSlots={user?.manualAvailabilitySlots || []}/>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
