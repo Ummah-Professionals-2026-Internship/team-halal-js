@@ -29,7 +29,7 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [] }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
 
@@ -116,17 +116,23 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             {times.map((time) => (
               <React.Fragment key={time}>
                 <div className="flex h-4 items-center text-gray-500 whitespace-nowrap pr-1">{time}</div>
-                {days.map((day) => {
+                {days.map((day, dayIdx) => {
                   const slotId = `${day}-${time}`
                   const isSelected = selectedSlots.includes(slotId)
+                  const colDate = new Date(weekStart)
+                  colDate.setDate(weekStart.getDate() + dayIdx)
+                  colDate.setHours(23, 59, 59, 999)
+                  const isPast = colDate < new Date()
                   return (
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={readOnly ? undefined : () => handleMouseDown(slotId, isSelected)}
+                      onMouseDown={readOnly ? () => !isPast && mentorSlots.includes(slotId) && onSlotSelect?.(slotId) : () => handleMouseDown(slotId, isSelected)}
                       onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
                       className={`h-4 rounded-none select-none transition ${
+                        isPast ? 'bg-gray-200' :
                         conflicts.includes(slotId) ? 'bg-red-400' :
+                        selectedSlot === slotId ? 'bg-purple-300' :
                         sessions.includes(slotId) ? 'bg-purple-300' :
                         (readOnly ? mentorSlots : selectedSlots).includes(slotId) ? 'bg-green-300' :
                         readOnly ? 'bg-gray-300' : 'bg-gray-300 hover:bg-green-100'
