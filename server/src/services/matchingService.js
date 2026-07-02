@@ -2,19 +2,16 @@ const User = require('../models/User');
 const Match = require('../models/Match');
 
 const WEIGHTS = {
+  TAG_PER_MATCH:   10,
+  TAG_CAP:         40,
   MAJOR_PER_MATCH: 10,
   MAJOR_CAP:       30,
   UNIVERSITY:      10,
   STATE:           10,
-  TIMEZONE:        10,
   AVAILABILITY:    20,
 };
-// 40 pts are reserved for tag overlap (mentee.lookingFor ∩ mentor.volunteeringFor).
-// That field pair doesn't exist in the schema yet — it will be the highest-weighted
-// signal once the teammate adds it to the profile forms (follow-up PR).
-const TAG_RESERVED = 40;
-const MAX_SCORE = TAG_RESERVED + WEIGHTS.MAJOR_CAP + WEIGHTS.UNIVERSITY +
-                  WEIGHTS.STATE + WEIGHTS.TIMEZONE + WEIGHTS.AVAILABILITY; // 120
+const MAX_SCORE = WEIGHTS.TAG_CAP + WEIGHTS.MAJOR_CAP + WEIGHTS.UNIVERSITY +
+                  WEIGHTS.STATE + WEIGHTS.AVAILABILITY; // 110
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -30,17 +27,16 @@ function parseMinutes(timeStr) {
   return hours * 60 + parseInt(m, 10);
 }
 
-function countAvailabilityOverlap(mentorSlots = [], menteeSlots = []) {
-  let count = 0;
+function hasAvailabilityOverlap(mentorSlots = [], menteeSlots = []) {
   for (const ms of mentorSlots) {
     for (const ts of menteeSlots) {
       if (!ms.day || ms.day !== ts.day) continue;
       const msS = parseMinutes(ms.startTime), msE = parseMinutes(ms.endTime);
       const tsS = parseMinutes(ts.startTime), tsE = parseMinutes(ts.endTime);
-      if (msS < tsE && msE > tsS) count++;
+      if (msS < tsE && msE > tsS) return true;
     }
   }
-  return count;
+  return false;
 }
 
 // Checks if mentor's industry and mentee's desired career share meaningful signal.
@@ -63,40 +59,32 @@ function industryCareerAligns(industry, career) {
 function scoreCandidate(mentor, mentee) {
   let score = 0;
 
-  // ── TAG OVERLAP seam (40 pts reserved) ───────────────────────────────────
-  // When lookingFor[] (mentee) and volunteeringFor[] (mentor) are added to the
-  // schema, replace the zero below with:
-  //   const tagHits = (mentee.lookingFor || [])
-  //     .filter(t => (mentor.volunteeringFor || []).includes(t)).length;
-  //   score += Math.min(tagHits * 10, TAG_RESERVED);
-  score += 0;
-  // ─────────────────────────────────────────────────────────────────────────
+  // Tag overlap — 10 pts per shared tag, cap 40
+  const mentorTags = new Set(mentor.volunteeringFor || []);
+  const tagHits = (mentee.lookingFor || []).filter(t => mentorTags.has(t)).length;
+  score += Math.min(tagHits * WEIGHTS.TAG_PER_MATCH, WEIGHTS.TAG_CAP);
 
-  // Shared majors (10 pts each, cap 30)
+  // Shared majors — 10 pts each, cap 30
   const mentorMajorSet = new Set((mentor.majors || []).map(m => m.toLowerCase()));
   const sharedMajors = (mentee.majors || [])
     .filter(m => mentorMajorSet.has(m.toLowerCase())).length;
   score += Math.min(sharedMajors * WEIGHTS.MAJOR_PER_MATCH, WEIGHTS.MAJOR_CAP);
 
-  // Same university (10 pts)
+  // Same university — 10 pts
   if (mentor.university && mentee.university &&
       mentor.university.toLowerCase() === mentee.university.toLowerCase()) {
     score += WEIGHTS.UNIVERSITY;
   }
 
-  // Same state (10 pts)
+  // Same state — 10 pts
   if (mentor.state && mentor.state === mentee.state) {
     score += WEIGHTS.STATE;
   }
 
-  // Same timezone (10 pts)
-  if (mentor.timeZone && mentor.timeZone === mentee.timeZone) {
-    score += WEIGHTS.TIMEZONE;
+  // Any availability overlap — 20 pts flat
+  if (hasAvailabilityOverlap(mentor.manualAvailabilitySlots, mentee.manualAvailabilitySlots)) {
+    score += WEIGHTS.AVAILABILITY;
   }
-
-  // Availability overlap (0–20 pts; 3 overlapping slots earns full marks)
-  const overlaps = countAvailabilityOverlap(mentor.manualAvailabilitySlots, mentee.manualAvailabilitySlots);
-  score += Math.round(Math.min(overlaps, 3) / 3 * WEIGHTS.AVAILABILITY);
 
   return Math.round((score / MAX_SCORE) * 100);
 }

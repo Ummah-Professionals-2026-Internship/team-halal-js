@@ -8,6 +8,7 @@ const menteeRoutes = require('./routes/Mentee');
 const matchRoutes = require('./routes/matches');
 const uploadRoutes = require('./routes/upload');
 const calendarRoutes = require('./routes/calendar');
+const sessionRoutes = require('./routes/sessions');
 
 // Connect to database
 connectDB();
@@ -29,6 +30,7 @@ app.use('/api/mentors', mentorRoutes);
 app.use('/api/mentees', menteeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -27,7 +27,13 @@ const userSchema = new mongoose.Schema({
 
     password: {
         type: String,
-        required: [true, 'Password is required']
+        required: false
+    },
+
+    googleId: {
+        type: String,
+        sparse: true,
+        unique: true
     },
 
     timeZone: {
@@ -95,17 +101,19 @@ const userSchema = new mongoose.Schema({
         industry: String,
         yearsOfProfExp: Number,
         maxMentees: Number,
-        frequency: String
+        frequency: String,
+        volunteeringFor: { type: [String], enum: ['healthcare service', 'mentorship program', 'resume review', 'mock interview', 'general career advice']}
     },
 
     menteeProfile: {
         academicStatus: String,
-        desiredCareer: String
+        desiredCareer: String,
+        desiredServices: {type: [String], enum: ['healthcare service', 'mentorship program', 'general career advice', 'resume review', 'interview prep']}
     }
 },{timestamps:true})
 
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+  if (!this.isModified('password') || !this.password) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
@@ -160,5 +168,7 @@ userSchema.pre('findOneAndDelete', async function (next) {
     next(err);
   }
 });
+
+userSchema.index({ role: 1, hasCompletedProfile: 1 });
 
 module.exports = mongoose.model('User', userSchema);

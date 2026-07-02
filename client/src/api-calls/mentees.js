@@ -10,7 +10,7 @@ export async function createMenteeProfile(profileData) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Failed to save mentee profile');
+    throw new Error(data.error || data.message || 'Failed to save mentee profile');
   }
 
   return data;
@@ -28,7 +28,7 @@ export async function updateMenteeProfile(updates) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Failed to update mentee profile');
+    throw new Error(data.error || data.message || 'Failed to update mentee profile');
   }
 
   return data;
@@ -40,7 +40,7 @@ export async function getMatchSuggestions() {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Failed to fetch matches');
+    throw new Error(data.error || data.message || 'Failed to fetch matches');
   }
 
   return data;

@@ -14,7 +14,7 @@ router.post('/', requireAuth, async (req, res) => {
     mentee.phone = req.body.phone;
     mentee.linkedinUrl = req.body.linkedinUrl;
     mentee.referralSource = req.body.referralSource;
-    mentee.profilePicture = req.body.profilePicture;
+    if (req.body.profilePicture) mentee.profilePicture = req.body.profilePicture;
     mentee.state = req.body.state;
     mentee.timeZone = req.body.timeZone;
     mentee.additionalInfo = req.body.additionalInfo;
@@ -25,7 +25,8 @@ router.post('/', requireAuth, async (req, res) => {
     mentee.hasCompletedProfile = true;
     mentee.menteeProfile = {
       academicStatus: req.body.academicStatus,
-      desiredCareer: req.body.desiredCareer
+      desiredCareer: req.body.desiredCareer,
+      desiredServices: req.body.desiredServices
     }
     await mentee.save();
     res.status(201).json({ message: 'Mentee saved successfully' });
