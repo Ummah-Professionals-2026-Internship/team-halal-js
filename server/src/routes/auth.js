@@ -144,17 +144,25 @@ router.get('/google/signin/callback', async (req, res) => {
     }
 
     const profile = await profileResponse.json();
-    const { sub: googleId, email, given_name: firstName, family_name: lastName, picture } = profile;
+    const googleId = profile.id || profile.sub;
+    const { email, given_name: firstName, family_name: lastName, picture } = profile;
 
-    // Find existing user by googleId or email
-    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+    // Find existing user by googleId or email (avoid matching unset/undefined fields in MongoDB)
+    const queryConditions = [];
+    if (googleId) queryConditions.push({ googleId });
+    if (email) queryConditions.push({ email });
+
+    let user = null;
+    if (queryConditions.length > 0) {
+      user = await User.findOne({ $or: queryConditions });
+    }
 
     if (user) {
       // Link googleId and keep profile picture in sync with Google,
       // but never overwrite a manually uploaded custom photo
       const hasCustomPhoto = user.profilePicture && !user.profilePicture.startsWith('https://');
       let needsSave = false;
-      if (!user.googleId) { user.googleId = googleId; needsSave = true; }
+      if (!user.googleId && googleId) { user.googleId = googleId; needsSave = true; }
       if (picture && !hasCustomPhoto) { user.profilePicture = picture; needsSave = true; }
       if (needsSave) await user.save();
 
@@ -199,8 +207,15 @@ router.post('/google/register', async (req, res) => {
     const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
     const { googleId, email, firstName, lastName, picture } = decoded;
 
-    // Double-check they haven't registered in the meantime
-    const existing = await User.findOne({ $or: [{ googleId }, { email }] });
+    // Double-check they haven't registered in the meantime (avoid matching unset/undefined fields)
+    const queryConditions = [];
+    if (googleId) queryConditions.push({ googleId });
+    if (email) queryConditions.push({ email });
+
+    let existing = null;
+    if (queryConditions.length > 0) {
+      existing = await User.findOne({ $or: queryConditions });
+    }
     if (existing) {
       return res.status(400).json({ message: 'An account with this email already exists. Please log in.' });
     }

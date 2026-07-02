@@ -29,7 +29,7 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [] }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
 
@@ -121,19 +121,26 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             {times.map((time) => (
               <React.Fragment key={time}>
                 <div className="flex h-4 items-center text-gray-500 whitespace-nowrap pr-1">{time}</div>
-                {days.map((day, i) => {
-                  const slotId = `${isoDate(weekDates[i])}-${time}`
+                {days.map((day, dayIdx) => {
+                  const slotId = `${day}-${time}`
                   const isSelected = selectedSlots.includes(slotId)
+                  const colDate = new Date(weekStart)
+                  colDate.setDate(weekStart.getDate() + dayIdx)
+                  colDate.setHours(23, 59, 59, 999)
+                  const isPast = colDate < new Date()
                   return (
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={() => handleMouseDown(slotId, isSelected)}
-                      onMouseEnter={() => handleMouseEnter(slotId)}
+                      onMouseDown={readOnly ? () => !isPast && mentorSlots.includes(slotId) && onSlotSelect?.(slotId) : () => handleMouseDown(slotId, isSelected)}
+                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
                       className={`h-4 rounded-none select-none transition ${
+                        isPast ? 'bg-gray-200' :
                         conflicts.includes(slotId) ? 'bg-red-400' :
+                        selectedSlot === slotId ? 'bg-purple-300' :
                         sessions.includes(slotId) ? 'bg-purple-300' :
-                        isSelected ? 'bg-green-300' : 'bg-gray-300 hover:bg-green-100'
+                        (readOnly ? mentorSlots : selectedSlots).includes(slotId) ? 'bg-green-300' :
+                        readOnly ? 'bg-gray-300' : 'bg-gray-300 hover:bg-green-100'
                       }`}
                     />
                   )
@@ -148,13 +155,13 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             <div className="w-2 h-2 rounded-full bg-red-400" /> Your Conflicts
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-300" /> Your Mentoring Hours
+            <div className="w-2 h-2 rounded-full bg-green-300" /> {readOnly ? "Mentor's Availability" : 'Your Mentoring Hours'}
           </div>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-purple-300" /> Your Sessions
           </div>
         </div>
-        <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>
+        {!readOnly && <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>}
 
         {selectedSlots.length > 0 && (
           <div className="mt-2 border-t pt-2">

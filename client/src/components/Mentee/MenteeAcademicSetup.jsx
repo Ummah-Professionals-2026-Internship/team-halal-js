@@ -32,6 +32,19 @@ const MenteeAcademicSetup = () => {
       if (savedFormData) setFormData(savedFormData);
       if (savedPicName) setProfilePictureName(savedPicName);
       localStorage.removeItem('menteeStep2Temp');
+      return;
+    }
+    // Pre-fill with existing profile picture (e.g. Google photo) if no manual upload yet
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.profilePicture) {
+            setFormData(prev => ({ ...prev, profilePicture: data.profilePicture }));
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -259,7 +272,8 @@ const MenteeAcademicSetup = () => {
                 {formData.profilePicture ? (
                   <>
                     <img 
-                      src={apiBaseUrl + formData.profilePicture} 
+                      src={formData.profilePicture.startsWith('http') ? formData.profilePicture : apiBaseUrl + formData.profilePicture} 
+                      referrerPolicy="no-referrer"
                       alt="Profile Preview" 
                       className="w-full h-full object-cover"
                     />
