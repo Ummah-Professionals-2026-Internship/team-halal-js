@@ -8,3 +8,12 @@ export async function getSessions(){
     }
     return data;
 }
+
+export async function getMenteeSessions(){
+    const res = await apiFetch('/api/sessions/mentee');
+    const data = await res.json();
+    if(!res.ok){
+        throw new Error(data.error || 'Failed to load sessions');
+    }
+    return data;
+}
