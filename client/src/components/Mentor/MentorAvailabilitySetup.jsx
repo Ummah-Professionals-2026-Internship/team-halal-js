@@ -20,6 +20,7 @@ const MentorAvailabilitySetup = () => {
   const [profilePictureName, setProfilePictureName] = useState('')
   const [profilePicture, setProfilePicture] = useState('')
   const [error, setError] = useState('')
+  const [manualAvailabilitySlots, setManualAvailabilitySlots] = useState([])
 
   useEffect(() => {
     const savedTemp = localStorage.getItem('mentorStep3Temp')
@@ -29,6 +30,15 @@ const MentorAvailabilitySetup = () => {
       if (parsed.profilePicture) setProfilePicture(parsed.profilePicture)
       if (parsed.profilePictureName) setProfilePictureName(parsed.profilePictureName)
       localStorage.removeItem('mentorStep3Temp')
+      return
+    }
+    // Pre-fill with existing profile picture (e.g. Google photo) if no manual upload yet
+    const token = localStorage.getItem('token')
+    if (token) {
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data?.profilePicture && !profilePicture) setProfilePicture(data.profilePicture) })
+        .catch(() => {})
     }
   }, [])
 
@@ -86,7 +96,7 @@ const MentorAvailabilitySetup = () => {
     if (loading) return
     setLoading(true)
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
-    const toSave = { ...saved, frequency, calendarAccess, profilePicture }
+    const toSave = { ...saved, frequency, calendarAccess, profilePicture, manualAvailabilitySlots }
 
     try {
       await createMentorProfile(toSave)
@@ -150,7 +160,8 @@ const MentorAvailabilitySetup = () => {
               {profilePicture ? (
                 <>
                   <img
-                    src={apiBaseUrl + profilePicture}
+                    src={profilePicture.startsWith('http') ? profilePicture : apiBaseUrl + profilePicture}
+                    referrerPolicy="no-referrer"
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
                   />
@@ -239,7 +250,7 @@ const MentorAvailabilitySetup = () => {
         {/* Availability Picker */}
         <div className="mb-5">
           <p className="text-sm font-semibold text-slate-700 mb-3">Your Availability</p>
-          <AvailabilityPick />
+          <AvailabilityPick onChange={setManualAvailabilitySlots} />
         </div>
 
         {error && (

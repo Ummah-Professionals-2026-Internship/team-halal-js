@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Register from './components/Register';
 import Login from './components/Login';
+import GoogleRegister from './components/GoogleRegister';
 import MentorMenteeProfile from './MentorMenteeProfile';
 import MentorProfileSetup from './components/Mentor/MentorProfileSetup';
 import MentorCareerSetup from './components/Mentor/MentorCareerSetup';
@@ -10,6 +11,9 @@ import MenteeProfileSetup from './components/Mentee/MenteeProfileSetup';
 import MenteeAcademicSetup from './components/Mentee/MenteeAcademicSetup';
 import MentorDashboard from './components/Mentor/MentorDashboard';
 import MenteeDashboard from './components/Mentee/MenteeDashboard';
+import MenteeSchedulePage from './components/Mentee/MenteeSchedulePage';
+import MenteeBooking from './components/Mentee/MenteeBooking';
+import MenteeSessionsDashboard from './components/Mentee/MenteeSessionsDashboard';
 
 function App() {
   return (
@@ -17,6 +21,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/google-register" element={<GoogleRegister />} />
         
         {/* Profile Wizard Routes */}
         <Route path="/create-profile" element={<MentorMenteeProfile />} />
@@ -29,6 +34,9 @@ function App() {
         {/* Dashboard Routes */}
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />
         <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
+        <Route path="/mentee/schedule" element={<MenteeSchedulePage />} />
+        <Route path="/mentee/booking" element={<MenteeBooking />} />
+        <Route path="/mentee/sessions" element={<MenteeSessionsDashboard />} />
 
         {/* Redirect any other path to /login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

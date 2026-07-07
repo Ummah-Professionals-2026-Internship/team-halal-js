@@ -29,9 +29,15 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [] }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
+
+  useEffect(()=>{
+    const ids=initialSlots.map(s => `${s.day}-${s.startTime}`)
+  setSelectedSlots(ids)},
+  [JSON.stringify(initialSlots)]
+  )
 
   const isDragging = useRef(false)
   const dragMode = useRef('add')
@@ -46,14 +52,21 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     if (!onChange) return
     const allTimes = [...times, '9 PM']
     const slots = selectedSlots.map(slotId => {
-      // slotId format: "YYYY-MM-DD-H AM/PM"
       const parts = slotId.split('-')
-      const date = parts.slice(0, 3).join('-')   // "YYYY-MM-DD"
-      const startTime = parts.slice(3).join('-') // "H AM" or "H PM"
-      const endTime = allTimes[times.indexOf(startTime) + 1] || '9 PM'
-      const dayIndex = new Date(date + 'T00:00:00').getDay()
-      const day = days[dayIndex]
-      return { day, date, startTime, endTime }
+      if (parts.length === 2) {
+        // Weekly recurring format: "DAY-H AM/PM" (e.g. "MON-9 AM")
+        const [day, startTime] = parts
+        const endTime = allTimes[times.indexOf(startTime) + 1] || '9 PM'
+        return { day, startTime, endTime }
+      } else {
+        // Date-specific format: "YYYY-MM-DD-H AM/PM"
+        const date = parts.slice(0, 3).join('-')   // "YYYY-MM-DD"
+        const startTime = parts.slice(3).join('-') // "H AM" or "H PM"
+        const endTime = allTimes[times.indexOf(startTime) + 1] || '9 PM'
+        const dayIndex = new Date(date + 'T00:00:00').getDay()
+        const day = days[dayIndex]
+        return { day, date, startTime, endTime }
+      }
     })
     onChange(slots)
   }, [selectedSlots])
@@ -77,6 +90,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
       return [...prev, slotId]
     })
   }
+
 
   const handleMouseDown = (slotId, isSelected) => {
     isDragging.current = true
@@ -121,19 +135,26 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             {times.map((time) => (
               <React.Fragment key={time}>
                 <div className="flex h-4 items-center text-gray-500 whitespace-nowrap pr-1">{time}</div>
-                {days.map((day, i) => {
-                  const slotId = `${isoDate(weekDates[i])}-${time}`
+                {days.map((day, dayIdx) => {
+                  const slotId = `${day}-${time}`
                   const isSelected = selectedSlots.includes(slotId)
+                  const colDate = new Date(weekStart)
+                  colDate.setDate(weekStart.getDate() + dayIdx)
+                  colDate.setHours(23, 59, 59, 999)
+                  const isPast = colDate < new Date()
                   return (
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={() => handleMouseDown(slotId, isSelected)}
-                      onMouseEnter={() => handleMouseEnter(slotId)}
+                      onMouseDown={readOnly ? () => !isPast && mentorSlots.includes(slotId) && onSlotSelect?.(slotId) : () => handleMouseDown(slotId, isSelected)}
+                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
                       className={`h-4 rounded-none select-none transition ${
+                        isPast ? 'bg-gray-200' :
                         conflicts.includes(slotId) ? 'bg-red-400' :
+                        selectedSlot === slotId ? 'bg-purple-300' :
                         sessions.includes(slotId) ? 'bg-purple-300' :
-                        isSelected ? 'bg-green-300' : 'bg-gray-300 hover:bg-green-100'
+                        (readOnly ? mentorSlots : selectedSlots).includes(slotId) ? 'bg-green-300' :
+                        readOnly ? 'bg-gray-300' : 'bg-gray-300 hover:bg-green-100'
                       }`}
                     />
                   )
@@ -148,13 +169,13 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             <div className="w-2 h-2 rounded-full bg-red-400" /> Your Conflicts
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-300" /> Your Mentoring Hours
+            <div className="w-2 h-2 rounded-full bg-green-300" /> {readOnly ? "Mentor's Availability" : 'Your Mentoring Hours'}
           </div>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-purple-300" /> Your Sessions
           </div>
         </div>
-        <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>
+        {!readOnly && <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>}
 
         {selectedSlots.length > 0 && (
           <div className="mt-2 border-t pt-2">

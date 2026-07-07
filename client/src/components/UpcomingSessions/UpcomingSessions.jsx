@@ -16,7 +16,7 @@ const EmptyState = ({ text }) => (
 
 const UpcomingSessions = () => {
   const {sessions} = useSessions();
-  const upcomingSessions =  sessions.filter(s => s.status === 'scheduled');
+  const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
   const completedSessions = sessions.filter(s => s.status === 'completed');
 
   return (

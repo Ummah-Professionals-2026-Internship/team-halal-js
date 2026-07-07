@@ -52,7 +52,7 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
 
           <div onClick={()=>fileInputRef.current.click()} className="cursor-pointer relative group">
             {userPhoto
-            ? <img src={userPhoto} alt={userName} className="w-12 h-12 rounded-full object-cover shrink-0" />
+            ? <img src={userPhoto} alt={userName} referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover shrink-0" />
             : <div className="w-12 h-12 rounded-full bg-gray-400 shrink-0 flex items-center justify-center text-white text-lg font-bold">
                 {userName?.[0] ?? '?'}
               </div>
