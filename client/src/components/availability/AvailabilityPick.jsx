@@ -29,9 +29,10 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
+  const [slotInfo, setSlotInfo] = useState(null)
 
   useEffect(()=>{
     const ids=initialSlots.map(s => `${s.day}-${s.startTime}`)
@@ -75,12 +76,14 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     const d = new Date(weekStart)
     d.setDate(d.getDate() - 7)
     setWeekStart(d)
+    setSlotInfo(null)
   }
 
   const nextWeek = () => {
     const d = new Date(weekStart)
     d.setDate(d.getDate() + 7)
     setWeekStart(d)
+    setSlotInfo(null)
   }
 
   const applySlot = (slotId) => {
@@ -137,23 +140,45 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                 <div className="flex h-4 items-center text-gray-500 whitespace-nowrap pr-1">{time}</div>
                 {days.map((day, dayIdx) => {
                   const slotId = `${day}-${time}`
+                  const dateSlotId = `${isoDate(weekDates[dayIdx])}-${time}`
                   const isSelected = selectedSlots.includes(slotId)
                   const colDate = new Date(weekStart)
                   colDate.setDate(weekStart.getDate() + dayIdx)
                   colDate.setHours(23, 59, 59, 999)
                   const isPast = colDate < new Date()
+                  const slotDate = new Date(weekDates[dayIdx])
+                  const [hourStr, period] = time.split(' ')
+                  let slotHour = parseInt(hourStr, 10)
+                  if (period === 'PM' && slotHour !== 12) slotHour += 12
+                  if (period === 'AM' && slotHour === 12) slotHour = 0
+                  slotDate.setHours(slotHour, 0, 0, 0)
+                  const now = new Date()
+                  const beyond48hrs = slotDate > new Date(now.getTime() + 48 * 60 * 60 * 1000)
+                  const isMySession = sessions.includes(slotId) || sessions.includes(dateSlotId)
+                  const isConflict = conflicts.includes(slotId) || conflicts.includes(dateSlotId)
+                  const isMentorBusy = mentorBusy.includes(dateSlotId)
+                  const canSelect = readOnly && beyond48hrs && mentorSlots.includes(slotId) && !isConflict && !isMySession && !isMentorBusy
+                  const displayDate = weekDates[dayIdx].toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+                  const handleClick = () => {
+                    if (isMySession) setSlotInfo(`Your session with ${sessionMentorName || 'this mentor'} — ${displayDate} at ${time}`)
+                    else if (isConflict) setSlotInfo(`You have a session with ${conflictInfo[dateSlotId] || 'another mentor'} — ${displayDate} at ${time}`)
+                    else if (isMentorBusy) setSlotInfo(null)
+                    else setSlotInfo(null)
+                  }
                   return (
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={readOnly ? () => !isPast && mentorSlots.includes(slotId) && onSlotSelect?.(slotId) : () => handleMouseDown(slotId, isSelected)}
+                      onMouseDown={canSelect ? () => { onSlotSelect?.(dateSlotId); setSlotInfo(null) } : readOnly ? undefined : () => handleMouseDown(slotId, isSelected)}
                       onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
+                      onClick={handleClick}
                       className={`h-4 rounded-none select-none transition ${
+                        isMySession ? 'bg-purple-300' :
+                        isConflict ? 'bg-red-400' :
                         isPast ? 'bg-gray-200' :
-                        conflicts.includes(slotId) ? 'bg-red-400' :
-                        selectedSlot === slotId ? 'bg-purple-300' :
-                        sessions.includes(slotId) ? 'bg-purple-300' :
-                        (readOnly ? mentorSlots : selectedSlots).includes(slotId) ? 'bg-green-300' :
+                        selectedSlot === dateSlotId ? 'bg-green-600' :
+                        !readOnly && selectedSlots.includes(slotId) ? 'bg-green-300' :
+                        canSelect ? 'bg-green-300' :
                         readOnly ? 'bg-gray-300' : 'bg-gray-300 hover:bg-green-100'
                       }`}
                     />
@@ -166,18 +191,21 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
 
         <div className="flex flex-wrap gap-2 justify-center mt-2 text-gray-600" style={{ fontSize: '9px' }}>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-red-400" /> Your Conflicts
+            <div className="w-2 h-2 rounded-full bg-red-400" /> {readOnly ? 'Your Conflicts' : 'Your Conflicts'}
           </div>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-300" /> {readOnly ? "Mentor's Availability" : 'Your Mentoring Hours'}
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-purple-300" /> Your Sessions
+            <div className="w-2 h-2 rounded-full bg-purple-300" /> {readOnly ? 'Booked With This Mentor' : 'Your Sessions'}
           </div>
         </div>
         {!readOnly && <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>}
+        {slotInfo && (
+          <p className="text-center text-[#00212C] bg-slate-100 rounded-lg px-2 py-1 mt-1" style={{ fontSize: '9px' }}>{slotInfo}</p>
+        )}
 
-        {selectedSlots.length > 0 && (
+        {!readOnly && selectedSlots.length > 0 && (
           <div className="mt-2 border-t pt-2">
             <p className="text-center font-semibold text-gray-700 mb-1" style={{ fontSize: '9px' }}>Selected Hours</p>
             <div className="flex flex-col gap-0.5">

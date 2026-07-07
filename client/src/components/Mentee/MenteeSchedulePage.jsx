@@ -26,15 +26,33 @@ const MenteeSchedulePage = () => {
     slot => `${slot.day}-${slot.startTime}`
   )
   const [selectedSlot, setSelectedSlot] = useState(null)
-  const [mySessions, setMySessions] = useState([])
+  const [mySessionsWithMentor, setMySessionsWithMentor] = useState([])
+  const [myConflicts, setMyConflicts] = useState([])
+  const [conflictInfo, setConflictInfo] = useState({})
   const [bookedSlots, setBookedSlots] = useState([])
 
   useEffect(() => {
+    if (!mentor?._id) return;
     apiFetch('/api/sessions/mentee')
       .then(r => r.json())
-      .then(data => setMySessions(data.filter(s => s.status === 'scheduled').map(s => toDateSlotId(s.scheduledTime))))
+      .then(data => {
+        const scheduled = data.filter(s => s.status === 'scheduled');
+        const mentorId = String(mentor._id);
+        setMySessionsWithMentor(
+          scheduled.filter(s => String(s.mentor?._id || s.mentor) === mentorId).map(s => toDateSlotId(s.scheduledTime))
+        );
+        const others = scheduled.filter(s => String(s.mentor?._id || s.mentor) !== mentorId);
+        setMyConflicts(others.map(s => toDateSlotId(s.scheduledTime)));
+        const info = {};
+        others.forEach(s => {
+          const slotId = toDateSlotId(s.scheduledTime);
+          const m = s.mentor;
+          info[slotId] = m ? `${m.firstName || ''} ${m.lastName || ''}`.trim() : 'another mentor';
+        });
+        setConflictInfo(info);
+      })
       .catch(() => {})
-  }, [])
+  }, [mentor?._id])
 
   useEffect(() => {
     if (!mentor?._id) return;
@@ -58,16 +76,30 @@ const MenteeSchedulePage = () => {
               <AvailabilityPick
                 title={`${mentorName}'s Availability`}
                 mentorSlots={mentorSlots}
-                sessions={mySessions}
-                conflicts={bookedSlots.filter(s => !mySessions.includes(s))}
+                sessions={mySessionsWithMentor}
+                conflicts={myConflicts}
+                mentorBusy={bookedSlots.filter(s => !mySessionsWithMentor.includes(s))}
+                conflictInfo={conflictInfo}
+                sessionMentorName={mentorName}
                 readOnly
                 onSlotSelect={setSelectedSlot}
                 selectedSlot={selectedSlot}
               />
 
+              {selectedSlot && (
+                <p className="text-center text-sm font-semibold text-[#00212C]">
+                  Selected: {(() => {
+                    const parts = selectedSlot.split('-');
+                    const date = new Date(parts.slice(0,3).join('-') + 'T00:00:00');
+                    return `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${parts.slice(3).join('-')}`;
+                  })()}
+                </p>
+              )}
+
               <button
                 onClick={() => navigate('/mentee/booking', { state: { mentor, selectedSlot } })}
-                className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full"
+                disabled={!selectedSlot}
+                className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Confirm Booking
               </button>
