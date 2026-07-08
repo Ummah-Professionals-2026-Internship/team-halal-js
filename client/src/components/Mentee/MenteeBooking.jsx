@@ -10,9 +10,50 @@ const MenteeBooking = () => {
   const navigate = useNavigate();
   const mentor = state?.mentor;
   const mentorName = mentor ? `${mentor.firstName} ${mentor.lastName}` : 'your mentor';
-  const selectedTime = state?.selectedTime || null;
+  const rawSlot = state?.selectedSlot || null;
+  const selectedTime = rawSlot ? (() => {
+    const parts = rawSlot.split('-');
+    const dateStr = parts.slice(0, 3).join('-');
+    const time = parts.slice(3).join('-');
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    const day = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return { day, time };
+  })() : null;
 
   const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const parseScheduledTime = (slot) => {
+    const parts = slot.split('-');
+    const dateStr = parts.slice(0, 3).join('-');
+    const timeStr = parts.slice(3).join('-');
+    const [hourStr, period] = timeStr.split(' ');
+    let hour = parseInt(hourStr, 10);
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    return new Date(`${dateStr}T${String(hour).padStart(2, '0')}:00:00`).toISOString();
+  };
+
+  const handleConfirm = async () => {
+    if (!mentor?._id || !rawSlot) return navigate('/mentee/sessions');
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          mentorId: mentor._id,
+          scheduledTime: parseScheduledTime(rawSlot),
+          service: 'mentorship program',
+          details: note,
+        }),
+      });
+    } finally {
+      setLoading(false);
+      navigate('/mentee/sessions', { state: { mentor } });
+    }
+  };
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
@@ -52,10 +93,11 @@ const MenteeBooking = () => {
             />
 
             <button
-              onClick={() => navigate('/mentee/sessions', { state: { mentor } })}
-              className="bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm w-full"
+              onClick={handleConfirm}
+              disabled={loading}
+              className="bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm w-full disabled:opacity-60"
             >
-              Confirm and Go to Dashboard
+              {loading ? 'Booking...' : 'Confirm and Go to Dashboard'}
             </button>
           </div>
         </div>

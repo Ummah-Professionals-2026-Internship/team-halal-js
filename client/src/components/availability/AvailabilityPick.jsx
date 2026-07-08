@@ -86,9 +86,12 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     setSlotInfo(null)
   }
 
-  const applySlot = (slotId) => {
+  const applySlot = (slotId, dateSlotId = '') => {
     setSelectedSlots(prev => {
-      if (dragMode.current === 'remove') return prev.filter(s => s !== slotId)
+      if (dragMode.current === 'remove') {
+        if (sessions.includes(slotId) || sessions.includes(dateSlotId)) return prev
+        return prev.filter(s => s !== slotId)
+      }
       if (prev.includes(slotId)) return prev
       return [...prev, slotId]
     })
@@ -101,8 +104,8 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     applySlot(slotId)
   }
 
-  const handleMouseEnter = (slotId) => {
-    if (isDragging.current) applySlot(slotId)
+  const handleMouseEnter = (slotId, dateSlotId) => {
+    if (isDragging.current) applySlot(slotId, dateSlotId)
   }
 
   const weekDates = Array.from({ length: 7 }, (_, i) => {
@@ -169,11 +172,11 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={canSelect ? () => { onSlotSelect?.(dateSlotId); setSlotInfo(null) } : readOnly ? undefined : () => handleMouseDown(slotId, isSelected)}
-                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
+                      onMouseDown={canSelect ? () => { onSlotSelect?.(dateSlotId); setSlotInfo(null) } : readOnly ? undefined : isMySession ? undefined : () => handleMouseDown(slotId, isSelected)}
+                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId, dateSlotId)}
                       onClick={handleClick}
                       className={`h-4 rounded-none select-none transition ${
-                        isMySession ? 'bg-purple-300' :
+                        isMySession ? (readOnly ? 'bg-purple-300' : 'bg-red-400') :
                         isConflict ? 'bg-red-400' :
                         isPast ? 'bg-gray-200' :
                         selectedSlot === dateSlotId ? 'bg-green-600' :
@@ -209,11 +212,10 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
           <div className="mt-2 border-t pt-2">
             <p className="text-center font-semibold text-gray-700 mb-1" style={{ fontSize: '9px' }}>Selected Hours</p>
             <div className="flex flex-col gap-0.5">
-              {days.map((day, i) => {
-                const dateStr = isoDate(weekDates[i])
+              {days.map((day) => {
                 const slots = selectedSlots
-                  .filter(s => s.startsWith(dateStr + '-'))
-                  .map(s => s.replace(dateStr + '-', ''))
+                  .filter(s => s.startsWith(day + '-'))
+                  .map(s => s.replace(day + '-', ''))
                 if (slots.length === 0) return null
                 return (
                   <div key={day} className="flex gap-1 items-start" style={{ fontSize: '9px' }}>

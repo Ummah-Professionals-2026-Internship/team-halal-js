@@ -49,8 +49,14 @@ const Login = () => {
         // Fallback: decode role from JWT and go to dashboard
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
-          if (payload.role === 'mentor') navigate('/mentor-dashboard');
-          else navigate('/mentee-dashboard');
+          if (payload.role === 'mentor') {
+            navigate('/mentor-dashboard');
+          } else {
+            fetch('/api/sessions/mentee', { headers: { Authorization: `Bearer ${token}` } })
+              .then(r => r.json())
+              .then(sessions => navigate(sessions.length > 0 ? '/mentee/sessions' : '/mentee-dashboard'))
+              .catch(() => navigate('/mentee-dashboard'));
+          }
         } catch {
           setError('Sign-in failed. Please try again.');
         }
@@ -88,7 +94,11 @@ const Login = () => {
 
         }
         else {
-          navigate('/mentee-dashboard');
+          const token = localStorage.getItem('token');
+          fetch('/api/sessions/mentee', { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(sessions => navigate(sessions.length > 0 ? '/mentee/sessions' : '/mentee-dashboard'))
+            .catch(() => navigate('/mentee-dashboard'));
         }
       }
       else {
