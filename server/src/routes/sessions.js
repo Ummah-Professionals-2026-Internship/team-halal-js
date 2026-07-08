@@ -5,7 +5,7 @@ const User = require('../models/User');
 const Match = require('../models/Match');
 const requireAuth = require('../middleware/requireAuth');
 const { scheduleSessionOnGoogleCalendar } = require('../services/googleCalendarService');
-const { sendSessionConfirmationEmail } = require('../services/emailService');
+const { sendNotification } = require('../services/notificationService');
 
 router.post('/', requireAuth, async (req, res) => {
     try {
@@ -63,9 +63,30 @@ router.post('/', requireAuth, async (req, res) => {
 
         await session.save();
 
-        // Send confirmation email asynchronously (does not block response)
-        sendSessionConfirmationEmail(mentor, mentee, session).catch(err => {
-            console.error('Asynchronous email dispatch failed:', err);
+        // Dispatch unified notification asynchronously (does not block response)
+        const sessionDate = new Date(session.scheduledTime);
+        const formattedDate = sessionDate.toLocaleDateString(undefined, { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        const formattedTime = sessionDate.toLocaleTimeString(undefined, { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+
+        sendNotification({
+            recipientId: mentorId,
+            senderId: menteeId,
+            type: 'session_booked',
+            title: 'New Session Scheduled',
+            message: `${mentee.firstName} ${mentee.lastName} booked a mentorship session with you for ${formattedDate} at ${formattedTime}.`,
+            relatedId: session._id,
+            relatedModel: 'Session',
+            metadata: { session }
+        }).catch(err => {
+            console.error('Asynchronous notification dispatch failed:', err);
         });
 
         res.status(201).json(session);

@@ -9,6 +9,7 @@ const matchRoutes = require('./routes/matches');
 const uploadRoutes = require('./routes/upload');
 const calendarRoutes = require('./routes/calendar');
 const sessionRoutes = require('./routes/sessions');
+const notificationRoutes = require('./routes/notifications');
 
 // Connect to database
 connectDB();
@@ -31,6 +32,7 @@ app.use('/api/mentees', menteeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
