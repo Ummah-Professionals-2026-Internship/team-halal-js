@@ -140,18 +140,20 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                   const isSelected = selectedSlots.includes(slotId)
                   const colDate = new Date(weekStart)
                   colDate.setDate(weekStart.getDate() + dayIdx)
+                  const slotDate = new Date(colDate)
+                  slotDate.setHours(0, 0, 0, 0)
                   colDate.setHours(23, 59, 59, 999)
                   const isPast = colDate < new Date()
                   return (
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={readOnly ? () => !isPast && mentorSlots.includes(slotId) && onSlotSelect?.(slotId) : () => handleMouseDown(slotId, isSelected)}
+                      onMouseDown={readOnly ? () => !isPast && mentorSlots.includes(slotId) && onSlotSelect?.({ slotId, date: slotDate }) : () => handleMouseDown(slotId, isSelected)}
                       onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
                       className={`h-4 rounded-none select-none transition ${
                         isPast ? 'bg-gray-200' :
                         conflicts.includes(slotId) ? 'bg-red-400' :
-                        selectedSlot === slotId ? 'bg-purple-300' :
+                        (selectedSlot === slotId || selectedSlot?.slotId === slotId) ? 'bg-purple-300' :
                         sessions.includes(slotId) ? 'bg-purple-300' :
                         (readOnly ? mentorSlots : selectedSlots).includes(slotId) ? 'bg-green-300' :
                         readOnly ? 'bg-gray-300' : 'bg-gray-300 hover:bg-green-100'

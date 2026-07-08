@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PageLayoutDashboard from '../PageLayoutDashboard';
 import useCurrentUser from '../useCurrentUser';
+import { createSession } from '../../api-calls/sessions';
 
 const MenteeBooking = () => {
   const { user } = useCurrentUser();
@@ -13,6 +14,31 @@ const MenteeBooking = () => {
   const selectedTime = state?.selectedTime || null;
 
   const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleConfirm = async () => {
+    if (!mentor || !selectedTime) {
+      setError("Missing booking information. Please go back and select a slot.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await createSession({
+        scheduledTime: selectedTime.date,
+        mentorId: mentor._id,
+        service: selectedTime.service,
+        details: note
+      });
+      navigate('/mentee/sessions', { state: { mentor } });
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to schedule the session.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
@@ -34,28 +60,34 @@ const MenteeBooking = () => {
             )}
 
             <p className="text-sm text-[#00212C]">
-              Your mentor has been notified that the session is scheduled. You will both be
-              reminded of the session 24 hours and 15 minutes before the session begins.
+              Your mentor will be notified that the session is scheduled. A meeting link will be generated automatically.
             </p>
 
             <p className="text-sm text-[#00212C]">
               You can share any additional information or specific questions you have
-              with {mentorName} before your session here. This helps your mentor understand
-              what you need help with specifically.
+              with {mentorName} before your session here.
             </p>
 
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              disabled={loading}
               className="bg-white w-full rounded-lg p-3 text-sm text-[#00212C] resize-none h-28 border-none outline-none"
             
             />
 
+            {error && <p className="text-red-600 font-semibold text-xs mt-1">{error}</p>}
+
             <button
-              onClick={() => navigate('/mentee/sessions', { state: { mentor } })}
-              className="bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm w-full"
+              onClick={handleConfirm}
+              disabled={loading}
+              className={`font-semibold px-6 py-2 rounded-lg text-sm w-full transition-colors ${
+                loading
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-[#003F55] text-white hover:bg-[#002b3a] cursor-pointer'
+              }`}
             >
-              Confirm and Go to Dashboard
+              {loading ? 'Booking Session...' : 'Confirm and Go to Dashboard'}
             </button>
           </div>
         </div>
@@ -64,3 +96,4 @@ const MenteeBooking = () => {
 };
 
 export default MenteeBooking;
+

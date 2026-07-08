@@ -65,9 +65,74 @@ const MenteeSchedulePage = () => {
                 selectedSlot={selectedSlot}
               />
 
+              <div className="text-center">
+                <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
+                <p className="font-bold text-[#003F55] text-base mt-1">
+                  {selectedSlot ? (
+                    (() => {
+                      const timeStr = selectedSlot.slotId.split('-')[1];
+                      const dateStr = new Date(selectedSlot.date).toLocaleDateString(undefined, {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                      return `${dateStr} @ ${timeStr}`;
+                    })()
+                  ) : (
+                    'Please select a slot above'
+                  )}
+                </p>
+              </div>
+
               <button
-                onClick={() => navigate('/mentee/booking', { state: { mentor, selectedSlot } })}
-                className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full"
+                onClick={() => {
+                  if (!selectedSlot) return;
+                  const timeStr = selectedSlot.slotId.split('-')[1];
+                  const match = timeStr.match(/^(\d+)\s*(AM|PM)$/i);
+                  let hours = 0;
+                  if (match) {
+                    hours = parseInt(match[1], 10);
+                    const ampm = match[2].toUpperCase();
+                    if (ampm === 'PM' && hours !== 12) {
+                      hours += 12;
+                    } else if (ampm === 'AM' && hours === 12) {
+                      hours = 0;
+                    }
+                  }
+
+                  const scheduledDate = new Date(selectedSlot.date);
+                  scheduledDate.setHours(hours, 0, 0, 0);
+
+                  const formattedDay = scheduledDate.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  });
+                  
+                  const formattedTime = scheduledDate.toLocaleTimeString(undefined, {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  });
+
+                  navigate('/mentee/booking', {
+                    state: {
+                      mentor,
+                      selectedTime: {
+                        day: formattedDay,
+                        time: formattedTime,
+                        date: scheduledDate.toISOString(),
+                        service: mentor.volunteeringFor?.[0] || 'mentorship program'
+                      }
+                    }
+                  });
+                }}
+                disabled={!selectedSlot}
+                className={`font-semibold py-2 rounded-lg text-sm w-full transition-colors ${
+                  selectedSlot 
+                    ? 'bg-[#003F55] text-white hover:bg-[#002b3a] cursor-pointer' 
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                }`}
               >
                 Confirm Booking
               </button>
