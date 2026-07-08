@@ -1,19 +1,37 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageLayoutDashboard from '../PageLayoutDashboard';
 import useCurrentUser from '../useCurrentUser';
 import SessionCard from '../UpcomingSessions/SessionCard';
-import UpcomingSessions from '../UpcomingSessions/UpcomingSessions';
 import SectionHeading from '../SectionHeading';
+import { getMenteeSessions } from '../../api-calls/sessions';
+
+const CountBadge = ({ count }) => (
+  <span className="shrink-0 rounded-full bg-[#fdbb36]/15 px-3 py-1 text-xs font-bold text-[#00212C]">
+    {count}
+  </span>
+);
+
+const EmptyState = ({ text }) => (
+  <div className="bg-white rounded-xl border border-dashed border-slate-200 p-6 text-center">
+    <p className="text-sm text-slate-400">{text}</p>
+  </div>
+);
 
 const MenteeSessionsDashboard = () => {
   const { user, refreshUser } = useCurrentUser();
   const userName = `${user.firstName} ${user.lastName}`;
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const mentor = state?.mentor;
+  const [sessions, setSessions] = useState([]);
 
-  const pendingScheduledTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  useEffect(() => {
+    getMenteeSessions()
+      .then(setSessions)
+      .catch(console.error);
+  }, []);
+
+  const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
+  const completedSessions = sessions.filter(s => s.status === 'completed');
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser}>
@@ -23,24 +41,36 @@ const MenteeSessionsDashboard = () => {
           <h1 className="text-2xl font-bold text-[#00212C]">Dashboard</h1>
         </div>
 
-        {mentor && (
-          <div>
-            <SectionHeading title="Upcoming Sessions" className="mb-4" />
-            <SessionCard
-              mentee={mentor}
-              service={mentor.volunteeringFor?.[0] || 'Session'}
-              scheduledTime={pendingScheduledTime}
-            />
-            <button
-              onClick={() => navigate('/mentee-dashboard')}
-              className="mt-3 bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm"
-            >
-              Add Session
-            </button>
-          </div>
-        )}
+        <div>
+          <SectionHeading
+            title="Upcoming Sessions"
+            right={<CountBadge count={upcomingSessions.length} />}
+            className="mb-4"
+          />
+          {upcomingSessions.length > 0
+            ? upcomingSessions.map(s => (
+                <SessionCard key={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} />
+              ))
+            : <EmptyState text="No upcoming sessions yet." />}
+        </div>
 
-        <UpcomingSessions />
+        <div>
+          <SectionHeading title="Completed Sessions" className="mb-4" />
+          {completedSessions.length > 0
+            ? completedSessions.map(s => (
+                <SessionCard key={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} />
+              ))
+            : <EmptyState text="No completed sessions so far." />}
+        </div>
+
+        <div className="flex justify-start">
+          <button
+            onClick={() => navigate('/mentee-dashboard')}
+            className="bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm"
+          >
+            Find a Mentor
+          </button>
+        </div>
       </div>
     </PageLayoutDashboard>
   );
