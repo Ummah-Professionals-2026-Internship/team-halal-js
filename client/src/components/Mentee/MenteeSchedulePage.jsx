@@ -26,15 +26,33 @@ const MenteeSchedulePage = () => {
     slot => `${slot.day}-${slot.startTime}`
   )
   const [selectedSlot, setSelectedSlot] = useState(null)
-  const [mySessions, setMySessions] = useState([])
+  const [mySessionsWithMentor, setMySessionsWithMentor] = useState([])
+  const [myConflicts, setMyConflicts] = useState([])
+  const [conflictInfo, setConflictInfo] = useState({})
   const [bookedSlots, setBookedSlots] = useState([])
 
   useEffect(() => {
+    if (!mentor?._id) return;
     apiFetch('/api/sessions/mentee')
       .then(r => r.json())
-      .then(data => setMySessions(data.filter(s => s.status === 'scheduled').map(s => toDateSlotId(s.scheduledTime))))
+      .then(data => {
+        const scheduled = data.filter(s => s.status === 'scheduled');
+        const mentorId = String(mentor._id);
+        setMySessionsWithMentor(
+          scheduled.filter(s => String(s.mentor?._id || s.mentor) === mentorId).map(s => toDateSlotId(s.scheduledTime))
+        );
+        const others = scheduled.filter(s => String(s.mentor?._id || s.mentor) !== mentorId);
+        setMyConflicts(others.map(s => toDateSlotId(s.scheduledTime)));
+        const info = {};
+        others.forEach(s => {
+          const slotId = toDateSlotId(s.scheduledTime);
+          const m = s.mentor;
+          info[slotId] = m ? `${m.firstName || ''} ${m.lastName || ''}`.trim() : 'another mentor';
+        });
+        setConflictInfo(info);
+      })
       .catch(() => {})
-  }, [])
+  }, [mentor?._id])
 
   useEffect(() => {
     if (!mentor?._id) return;
@@ -58,37 +76,43 @@ const MenteeSchedulePage = () => {
               <AvailabilityPick
                 title={`${mentorName}'s Availability`}
                 mentorSlots={mentorSlots}
-                sessions={mySessions}
-                conflicts={bookedSlots.filter(s => !mySessions.includes(s))}
+                sessions={mySessionsWithMentor}
+                conflicts={myConflicts}
+                mentorBusy={bookedSlots.filter(s => !mySessionsWithMentor.includes(s))}
+                conflictInfo={conflictInfo}
+                sessionMentorName={mentorName}
                 readOnly
                 onSlotSelect={setSelectedSlot}
                 selectedSlot={selectedSlot}
               />
 
-              <div className="text-center">
-                <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
-                <p className="font-bold text-[#003F55] text-base mt-1">
-                  {selectedSlot ? (
-                    (() => {
-                      const timeStr = selectedSlot.slotId.split('-')[1];
-                      const dateStr = new Date(selectedSlot.date).toLocaleDateString(undefined, {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                      });
-                      return `${dateStr} @ ${timeStr}`;
-                    })()
-                  ) : (
-                    'Please select a slot above'
-                  )}
-                </p>
-              </div>
+              {selectedSlot ? (
+                <div className="text-center">
+                  <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
+                  <p className="font-bold text-[#003F55] text-base mt-1">
+                    {(() => {
+                      const parts = selectedSlot.split('-');
+                      const date = new Date(parts.slice(0,3).join('-') + 'T00:00:00');
+                      return `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} @ ${parts.slice(3).join('-')}`;
+                    })()}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
+                  <p className="font-bold text-gray-500 text-base mt-1">
+                    Please select a slot above
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={() => {
                   if (!selectedSlot) return;
-                  const timeStr = selectedSlot.slotId.split('-')[1];
-                  const match = timeStr.match(/^(\d+)\s*(AM|PM)$/i);
+                  const parts = selectedSlot.split('-');
+                  const datePart = parts.slice(0, 3).join('-');
+                  const timePart = parts.slice(3).join('-');
+                  const match = timePart.match(/^(\d+)\s*(AM|PM)$/i);
                   let hours = 0;
                   if (match) {
                     hours = parseInt(match[1], 10);
@@ -100,7 +124,7 @@ const MenteeSchedulePage = () => {
                     }
                   }
 
-                  const scheduledDate = new Date(selectedSlot.date);
+                  const scheduledDate = new Date(`${datePart}T00:00:00`);
                   scheduledDate.setHours(hours, 0, 0, 0);
 
                   const formattedDay = scheduledDate.toLocaleDateString(undefined, {
@@ -131,7 +155,7 @@ const MenteeSchedulePage = () => {
                 className={`font-semibold py-2 rounded-lg text-sm w-full transition-colors ${
                   selectedSlot 
                     ? 'bg-[#003F55] text-white hover:bg-[#002b3a] cursor-pointer' 
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-40'
                 }`}
               >
                 Confirm Booking
