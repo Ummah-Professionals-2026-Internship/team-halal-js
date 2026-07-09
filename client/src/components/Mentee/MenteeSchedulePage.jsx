@@ -21,6 +21,8 @@ const MenteeSchedulePage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const mentor = state?.mentor;
+  const rescheduleSessionId = state?.rescheduleSessionId || null;
+  const recommended = state?.recommended || false;
   const mentorName = mentor ? `${mentor.firstName} ${mentor.lastName}` : 'Mentor';
   const mentorSlots = (mentor?.manualAvailabilitySlots||[]).map(
     slot => `${slot.day}-${slot.startTime}`
@@ -66,11 +68,11 @@ const MenteeSchedulePage = () => {
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
       <div className="flex flex-col items-center gap-4 pb-4">
           <h1 className="text-2xl font-bold text-[#00212C]">
-            Schedule a Mentorship Session With {mentorName}
+            {rescheduleSessionId ? `Reschedule Your Session With ${mentorName}` : `Schedule a Mentorship Session With ${mentorName}`}
           </h1>
 
           <div className="flex w-full max-w-4xl gap-6 items-center">
-            {mentor && <MentorProfileCard mentor={mentor} />}
+            {mentor && <MentorProfileCard mentor={mentor} recommended={recommended} />}
 
             <div className="flex-1 bg-[#C5DCE8] rounded-2xl p-4 flex flex-col gap-3">
               <AvailabilityPick
@@ -86,75 +88,44 @@ const MenteeSchedulePage = () => {
                 selectedSlot={selectedSlot}
               />
 
-              {selectedSlot ? (
-                <div className="text-center">
-                  <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
-                  <p className="font-bold text-[#003F55] text-base mt-1">
-                    {(() => {
-                      const parts = selectedSlot.split('-');
-                      const date = new Date(parts.slice(0,3).join('-') + 'T00:00:00');
-                      return `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} @ ${parts.slice(3).join('-')}`;
-                    })()}
-                  </p>
+              <div className="text-center">
+                <p className="font-bold text-[#00212C] text-base">Auto-Selected Meeting Time:</p>
+                <div className="bg-[#FFFCF0] rounded-lg px-4 py-2 mt-2 mx-auto inline-block">
+                  {selectedSlot ? (
+                    <p className="font-bold text-[#00212C] text-base">
+                      {(() => {
+                        const parts = selectedSlot.split('-');
+                        const date = new Date(parts.slice(0,3).join('-') + 'T00:00:00');
+                        const time = parts.slice(3).join('-');
+                        const [hourStr, period] = time.split(' ');
+                        let hour = parseInt(hourStr, 10);
+                        if (period === 'PM' && hour !== 12) hour += 12;
+                        if (period === 'AM' && hour === 12) hour = 0;
+                        const endHour24 = (hour + 1) % 24;
+                        const endPeriod = endHour24 >= 12 ? 'PM' : 'AM';
+                        const endHour12 = endHour24 % 12 === 0 ? 12 : endHour24 % 12;
+                        return (
+                          <>
+                            {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                            <br />
+                            {time}- {endHour12} {endPeriod}
+                          </>
+                        );
+                      })()}
+                    </p>
+                  ) : (
+                    <p className="font-bold text-gray-500 text-base">Please select a slot above</p>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center">
-                  <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
-                  <p className="font-bold text-gray-500 text-base mt-1">
-                    Please select a slot above
-                  </p>
-                </div>
-              )}
+                <p className="text-sm text-[#00212C] mt-2">Click to Select Another Time<br />on The Calendar</p>
+              </div>
 
               <button
-                onClick={() => {
-                  if (!selectedSlot) return;
-                  const parts = selectedSlot.split('-');
-                  const datePart = parts.slice(0, 3).join('-');
-                  const timePart = parts.slice(3).join('-');
-                  const match = timePart.match(/^(\d+)\s*(AM|PM)$/i);
-                  let hours = 0;
-                  if (match) {
-                    hours = parseInt(match[1], 10);
-                    const ampm = match[2].toUpperCase();
-                    if (ampm === 'PM' && hours !== 12) {
-                      hours += 12;
-                    } else if (ampm === 'AM' && hours === 12) {
-                      hours = 0;
-                    }
-                  }
-
-                  const scheduledDate = new Date(`${datePart}T00:00:00`);
-                  scheduledDate.setHours(hours, 0, 0, 0);
-
-                  const formattedDay = scheduledDate.toLocaleDateString(undefined, {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  });
-                  
-                  const formattedTime = scheduledDate.toLocaleTimeString(undefined, {
-                    hour: 'numeric',
-                    minute: '2-digit'
-                  });
-
-                  navigate('/mentee/booking', {
-                    state: {
-                      mentor,
-                      selectedTime: {
-                        day: formattedDay,
-                        time: formattedTime,
-                        date: scheduledDate.toISOString(),
-                        service: mentor.volunteeringFor?.[0] || 'mentorship program'
-                      }
-                    }
-                  });
-                }}
+                onClick={() => navigate('/mentee/booking', { state: { mentor, selectedSlot, rescheduleSessionId } })}
                 disabled={!selectedSlot}
-                className={`font-semibold py-2 rounded-lg text-sm w-full transition-colors ${
-                  selectedSlot 
-                    ? 'bg-[#003F55] text-white hover:bg-[#002b3a] cursor-pointer' 
+                className={`font-bold py-2.5 rounded-lg text-sm w-full transition ${
+                  selectedSlot
+                    ? 'bg-[#fdbb36] text-[#00212C] hover:brightness-95 cursor-pointer'
                     : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-40'
                 }`}
               >

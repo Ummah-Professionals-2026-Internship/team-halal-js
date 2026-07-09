@@ -1,13 +1,36 @@
-import { useState, useEffect} from 'react'
+import { useState, useEffect } from 'react'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import SectionHeading from '../SectionHeading'
 import useCurrentUser from '../useCurrentUser'
 import { apiFetch } from '../../api-calls/client'
 
+const toDateSlotId = (scheduledTime) => {
+  const d = new Date(scheduledTime)
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  const h = d.getHours()
+  const timeStr = h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h-12} PM`
+  return `${dateStr}-${timeStr}`
+}
+
 const MentorAvailabilityCard = () => {
   const {user}=useCurrentUser()
   const [slots, setSlots] = useState(user?.manualAvailabilitySlots||[])
   const [saved, setSaved] = useState(false)
+  const [bookedSessions, setBookedSessions] = useState([])
+  const [sessionInfo, setSessionInfo] = useState({})
+
+  useEffect(() => {
+    apiFetch('/api/sessions')
+      .then(r => r.json())
+      .then(data => {
+        const scheduled = data.filter(s => s.status === 'scheduled')
+        setBookedSessions(scheduled.map(s => toDateSlotId(s.scheduledTime)))
+        setSessionInfo(Object.fromEntries(
+          scheduled.map(s => [toDateSlotId(s.scheduledTime), `${s.mentee?.firstName ?? ''} ${s.mentee?.lastName ?? ''}`.trim()])
+        ))
+      })
+      .catch(() => {})
+  }, [])
   
 
   const handleChange = (next) => {
@@ -35,7 +58,7 @@ const MentorAvailabilityCard = () => {
       />
 
       <div className="rounded-xl bg-[#8ACBDB]/25 p-3">
-        <AvailabilityPick title="" onChange={handleChange}  initialSlots={user?.manualAvailabilitySlots || []}/>
+        <AvailabilityPick title="" onChange={handleChange} initialSlots={user?.manualAvailabilitySlots || []} sessions={bookedSessions} sessionInfo={sessionInfo} />
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
