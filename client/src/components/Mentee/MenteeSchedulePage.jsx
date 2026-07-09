@@ -86,20 +86,32 @@ const MenteeSchedulePage = () => {
                 selectedSlot={selectedSlot}
               />
 
-              {selectedSlot && (
-                <p className="text-center text-sm font-semibold text-[#00212C]">
-                  Selected: {(() => {
-                    const parts = selectedSlot.split('-');
-                    const date = new Date(parts.slice(0,3).join('-') + 'T00:00:00');
-                    return `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${parts.slice(3).join('-')}`;
-                  })()}
-                </p>
+              {selectedSlot ? (
+                <div className="text-center">
+                  <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
+                  <p className="font-bold text-[#003F55] text-base mt-1">
+                    {(() => {
+                      const parts = selectedSlot.split('-');
+                      const date = new Date(parts.slice(0,3).join('-') + 'T00:00:00');
+                      return `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} @ ${parts.slice(3).join('-')}`;
+                    })()}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="font-semibold text-[#00212C] text-sm">Selected Meeting Time:</p>
+                  <p className="font-bold text-gray-500 text-base mt-1">Please select a slot above</p>
+                </div>
               )}
 
               <button
                 onClick={() => navigate('/mentee/booking', { state: { mentor, selectedSlot } })}
                 disabled={!selectedSlot}
-                className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full disabled:opacity-40 disabled:cursor-not-allowed"
+                className={`font-semibold py-2 rounded-lg text-sm w-full transition-colors ${
+                  selectedSlot
+                    ? 'bg-[#003F55] text-white hover:bg-[#002b3a] cursor-pointer'
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-40'
+                }`}
               >
                 Confirm Booking
               </button>

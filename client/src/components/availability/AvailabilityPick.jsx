@@ -29,7 +29,7 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
   const [slotInfo, setSlotInfo] = useState(null)
@@ -163,7 +163,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                   const canSelect = readOnly && beyond48hrs && mentorSlots.includes(slotId) && !isConflict && !isMySession && !isMentorBusy
                   const displayDate = weekDates[dayIdx].toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                   const handleClick = () => {
-                    if (isMySession) setSlotInfo(`Your session with ${sessionMentorName || 'this mentor'} — ${displayDate} at ${time}`)
+                    if (isMySession) setSlotInfo(`Your session with ${sessionInfo[dateSlotId] || sessionMentorName || 'this mentor'} — ${displayDate} at ${time}`)
                     else if (isConflict) setSlotInfo(`You have a session with ${conflictInfo[dateSlotId] || 'another mentor'} — ${displayDate} at ${time}`)
                     else if (isMentorBusy) setSlotInfo(null)
                     else setSlotInfo(null)

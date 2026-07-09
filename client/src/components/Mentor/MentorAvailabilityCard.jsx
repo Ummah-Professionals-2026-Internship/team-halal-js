@@ -17,11 +17,18 @@ const MentorAvailabilityCard = () => {
   const [slots, setSlots] = useState(user?.manualAvailabilitySlots||[])
   const [saved, setSaved] = useState(false)
   const [bookedSessions, setBookedSessions] = useState([])
+  const [sessionInfo, setSessionInfo] = useState({})
 
   useEffect(() => {
     apiFetch('/api/sessions')
       .then(r => r.json())
-      .then(data => setBookedSessions(data.filter(s => s.status === 'scheduled').map(s => toDateSlotId(s.scheduledTime))))
+      .then(data => {
+        const scheduled = data.filter(s => s.status === 'scheduled')
+        setBookedSessions(scheduled.map(s => toDateSlotId(s.scheduledTime)))
+        setSessionInfo(Object.fromEntries(
+          scheduled.map(s => [toDateSlotId(s.scheduledTime), `${s.mentee?.firstName ?? ''} ${s.mentee?.lastName ?? ''}`.trim()])
+        ))
+      })
       .catch(() => {})
   }, [])
   
@@ -51,7 +58,7 @@ const MentorAvailabilityCard = () => {
       />
 
       <div className="rounded-xl bg-[#8ACBDB]/25 p-3">
-        <AvailabilityPick title="" onChange={handleChange} initialSlots={user?.manualAvailabilitySlots || []} sessions={bookedSessions} />
+        <AvailabilityPick title="" onChange={handleChange} initialSlots={user?.manualAvailabilitySlots || []} sessions={bookedSessions} sessionInfo={sessionInfo} />
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
