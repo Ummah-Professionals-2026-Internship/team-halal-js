@@ -1,4 +1,5 @@
 import React from 'react';
+import CompatibilityRing from './CompatibilityRing';
 
 const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
   const name = `${mentor.firstName} ${mentor.lastName}`;
@@ -38,6 +39,13 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
         )}
       </div>
 
+      {typeof mentor.compatibilityScore === 'number' && (
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <CompatibilityRing score={mentor.compatibilityScore} />
+          <span className="text-[10px] text-[#00212C] font-medium">Match</span>
+        </div>
+      )}
+
       <div className="flex flex-col items-end gap-2 shrink-0">
         <div className="flex flex-col text-sm items-end">
           <button className="text-[#003F55] underline">View Profile</button>
@@ -47,7 +55,7 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
         </div>
         <button
           onClick={() => onSchedule(mentor, recommended)}
-          className="bg-[#003F55] text-white font-semibold px-5 py-2 rounded-lg text-sm"
+          className="bg-[#003F55] text-white font-semibold px-5 py-2 rounded-lg text-sm shrink-0"
         >
           Schedule Meeting
         </button>

@@ -28,6 +28,7 @@ router.post('/', requireAuth, async (req, res) => {
       desiredCareer: req.body.desiredCareer,
       desiredServices: req.body.desiredServices
     }
+    mentee.manualAvailabilitySlots = req.body.manualAvailabilitySlots || [];
     await mentee.save();
     res.status(201).json({ message: 'Mentee saved successfully' });
   } catch (err) {
