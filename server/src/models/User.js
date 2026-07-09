@@ -123,7 +123,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 // Hook to clean up files when user document is deleted via user.deleteOne()
-userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+userSchema.pre('deleteOne', { document: true, query: false }, async function () {
   try {
     if (this.profilePicture) {
       const picPath = path.join(__dirname, '../..', this.profilePicture);
@@ -137,15 +137,14 @@ userSchema.pre('deleteOne', { document: true, query: false }, async function (ne
         fs.unlinkSync(resumePath);
       }
     }
-    next();
   } catch (err) {
     console.error('Error during user pre-deleteOne hook file cleanup:', err);
-    next(err);
+    throw err;
   }
 });
 
 // Hook to clean up files when user document is deleted via queries (like findByIdAndDelete)
-userSchema.pre('findOneAndDelete', async function (next) {
+userSchema.pre('findOneAndDelete', async function () {
   try {
     const docToDelete = await this.model.findOne(this.getQuery());
     if (docToDelete) {
@@ -162,10 +161,9 @@ userSchema.pre('findOneAndDelete', async function (next) {
         }
       }
     }
-    next();
   } catch (err) {
     console.error('Error during user pre-findOneAndDelete hook file cleanup:', err);
-    next(err);
+    throw err;
   }
 });
 
