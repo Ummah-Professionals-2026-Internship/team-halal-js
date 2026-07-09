@@ -112,11 +112,13 @@ const Login = () => {
     window.location.href = 'http://localhost:5000/api/auth/google/signin';
   };
 
-  const inputClasses = "w-full max-w-[385px] h-[70px] bg-white border border-[#CFC5B3] rounded-lg pl-5 box-border text-2xl font-normal text-[#656565] transition-all duration-200 block mx-auto focus:border-[#007CA6] focus:ring-3 focus:ring-[rgba(0,124,166,0.15)] focus:outline-none placeholder:text-[#656565] placeholder:opacity-80";
+  const inputClasses = "w-full max-w-[385px] h-[70px] bg-white border border-[#CFC5B3] rounded-lg pl-5 box-border text-2xl font-normal text-[#656565] transition-all duration-200 block mx-auto hover:border-[#007CA6]/50 focus:border-[#007CA6] focus:ring-3 focus:ring-[rgba(0,124,166,0.15)] focus:shadow-[0_0_0_4px_rgba(0,124,166,0.10)] focus:outline-none placeholder:text-[#656565] placeholder:opacity-80";
+
+  const primaryButtonClasses = "w-full max-w-[385px] h-[69px] bg-gradient-to-b from-[#0089b8] to-[#00698d] hover:from-[#0092c4] hover:to-[#007096] border border-[#036383] rounded-lg text-[#F5F5F5] text-[25px] font-bold text-center shadow-[0_1px_2px_rgba(0,49,63,0.25),0_10px_24px_-6px_rgba(0,124,166,0.45)] hover:shadow-[0_2px_4px_rgba(0,49,63,0.3),0_14px_30px_-6px_rgba(0,124,166,0.55)] cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#007CA6]/35 block mx-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
 
   return (
     <AuthLayout>
-      <AuthCard title={<>Ummah Professionals<br />Mentorship Service</>}>
+      <AuthCard title="Welcome Back">
         <form className="flex flex-col items-center gap-5 w-full m-0 p-0 box-border" onSubmit={handleLoginSubmit}>
           {error && <p className="w-full max-w-[385px] text-base text-[#c0392b] text-center mx-auto p-0">{error}</p>}
           <input
@@ -137,14 +139,14 @@ const Login = () => {
           />
           <button
             type="submit"
-            className="w-full max-w-[385px] h-[69px] bg-[#007CA6] border border-[#036383] rounded-lg text-[#F5F5F5] text-[25px] font-bold text-center shadow-[0_4px_12px_rgba(0,124,166,0.15)] cursor-pointer transition-all duration-200 active:scale-[0.98] hover:bg-[#00698d] block mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            className={primaryButtonClasses}
             disabled={loading}
           >
             {loading ? 'Logging in...' : 'Log in'}
           </button>
           <button
             type="button"
-            className="w-full max-w-[385px] h-[69px] bg-[#007CA6] border border-[#036383] rounded-lg text-[#F5F5F5] text-[25px] font-bold text-center shadow-[0_4px_12px_rgba(0,124,166,0.15)] cursor-pointer transition-all duration-200 active:scale-[0.98] hover:bg-[#00698d] block mx-auto"
+            className={primaryButtonClasses}
             onClick={() => navigate('/register')}
           >
             Sign Up
@@ -162,7 +164,7 @@ const Login = () => {
             type="button"
             id="google-signin-btn"
             onClick={handleGoogleSignIn}
-            className="w-full max-w-[385px] h-[69px] bg-white border border-[#CFC5B3] rounded-lg text-[#3c3c3c] text-[20px] font-semibold flex items-center justify-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] cursor-pointer transition-all duration-200 hover:bg-[#f7f3ee] hover:border-[#b0a899] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-[0.98] mx-auto"
+            className="w-full max-w-[385px] h-[69px] bg-white border border-[#CFC5B3] rounded-lg text-[#3c3c3c] text-[20px] font-semibold flex items-center justify-center gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_8px_20px_-4px_rgba(0,0,0,0.12)] cursor-pointer transition-all duration-200 hover:bg-[#f7f3ee] hover:border-[#b0a899] hover:-translate-y-0.5 hover:shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_-4px_rgba(0,0,0,0.16)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#007CA6]/35 mx-auto"
           >
             <GoogleIcon />
             Sign in with Google
