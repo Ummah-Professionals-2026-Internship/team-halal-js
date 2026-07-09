@@ -144,8 +144,6 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                   const isSelected = selectedSlots.includes(slotId)
                   const colDate = new Date(weekStart)
                   colDate.setDate(weekStart.getDate() + dayIdx)
-                  const slotDate = new Date(colDate)
-                  slotDate.setHours(0, 0, 0, 0)
                   colDate.setHours(23, 59, 59, 999)
                   const isPast = colDate < new Date()
                   const slotDate = new Date(weekDates[dayIdx])
