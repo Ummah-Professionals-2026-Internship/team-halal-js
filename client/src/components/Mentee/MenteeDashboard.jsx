@@ -21,8 +21,8 @@ const MenteeDashboard = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleSchedule = (mentor) => {
-    navigate('/mentee/schedule', { state: { mentor } });
+  const handleSchedule = (mentor, recommended) => {
+    navigate('/mentee/schedule', { state: { mentor, recommended } });
   };
 
   const recommended = mentors[0] || null;
@@ -59,6 +59,7 @@ const MenteeDashboard = () => {
             <MentorCard
               mentor={recommended}
               bg="bg-[#C5DCE8]"
+              recommended
               onSchedule={handleSchedule}
             />
           </>
@@ -68,12 +69,11 @@ const MenteeDashboard = () => {
           <>
             <p className="text-[#00212C] self-start mt-2">More Mentors</p>
             <div className="flex flex-col w-full gap-3">
-              {moreMentors.map((mentor, i) => (
+              {moreMentors.map((mentor) => (
                 <MentorCard
                   key={mentor._id}
                   mentor={mentor}
-                  bg="bg-[#D4C9B8]"
-                  selected={i === 0}
+                  bg="bg-white border border-slate-200"
                   onSchedule={handleSchedule}
                 />
               ))}

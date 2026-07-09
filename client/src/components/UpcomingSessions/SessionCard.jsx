@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 const formatCountdown = (daysUntil) => {
   if (daysUntil <= 0) return 'Today'
   if (daysUntil === 1) return 'Tomorrow'
@@ -9,7 +11,8 @@ const startOfDay = (d) => {
   return x
 }
 
-const SessionCard = ({ mentee, service, scheduledTime, link }) => {
+const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'scheduled' }) => {
+  const navigate = useNavigate()
   const name = `${mentee?.firstName ?? ''} ${mentee?.lastName ?? ''}`.trim()
   const initial = mentee?.firstName?.[0]?.toUpperCase() ?? '?'
   const photo = mentee?.profilePicture
@@ -18,6 +21,14 @@ const SessionCard = ({ mentee, service, scheduledTime, link }) => {
   const dateStr = when.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
   const timeStr = when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
   const daysUntil = Math.round((startOfDay(when) - startOfDay(new Date())) / 86400000)
+
+  const beyond48hrs = when.getTime() > Date.now() + 48 * 60 * 60 * 1000
+  const canReschedule = status === 'scheduled' && beyond48hrs
+
+  const handleReschedule = () => {
+    if (!canReschedule) return
+    navigate('/mentee/schedule', { state: { mentor: mentee, rescheduleSessionId: sessionId } })
+  }
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 p-4 mb-3 shadow-sm hover:shadow-md transition-shadow">
@@ -32,9 +43,6 @@ const SessionCard = ({ mentee, service, scheduledTime, link }) => {
 
           <div className="min-w-0">
             <p className="font-bold text-[#00212C] text-sm truncate">{name}</p>
-            <span className="inline-block mt-1 rounded-full bg-[#8ACBDB]/30 text-[#003F55] text-[11px] font-semibold px-2 py-0.5">
-              {service}
-            </span>
           </div>
         </div>
         <div className="text-right shrink-0">
@@ -48,7 +56,16 @@ const SessionCard = ({ mentee, service, scheduledTime, link }) => {
 
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
         <div className="flex gap-2">
-          <button className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors">
+          <button
+            onClick={handleReschedule}
+            disabled={!canReschedule}
+            title={!canReschedule && status === 'scheduled' ? 'Sessions can only be rescheduled at least 48 hours in advance' : undefined}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              canReschedule
+                ? 'text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer'
+                : 'text-slate-300 border border-slate-100 cursor-not-allowed'
+            }`}
+          >
             Reschedule
           </button>
           <button className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors">

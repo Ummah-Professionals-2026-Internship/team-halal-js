@@ -49,27 +49,27 @@ const MenteeSessionsDashboard = () => {
           />
           {upcomingSessions.length > 0
             ? upcomingSessions.map(s => (
-                <SessionCard key={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} />
+                <SessionCard key={s._id} sessionId={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} status={s.status} />
               ))
             : <EmptyState text="No upcoming sessions yet." />}
+        </div>
+
+        <div className="flex justify-center">
+          <button
+            onClick={() => navigate('/mentee-dashboard')}
+            className="bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm"
+          >
+            Add Session
+          </button>
         </div>
 
         <div>
           <SectionHeading title="Completed Sessions" className="mb-4" />
           {completedSessions.length > 0
             ? completedSessions.map(s => (
-                <SessionCard key={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} />
+                <SessionCard key={s._id} sessionId={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} status={s.status} />
               ))
             : <EmptyState text="No completed sessions so far." />}
-        </div>
-
-        <div className="flex justify-start">
-          <button
-            onClick={() => navigate('/mentee-dashboard')}
-            className="bg-[#003F55] text-white font-semibold px-6 py-2 rounded-lg text-sm"
-          >
-            Find a Mentor
-          </button>
         </div>
       </div>
     </PageLayoutDashboard>

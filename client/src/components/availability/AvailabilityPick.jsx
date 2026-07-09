@@ -116,6 +116,60 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
 
   const isoDate = (d) => d.toISOString().slice(0, 10)
 
+  const findFirstSelectableSlot = () => {
+    for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+      const day = days[dayIdx]
+      for (const time of times) {
+        const slotId = `${day}-${time}`
+        const dateSlotId = `${isoDate(weekDates[dayIdx])}-${time}`
+        const slotDate = new Date(weekDates[dayIdx])
+        const [hourStr, period] = time.split(' ')
+        let slotHour = parseInt(hourStr, 10)
+        if (period === 'PM' && slotHour !== 12) slotHour += 12
+        if (period === 'AM' && slotHour === 12) slotHour = 0
+        slotDate.setHours(slotHour, 0, 0, 0)
+        const beyond48hrs = slotDate > new Date(Date.now() + 48 * 60 * 60 * 1000)
+        const isMySession = sessions.includes(slotId) || sessions.includes(dateSlotId)
+        const isConflict = conflicts.includes(slotId) || conflicts.includes(dateSlotId)
+        const isMentorBusy = mentorBusy.includes(dateSlotId)
+        if (beyond48hrs && mentorSlots.includes(slotId) && !isConflict && !isMySession && !isMentorBusy) {
+          return dateSlotId
+        }
+      }
+    }
+    return null
+  }
+
+  const firstSelectableSlot = findFirstSelectableSlot()
+  const weekHasSelectableSlot = firstSelectableSlot !== null
+
+  const autoAdvanceCount = useRef(0)
+  useEffect(() => {
+    if (!readOnly || mentorSlots.length === 0) return
+    if (weekHasSelectableSlot) {
+      autoAdvanceCount.current = 0
+      return
+    }
+    if (autoAdvanceCount.current >= 12) return
+    autoAdvanceCount.current += 1
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + 7)
+    setWeekStart(d)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekStart, weekHasSelectableSlot, readOnly, mentorSlots.length])
+
+  const lastAutoSelected = useRef(null)
+  useEffect(() => {
+    if (!readOnly) return
+    // Stop auto-picking once the mentee has manually chosen something different themselves
+    if (selectedSlot && selectedSlot !== lastAutoSelected.current) return
+    if (firstSelectableSlot && firstSelectableSlot !== selectedSlot) {
+      lastAutoSelected.current = firstSelectableSlot
+      onSlotSelect?.(firstSelectableSlot)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstSelectableSlot, readOnly, selectedSlot])
+
   return (
     <div className="w-full">
       {title && <h2 className="text-xs font-bold text-gray-900 text-center mb-1">{title}</h2>}
@@ -148,7 +202,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                   const colDate = new Date(weekStart)
                   colDate.setDate(weekStart.getDate() + dayIdx)
                   colDate.setHours(23, 59, 59, 999)
-                  const isPast = colDate < new Date()
+                  const isPast = readOnly && colDate < new Date()
                   const slotDate = new Date(weekDates[dayIdx])
                   const [hourStr, period] = time.split(' ')
                   let slotHour = parseInt(hourStr, 10)
