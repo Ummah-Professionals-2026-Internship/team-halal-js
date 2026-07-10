@@ -29,7 +29,7 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
   const [slotInfo, setSlotInfo] = useState(null)
@@ -86,9 +86,12 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     setSlotInfo(null)
   }
 
-  const applySlot = (slotId) => {
+  const applySlot = (slotId, dateSlotId = '') => {
     setSelectedSlots(prev => {
-      if (dragMode.current === 'remove') return prev.filter(s => s !== slotId)
+      if (dragMode.current === 'remove') {
+        if (sessions.includes(slotId) || sessions.includes(dateSlotId)) return prev
+        return prev.filter(s => s !== slotId)
+      }
       if (prev.includes(slotId)) return prev
       return [...prev, slotId]
     })
@@ -101,8 +104,8 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
     applySlot(slotId)
   }
 
-  const handleMouseEnter = (slotId) => {
-    if (isDragging.current) applySlot(slotId)
+  const handleMouseEnter = (slotId, dateSlotId) => {
+    if (isDragging.current) applySlot(slotId, dateSlotId)
   }
 
   const weekDates = Array.from({ length: 7 }, (_, i) => {
@@ -112,6 +115,60 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
   })
 
   const isoDate = (d) => d.toISOString().slice(0, 10)
+
+  const findFirstSelectableSlot = () => {
+    for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+      const day = days[dayIdx]
+      for (const time of times) {
+        const slotId = `${day}-${time}`
+        const dateSlotId = `${isoDate(weekDates[dayIdx])}-${time}`
+        const slotDate = new Date(weekDates[dayIdx])
+        const [hourStr, period] = time.split(' ')
+        let slotHour = parseInt(hourStr, 10)
+        if (period === 'PM' && slotHour !== 12) slotHour += 12
+        if (period === 'AM' && slotHour === 12) slotHour = 0
+        slotDate.setHours(slotHour, 0, 0, 0)
+        const beyond48hrs = slotDate > new Date(Date.now() + 48 * 60 * 60 * 1000)
+        const isMySession = sessions.includes(slotId) || sessions.includes(dateSlotId)
+        const isConflict = conflicts.includes(slotId) || conflicts.includes(dateSlotId)
+        const isMentorBusy = mentorBusy.includes(dateSlotId)
+        if (beyond48hrs && mentorSlots.includes(slotId) && !isConflict && !isMySession && !isMentorBusy) {
+          return dateSlotId
+        }
+      }
+    }
+    return null
+  }
+
+  const firstSelectableSlot = findFirstSelectableSlot()
+  const weekHasSelectableSlot = firstSelectableSlot !== null
+
+  const autoAdvanceCount = useRef(0)
+  useEffect(() => {
+    if (!readOnly || mentorSlots.length === 0) return
+    if (weekHasSelectableSlot) {
+      autoAdvanceCount.current = 0
+      return
+    }
+    if (autoAdvanceCount.current >= 12) return
+    autoAdvanceCount.current += 1
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + 7)
+    setWeekStart(d)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekStart, weekHasSelectableSlot, readOnly, mentorSlots.length])
+
+  const lastAutoSelected = useRef(null)
+  useEffect(() => {
+    if (!readOnly) return
+    // Stop auto-picking once the mentee has manually chosen something different themselves
+    if (selectedSlot && selectedSlot !== lastAutoSelected.current) return
+    if (firstSelectableSlot && firstSelectableSlot !== selectedSlot) {
+      lastAutoSelected.current = firstSelectableSlot
+      onSlotSelect?.(firstSelectableSlot)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstSelectableSlot, readOnly, selectedSlot])
 
   return (
     <div className="w-full">
@@ -144,10 +201,8 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                   const isSelected = selectedSlots.includes(slotId)
                   const colDate = new Date(weekStart)
                   colDate.setDate(weekStart.getDate() + dayIdx)
-                  const slotDate = new Date(colDate)
-                  slotDate.setHours(0, 0, 0, 0)
                   colDate.setHours(23, 59, 59, 999)
-                  const isPast = colDate < new Date()
+                  const isPast = readOnly && colDate < new Date()
                   const slotDate = new Date(weekDates[dayIdx])
                   const [hourStr, period] = time.split(' ')
                   let slotHour = parseInt(hourStr, 10)
@@ -162,7 +217,7 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                   const canSelect = readOnly && beyond48hrs && mentorSlots.includes(slotId) && !isConflict && !isMySession && !isMentorBusy
                   const displayDate = weekDates[dayIdx].toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                   const handleClick = () => {
-                    if (isMySession) setSlotInfo(`Your session with ${sessionMentorName || 'this mentor'} — ${displayDate} at ${time}`)
+                    if (isMySession) setSlotInfo(`Your session with ${sessionInfo[dateSlotId] || sessionMentorName || 'this mentor'} — ${displayDate} at ${time}`)
                     else if (isConflict) setSlotInfo(`You have a session with ${conflictInfo[dateSlotId] || 'another mentor'} — ${displayDate} at ${time}`)
                     else if (isMentorBusy) setSlotInfo(null)
                     else setSlotInfo(null)
@@ -171,11 +226,11 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
                     <button
                       key={slotId}
                       type="button"
-                      onMouseDown={canSelect ? () => { onSlotSelect?.(dateSlotId); setSlotInfo(null) } : readOnly ? undefined : () => handleMouseDown(slotId, isSelected)}
-                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId)}
+                      onMouseDown={canSelect ? () => { onSlotSelect?.(dateSlotId); setSlotInfo(null) } : readOnly ? undefined : isMySession ? undefined : () => handleMouseDown(slotId, isSelected)}
+                      onMouseEnter={readOnly ? undefined : () => handleMouseEnter(slotId, dateSlotId)}
                       onClick={handleClick}
                       className={`h-4 rounded-none select-none transition ${
-                        isMySession ? 'bg-purple-300' :
+                        isMySession ? (readOnly ? 'bg-purple-300' : 'bg-red-400') :
                         isConflict ? 'bg-red-400' :
                         isPast ? 'bg-gray-200' :
                         selectedSlot === dateSlotId ? 'bg-green-600' :
@@ -211,11 +266,10 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
           <div className="mt-2 border-t pt-2">
             <p className="text-center font-semibold text-gray-700 mb-1" style={{ fontSize: '9px' }}>Selected Hours</p>
             <div className="flex flex-col gap-0.5">
-              {days.map((day, i) => {
-                const dateStr = isoDate(weekDates[i])
+              {days.map((day) => {
                 const slots = selectedSlots
-                  .filter(s => s.startsWith(dateStr + '-'))
-                  .map(s => s.replace(dateStr + '-', ''))
+                  .filter(s => s.startsWith(day + '-'))
+                  .map(s => s.replace(day + '-', ''))
                 if (slots.length === 0) return null
                 return (
                   <div key={day} className="flex gap-1 items-start" style={{ fontSize: '9px' }}>

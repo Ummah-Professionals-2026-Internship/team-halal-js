@@ -4,6 +4,7 @@ import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { STATES_LIST, MAJORS_LIST } from '../../constants/lists'
+import { MENTOR_SERVICES } from '../../constants/services'
 import { uploadResume } from '../../api-calls/upload'
 
 const formatPhoneNumber = (value) => {
@@ -310,28 +311,28 @@ const MentorProfileSetup = () => {
 
             <p className="text-xs text-slate-500 mb-3">Select all services you'd like to offer mentees.</p>
             <div className="mb-4 flex flex-col gap-0.5">
-              {['healthcare service', 'mentorship program', 'resume review', 'mock interview', 'general career advice'].map(service => (
-                <label key={service} className="flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer hover:bg-slate-50 group transition-colors">
+              {MENTOR_SERVICES.map(service => (
+                <label key={service.id} className="flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer hover:bg-slate-50 group transition-colors">
                   <input
                     type="checkbox"
                     name="volunteeringFor"
-                    value={service}
-                    checked={formData.volunteeringFor.includes(service)}
+                    value={service.id}
+                    checked={formData.volunteeringFor.includes(service.id)}
                     onChange={handleCheckbox}
                     className="sr-only"
                   />
                   <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                    formData.volunteeringFor.includes(service)
+                    formData.volunteeringFor.includes(service.id)
                       ? 'bg-[#007CA6] border-[#007CA6]'
                       : 'border-slate-300 group-hover:border-[#007CA6]/50'
                   }`}>
-                    {formData.volunteeringFor.includes(service) && (
+                    {formData.volunteeringFor.includes(service.id) && (
                       <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
                         <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </div>
-                  <span className="text-sm text-slate-700 capitalize">{service}</span>
+                  <span className="text-sm text-slate-700">{service.label}</span>
                 </label>
               ))}
             </div>

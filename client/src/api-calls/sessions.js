@@ -32,3 +32,18 @@ export async function createSession(sessionData){
     }
     return data;
 }
+
+export async function rescheduleSession(sessionId, sessionData){
+    const res = await apiFetch(`/api/sessions/${sessionId}/reschedule`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(sessionData)
+    });
+    const data = await res.json();
+    if(!res.ok){
+        throw new Error(data.error || 'Failed to reschedule session');
+    }
+    return data;
+}

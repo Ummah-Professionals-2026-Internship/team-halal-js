@@ -28,7 +28,7 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
     onPhotoUpdate?.();
   };
   return (
-    <header className="w-full h-[126px] bg-[#003F55] flex justify-between items-center px-[42px] box-border">
+    <header className="relative z-20 w-full h-[126px] bg-gradient-to-b from-[#0c4a63] to-[#00303f] flex justify-between items-center px-[42px] box-border shadow-[0_4px_18px_rgba(0,0,0,0.25)]">
       <Link to={userRole === 'Mentor' ? '/mentor-dashboard' : userRole === 'Mentee' ? '/mentee-dashboard' : '/login'} className="flex items-center cursor-pointer">
         <img src={logo} className="h-[74px] w-auto object-contain" alt="Ummah Professionals Logo" />
       </Link>
