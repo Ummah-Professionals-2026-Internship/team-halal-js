@@ -9,7 +9,7 @@ const { sendNotification } = require('../services/notificationService');
 
 const MIN_LEAD_TIME_MS = 48 * 60 * 60 * 1000;
 
-async function createMenteeSession({ mentorId, menteeId, scheduledTime, service, details }) {
+async function createMenteeSession({ mentorId, menteeId, scheduledTime, service, details, oldScheduledTime = null }) {
     if (new Date(scheduledTime).getTime() < Date.now() + MIN_LEAD_TIME_MS) {
         const err = new Error('Sessions must be scheduled at least 48 hours in advance.');
         err.status = 400;
@@ -86,18 +86,48 @@ async function createMenteeSession({ mentorId, menteeId, scheduledTime, service,
         minute: '2-digit' 
     });
 
-    sendNotification({
-        recipientId: mentorId,
-        senderId: menteeId,
-        type: 'session_booked',
-        title: 'New Session Scheduled',
-        message: `${mentee.firstName} ${mentee.lastName} booked a mentorship session with you for ${formattedDate} at ${formattedTime}.`,
-        relatedId: session._id,
-        relatedModel: 'Session',
-        metadata: { session }
-    }).catch(err => {
-        console.error('Asynchronous notification dispatch failed:', err);
-    });
+    if (oldScheduledTime) {
+        const oldDate = new Date(oldScheduledTime);
+        const formattedOldDate = oldDate.toLocaleDateString(undefined, { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        const formattedOldTime = oldDate.toLocaleTimeString(undefined, { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+
+        sendNotification({
+            recipientId: mentorId,
+            senderId: menteeId,
+            type: 'session_rescheduled',
+            title: 'Session Rescheduled',
+            message: `${mentee.firstName} ${mentee.lastName} rescheduled their session originally on ${formattedOldDate} at ${formattedOldTime} to ${formattedDate} at ${formattedTime}.`,
+            relatedId: session._id,
+            relatedModel: 'Session',
+            metadata: { 
+                session, 
+                oldScheduledTime 
+            }
+        }).catch(err => {
+            console.error('Asynchronous notification dispatch failed:', err);
+        });
+    } else {
+        sendNotification({
+            recipientId: mentorId,
+            senderId: menteeId,
+            type: 'session_booked',
+            title: 'New Session Scheduled',
+            message: `${mentee.firstName} ${mentee.lastName} booked a mentorship session with you for ${formattedDate} at ${formattedTime}.`,
+            relatedId: session._id,
+            relatedModel: 'Session',
+            metadata: { session }
+        }).catch(err => {
+            console.error('Asynchronous notification dispatch failed:', err);
+        });
+    }
 
     return session;
 }
@@ -125,6 +155,7 @@ router.put('/:id/reschedule', requireAuth, async (req, res) => {
         }
 
         const mentorId = oldSession.mentor;
+        const oldScheduledTime = oldSession.scheduledTime;
         await Session.deleteOne({ _id: oldSession._id });
 
         const session = await createMenteeSession({
@@ -132,7 +163,8 @@ router.put('/:id/reschedule', requireAuth, async (req, res) => {
             menteeId: req.user.id,
             scheduledTime,
             service: service || oldSession.service,
-            details: details !== undefined ? details : oldSession.details
+            details: details !== undefined ? details : oldSession.details,
+            oldScheduledTime
         });
         res.status(201).json(session);
     } catch (err) {

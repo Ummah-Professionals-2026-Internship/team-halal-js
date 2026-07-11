@@ -1,6 +1,6 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const { sendSessionConfirmationEmail } = require('./emailService');
+const { sendSessionConfirmationEmail, sendSessionRescheduleEmail } = require('./emailService');
 
 /**
  * Unified notification dispatcher.
@@ -47,6 +47,16 @@ const sendNotification = async ({
       
       if (mentor && mentee) {
         sendSessionConfirmationEmail(mentor, mentee, metadata.session).catch(err => {
+          console.error('Email dispatch in notification dispatcher failed:', err);
+        });
+      }
+    } else if (type === 'session_rescheduled' && metadata.session) {
+      // For session rescheduling, identify mentor and mentee roles
+      const mentor = recipient.role === 'mentor' ? recipient : sender;
+      const mentee = recipient.role === 'mentee' ? recipient : sender;
+      
+      if (mentor && mentee) {
+        sendSessionRescheduleEmail(mentor, mentee, metadata.session, metadata.oldScheduledTime).catch(err => {
           console.error('Email dispatch in notification dispatcher failed:', err);
         });
       }
