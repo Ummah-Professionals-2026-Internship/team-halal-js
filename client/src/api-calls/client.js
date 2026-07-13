@@ -13,6 +13,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   const headers = {
     ...options.headers,
+    'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   };
 
   // Only attach the auth header if a token exists

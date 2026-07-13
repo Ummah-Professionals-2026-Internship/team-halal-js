@@ -28,14 +28,14 @@ const UpcomingSessions = () => {
           className="mb-4"
         />
         {upcomingSessions.length > 0
-          ? upcomingSessions.map(session => <SessionCard key={session.id} {...session} />)
+          ? upcomingSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
           : <EmptyState text="No upcoming sessions yet." />}
       </div>
 
       <div>
         <SectionHeading title="Completed Sessions" className="mb-4" />
         {completedSessions.length > 0
-          ? completedSessions.map(session => <SessionCard key={session.id} {...session} />)
+          ? completedSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
           : <EmptyState text="No completed sessions so far." />}
       </div>
     </div>

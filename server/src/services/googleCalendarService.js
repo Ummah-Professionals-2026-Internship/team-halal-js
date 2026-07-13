@@ -61,7 +61,7 @@ const refreshGoogleTokens = async (user) => {
  * @param {Object} mentor - The mentor User object.
  * @param {Object} mentee - The mentee User object.
  * @param {Object} session - The created session details.
- * @returns {Promise<string|null>} The Google Meet link, or null if calendar scheduling is not configured.
+ * @returns {Promise<Object>} Object containing meetLink and googleCalendarEventId, or null values.
  */
 const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   // Determine which user has calendarAccess and googleCalendarTokens
@@ -75,13 +75,19 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   // If neither has connected Google Calendar, return a mock meet link to help in testing UI
   if (!host) {
     console.log('Neither user has connected Google Calendar. Generating a mock Meet link.');
-    return `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`;
+    return {
+      meetLink: `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+      googleCalendarEventId: null
+    };
   }
 
   // If using the mock token flow
   if (host.googleCalendarTokens.accessToken === 'mock_access_token_123') {
     console.log('Mock calendar token detected. Returning mock Google Meet link.');
-    return `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`;
+    return {
+      meetLink: `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+      googleCalendarEventId: null
+    };
   }
 
   let accessToken = host.googleCalendarTokens.accessToken;
@@ -93,7 +99,10 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
       accessToken = await refreshGoogleTokens(host);
     } catch (err) {
       console.error('Error attempting to refresh host token, falling back to mock link:', err.message);
-      return `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`;
+      return {
+        meetLink: `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+        googleCalendarEventId: null
+      };
     }
   }
 
@@ -144,7 +153,10 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
       const errorText = await response.text();
       console.error('Failed to create Google Calendar event:', errorText);
       // Fallback to mock link instead of failing the session creation outright
-      return `https://meet.google.com/mock-fallback-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`;
+      return {
+        meetLink: `https://meet.google.com/mock-fallback-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+        googleCalendarEventId: null
+      };
     }
 
     const data = await response.json();
@@ -156,18 +168,155 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
 
     if (conferenceEntryPoint && conferenceEntryPoint.uri) {
       console.log('Successfully created Google Calendar Event with Meet URI:', conferenceEntryPoint.uri);
-      return conferenceEntryPoint.uri;
+      return {
+        meetLink: conferenceEntryPoint.uri,
+        googleCalendarEventId: data.id
+      };
     }
 
     console.log('Calendar event created but no Meet URL returned.');
-    return data.htmlLink || null;
+    return {
+      meetLink: data.htmlLink || null,
+      googleCalendarEventId: data.id
+    };
   } catch (error) {
     console.error('Error calling Google Calendar API:', error);
-    return `https://meet.google.com/mock-error-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`;
+    return {
+      meetLink: `https://meet.google.com/mock-error-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+      googleCalendarEventId: null
+    };
+  }
+};
+
+/**
+ * Updates (reschedules) an existing Google Calendar event.
+ * Keeps the meeting link identical.
+ * @param {Object} mentor - The mentor User object.
+ * @param {Object} mentee - The mentee User object.
+ * @param {Object} session - The updated session details (containing googleCalendarEventId).
+ */
+const updateSessionOnGoogleCalendar = async (mentor, mentee, session) => {
+  let host = null;
+  if (mentor.calendarAccess && mentor.googleCalendarTokens?.accessToken) {
+    host = mentor;
+  } else if (mentee.calendarAccess && mentee.googleCalendarTokens?.accessToken) {
+    host = mentee;
+  }
+
+  const eventId = session.googleCalendarEventId;
+  if (!host || !eventId || host.googleCalendarTokens.accessToken === 'mock_access_token_123') {
+    console.log('Google Calendar update skipped (no host connected or mock token/event ID).');
+    return;
+  }
+
+  let accessToken = host.googleCalendarTokens.accessToken;
+  const expiryDate = host.googleCalendarTokens.expiryDate;
+
+  // Refresh token if necessary
+  if (expiryDate && Date.now() + 5 * 60 * 1000 >= expiryDate) {
+    try {
+      accessToken = await refreshGoogleTokens(host);
+    } catch (err) {
+      console.error('Error attempting to refresh host token for update:', err.message);
+      return;
+    }
+  }
+
+  const scheduledTime = new Date(session.scheduledTime);
+  const duration = session.duration || 60;
+  const endTime = new Date(scheduledTime.getTime() + duration * 60 * 1000);
+
+  const eventBody = {
+    start: {
+      dateTime: scheduledTime.toISOString(),
+      timeZone: 'UTC'
+    },
+    end: {
+      dateTime: endTime.toISOString(),
+      timeZone: 'UTC'
+    }
+  };
+
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(eventBody)
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Failed to update Google Calendar event:', await response.text());
+    } else {
+      console.log('Successfully updated Google Calendar Event ID:', eventId);
+    }
+  } catch (error) {
+    console.error('Error calling Google Calendar API PATCH:', error);
+  }
+};
+
+/**
+ * Deletes (cancels) an existing Google Calendar event.
+ * @param {Object} mentor - The mentor User object.
+ * @param {Object} mentee - The mentee User object.
+ * @param {string} eventId - The Google Calendar Event ID.
+ */
+const deleteSessionFromGoogleCalendar = async (mentor, mentee, eventId) => {
+  let host = null;
+  if (mentor.calendarAccess && mentor.googleCalendarTokens?.accessToken) {
+    host = mentor;
+  } else if (mentee.calendarAccess && mentee.googleCalendarTokens?.accessToken) {
+    host = mentee;
+  }
+
+  if (!host || !eventId || host.googleCalendarTokens.accessToken === 'mock_access_token_123') {
+    console.log('Google Calendar deletion skipped (no host connected or mock token/event ID).');
+    return;
+  }
+
+  let accessToken = host.googleCalendarTokens.accessToken;
+  const expiryDate = host.googleCalendarTokens.expiryDate;
+
+  // Refresh token if necessary
+  if (expiryDate && Date.now() + 5 * 60 * 1000 >= expiryDate) {
+    try {
+      accessToken = await refreshGoogleTokens(host);
+    } catch (err) {
+      console.error('Error attempting to refresh host token for deletion:', err.message);
+      return;
+    }
+  }
+
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Failed to delete Google Calendar event:', await response.text());
+    } else {
+      console.log('Successfully deleted Google Calendar Event ID:', eventId);
+    }
+  } catch (error) {
+    console.error('Error calling Google Calendar API DELETE:', error);
   }
 };
 
 module.exports = {
   refreshGoogleTokens,
-  scheduleSessionOnGoogleCalendar
+  scheduleSessionOnGoogleCalendar,
+  updateSessionOnGoogleCalendar,
+  deleteSessionFromGoogleCalendar
 };

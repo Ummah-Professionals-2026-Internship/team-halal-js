@@ -109,6 +109,12 @@ const userSchema = new mongoose.Schema({
         academicStatus: String,
         desiredCareer: String,
         desiredServices: {type: [String], enum: ['general career advice', 'resume/portfolio review', 'mock interview']}
+    },
+
+    notificationPreferences: {
+        email: { type: Boolean, default: true },
+        sms: { type: Boolean, default: true },
+        inApp: { type: Boolean, default: true }
     }
 },{timestamps:true})
 

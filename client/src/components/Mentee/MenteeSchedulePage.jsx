@@ -20,11 +20,15 @@ const MenteeSchedulePage = () => {
   const userName = `${user.firstName} ${user.lastName}`;
   const { state } = useLocation();
   const navigate = useNavigate();
-  const mentor = state?.mentor;
+  
+  const isMentorRescheduling = user?.role === 'mentor';
+  const mentorDoc = isMentorRescheduling ? user : state?.mentor;
+  const menteeDoc = isMentorRescheduling ? state?.mentor : user;
+
   const rescheduleSessionId = state?.rescheduleSessionId || null;
   const recommended = state?.recommended || false;
-  const mentorName = mentor ? `${mentor.firstName} ${mentor.lastName}` : 'Mentor';
-  const mentorSlots = (mentor?.manualAvailabilitySlots||[]).map(
+  const mentorName = mentorDoc ? `${mentorDoc.firstName} ${mentorDoc.lastName}` : 'Mentor';
+  const mentorSlots = (mentorDoc?.manualAvailabilitySlots||[]).map(
     slot => `${slot.day}-${slot.startTime}`
   )
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -34,45 +38,54 @@ const MenteeSchedulePage = () => {
   const [bookedSlots, setBookedSlots] = useState([])
 
   useEffect(() => {
-    if (!mentor?._id) return;
-    apiFetch('/api/sessions/mentee')
+    if (!mentorDoc?._id || !menteeDoc?._id) return;
+    const endpoint = isMentorRescheduling ? '/api/sessions' : '/api/sessions/mentee';
+    apiFetch(endpoint)
       .then(r => r.json())
       .then(data => {
         const scheduled = data.filter(s => s.status === 'scheduled');
-        const mentorId = String(mentor._id);
-        setMySessionsWithMentor(
-          scheduled.filter(s => String(s.mentor?._id || s.mentor) === mentorId).map(s => toDateSlotId(s.scheduledTime))
-        );
-        const others = scheduled.filter(s => String(s.mentor?._id || s.mentor) !== mentorId);
+        const partnerId = String(isMentorRescheduling ? menteeDoc._id : mentorDoc._id);
+        
+        const mySessions = scheduled.filter(s => {
+          const sPartner = isMentorRescheduling ? s.mentee : s.mentor;
+          return String(sPartner?._id || sPartner) === partnerId;
+        });
+        setMySessionsWithMentor(mySessions.map(s => toDateSlotId(s.scheduledTime)));
+        
+        const others = scheduled.filter(s => {
+          const sPartner = isMentorRescheduling ? s.mentee : s.mentor;
+          return String(sPartner?._id || sPartner) !== partnerId;
+        });
         setMyConflicts(others.map(s => toDateSlotId(s.scheduledTime)));
+        
         const info = {};
         others.forEach(s => {
           const slotId = toDateSlotId(s.scheduledTime);
-          const m = s.mentor;
-          info[slotId] = m ? `${m.firstName || ''} ${m.lastName || ''}`.trim() : 'another mentor';
+          const p = isMentorRescheduling ? s.mentee : s.mentor;
+          info[slotId] = p ? `${p.firstName || ''} ${p.lastName || ''}`.trim() : 'another user';
         });
         setConflictInfo(info);
       })
       .catch(() => {})
-  }, [mentor?._id])
+  }, [mentorDoc?._id, menteeDoc?._id, isMentorRescheduling])
 
   useEffect(() => {
-    if (!mentor?._id) return;
-    apiFetch(`/api/sessions/mentor/${mentor._id}/booked`)
+    if (!mentorDoc?._id) return;
+    apiFetch(`/api/sessions/mentor/${mentorDoc._id}/booked`)
       .then(r => r.json())
       .then(data => setBookedSlots(data.map(s => toDateSlotId(s.scheduledTime))))
       .catch(() => {})
-  }, [mentor?._id])
+  }, [mentorDoc?._id])
 
   return (
-    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
+    <PageLayoutDashboard userName={userName} userRole={isMentorRescheduling ? 'Mentor' : 'Mentee'} userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
       <div className="flex flex-col items-center gap-4 pb-4">
           <h1 className="text-2xl font-bold text-[#00212C]">
-            {rescheduleSessionId ? `Reschedule Your Session With ${mentorName}` : `Schedule a Mentorship Session With ${mentorName}`}
+            {rescheduleSessionId ? `Reschedule Your Session With ${isMentorRescheduling ? `${menteeDoc?.firstName} ${menteeDoc?.lastName}` : mentorName}` : `Schedule a Mentorship Session With ${mentorName}`}
           </h1>
 
           <div className="flex w-full max-w-4xl gap-6 items-center">
-            {mentor && <MentorProfileCard mentor={mentor} recommended={recommended} />}
+            {mentorDoc && <MentorProfileCard mentor={mentorDoc} recommended={recommended} />}
 
             <div className="flex-1 bg-[#C5DCE8] rounded-2xl p-4 flex flex-col gap-3">
               <AvailabilityPick

@@ -30,3 +30,27 @@ export async function markAllAsRead() {
     }
     return data;
 }
+
+export async function getNotificationPreferences() {
+    const res = await apiFetch('/api/notifications/preferences');
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch notification preferences');
+    }
+    return data;
+}
+
+export async function updateNotificationPreferences(preferences) {
+    const res = await apiFetch('/api/notifications/preferences', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(preferences)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || 'Failed to update notification preferences');
+    }
+    return data;
+}

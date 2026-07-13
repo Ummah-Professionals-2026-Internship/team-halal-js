@@ -69,7 +69,7 @@ const MenteeBooking = () => {
           details: note,
         });
       }
-      navigate('/mentee/sessions', { state: { mentor } });
+      navigate(user?.role === 'mentor' ? '/mentor-dashboard' : '/mentee/sessions', { state: { mentor } });
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to schedule the session.");
@@ -79,7 +79,7 @@ const MenteeBooking = () => {
   };
 
   return (
-    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
+    <PageLayoutDashboard userName={userName} userRole={user?.role === 'mentor' ? 'Mentor' : 'Mentee'} userPhoto={user.profilePicture} onBack={() => navigate(-1)}>
       <div className="flex flex-col items-center gap-4 pb-4 mt-6">
           <h1 className="text-2xl font-bold text-[#00212C]">{rescheduleSessionId ? 'Confirm Reschedule' : 'Confirm Booking'}</h1>
 

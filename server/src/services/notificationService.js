@@ -17,20 +17,7 @@ const sendNotification = async ({
   metadata = {}
 }) => {
   try {
-    // 1. Create and save the In-App Notification in DB
-    const notification = new Notification({
-      recipient: recipientId,
-      sender: senderId,
-      type,
-      title,
-      message,
-      relatedId,
-      relatedModel
-    });
-    await notification.save();
-    console.log(`Saved in-app notification: ${notification._id}`);
-
-    // Fetch recipient and sender users for email/SMS sending
+    // Fetch recipient and sender users for preference checks and email/SMS sending
     const recipient = await User.findById(recipientId);
     const sender = senderId ? await User.findById(senderId) : null;
 
@@ -39,36 +26,66 @@ const sendNotification = async ({
       return;
     }
 
-    // 2. Dispatch Email depending on notification type
-    if (type === 'session_booked' && metadata.session) {
-      // For session booking, identify mentor and mentee roles
-      const mentor = recipient.role === 'mentor' ? recipient : sender;
-      const mentee = recipient.role === 'mentee' ? recipient : sender;
-      
-      if (mentor && mentee) {
-        sendSessionConfirmationEmail(mentor, mentee, metadata.session).catch(err => {
-          console.error('Email dispatch in notification dispatcher failed:', err);
-        });
+    const prefs = recipient.notificationPreferences || {};
+    const inAppEnabled = prefs.inApp !== false;
+    const emailEnabled = prefs.email !== false;
+    const smsEnabled = prefs.sms !== false;
+
+    // 1. Create and save the In-App Notification in DB if enabled
+    if (inAppEnabled) {
+      const notification = new Notification({
+        recipient: recipientId,
+        sender: senderId,
+        type,
+        title,
+        message,
+        relatedId,
+        relatedModel
+      });
+      await notification.save();
+      console.log(`Saved in-app notification: ${notification._id}`);
+    } else {
+      console.log(`In-app notification skipped for recipient ${recipientId} due to user preference.`);
+    }
+
+    // 2. Dispatch Email depending on notification type and if email is enabled
+    if (emailEnabled) {
+      if (type === 'session_booked' && metadata.session) {
+        // For session booking, identify mentor and mentee roles
+        const mentor = recipient.role === 'mentor' ? recipient : sender;
+        const mentee = recipient.role === 'mentee' ? recipient : sender;
+        
+        if (mentor && mentee) {
+          sendSessionConfirmationEmail(mentor, mentee, metadata.session).catch(err => {
+            console.error('Email dispatch in notification dispatcher failed:', err);
+          });
+        }
+      } else if (type === 'session_rescheduled' && metadata.session) {
+        // For session rescheduling, identify mentor and mentee roles
+        const mentor = recipient.role === 'mentor' ? recipient : sender;
+        const mentee = recipient.role === 'mentee' ? recipient : sender;
+        
+        const initiatorRole = sender ? sender.role : 'mentee';
+        
+        if (mentor && mentee) {
+          sendSessionRescheduleEmail(mentor, mentee, metadata.session, metadata.oldScheduledTime, initiatorRole).catch(err => {
+            console.error('Email dispatch in notification dispatcher failed:', err);
+          });
+        }
       }
-    } else if (type === 'session_rescheduled' && metadata.session) {
-      // For session rescheduling, identify mentor and mentee roles
-      const mentor = recipient.role === 'mentor' ? recipient : sender;
-      const mentee = recipient.role === 'mentee' ? recipient : sender;
-      
-      if (mentor && mentee) {
-        sendSessionRescheduleEmail(mentor, mentee, metadata.session, metadata.oldScheduledTime).catch(err => {
-          console.error('Email dispatch in notification dispatcher failed:', err);
-        });
-      }
+    } else {
+      console.log(`Email dispatch skipped for recipient ${recipientId} due to user preference.`);
     }
 
     // 3. Dispatch SMS (Stub / Placeholder for Twilio)
-    if (recipient.phone) {
+    if (smsEnabled && recipient.phone) {
       console.log('\n==================================================');
       console.log('--- DEVELOPMENT MOCK SMS DISPATCH (TWILIO STUB) ---');
       console.log(`To:      ${recipient.phone} (${recipient.firstName})`);
       console.log(`Msg:     ${title} - ${message}`);
       console.log('==================================================\n');
+    } else if (!smsEnabled) {
+      console.log(`SMS dispatch skipped for recipient ${recipientId} due to user preference.`);
     }
 
   } catch (err) {
