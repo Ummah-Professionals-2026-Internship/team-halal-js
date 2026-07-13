@@ -134,7 +134,7 @@ const MenteeSchedulePage = () => {
               </div>
 
               <button
-                onClick={() => navigate('/mentee/booking', { state: { mentor, selectedSlot, rescheduleSessionId } })}
+                onClick={() => navigate('/mentee/booking', { state: { mentor: mentorDoc, selectedSlot, rescheduleSessionId } })}
                 disabled={!selectedSlot}
                 className={`font-bold py-2.5 rounded-lg text-sm w-full transition ${
                   selectedSlot
