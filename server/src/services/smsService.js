@@ -24,9 +24,21 @@ const sendSMS = async (to, body) => {
   }
 
   try {
-    let formattedTo = to;
-    if (fromNumber && fromNumber.startsWith('whatsapp:') && !to.startsWith('whatsapp:')) {
-      formattedTo = `whatsapp:${to}`;
+    // Sanitize recipient's phone number to E.164 format (e.g. (732) 526-5564 -> +17325265564)
+    let cleanNumber = to.replace(/[^\d]/g, '');
+    if (cleanNumber.length === 10) {
+      cleanNumber = `+1${cleanNumber}`;
+    } else if (cleanNumber.length === 11 && cleanNumber.startsWith('1')) {
+      cleanNumber = `+${cleanNumber}`;
+    } else if (to.startsWith('+')) {
+      cleanNumber = to; // Keep original if it already had a country code prefix
+    } else {
+      cleanNumber = `+${cleanNumber}`;
+    }
+
+    let formattedTo = cleanNumber;
+    if (fromNumber && fromNumber.startsWith('whatsapp:') && !cleanNumber.startsWith('whatsapp:')) {
+      formattedTo = `whatsapp:${cleanNumber}`;
     }
 
     const message = await client.messages.create({
