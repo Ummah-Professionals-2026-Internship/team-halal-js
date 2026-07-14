@@ -47,3 +47,14 @@ export async function rescheduleSession(sessionId, sessionData){
     }
     return data;
 }
+
+export async function cancelSession(sessionId){
+    const res = await apiFetch(`/api/sessions/${sessionId}/cancel`, {
+        method: 'PUT'
+    });
+    const data = await res.json();
+    if(!res.ok){
+        throw new Error(data.error || 'Failed to cancel session');
+    }
+    return data;
+}

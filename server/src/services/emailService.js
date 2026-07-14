@@ -424,7 +424,130 @@ const sendSessionRescheduleEmail = async (mentor, mentee, session, oldScheduledT
   });
 };
 
+/**
+ * Sends separate, tailored mentorship session cancellation emails.
+ * @param {Object} mentor - The mentor User object.
+ * @param {Object} mentee - The mentee User object.
+ * @param {Object} session - The cancelled Session document.
+ * @param {string} initiatorRole - The role of the user who initiated the cancellation ('mentor' or 'mentee')
+ */
+const sendSessionCancellationEmail = async (mentor, mentee, session, initiatorRole = 'mentee') => {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  // Generate calendar cancellation attachment (.ics file with isCancel = true)
+  const icsContent = generateICSString(mentor, mentee, session, true);
+  const base64ICS = Buffer.from(icsContent).toString('base64');
+  const attachments = [
+    {
+      content: base64ICS,
+      filename: 'invite.ics'
+    }
+  ];
+
+  const getCancellationDetailsHtml = (partnerName, partnerRole, formattedDate, formattedTime) => `
+    <div style="background-color: #f7fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #4a5568; width: 120px;">${partnerRole}:</td>
+          <td style="padding: 6px 0;">${partnerName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #4a5568;">Service:</td>
+          <td style="padding: 6px 0; text-transform: capitalize;">${session.service}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #e53e3e;">Status:</td>
+          <td style="padding: 6px 0; font-weight: bold; color: #e53e3e; text-transform: uppercase;">Cancelled</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #4a5568;">Original Date/Time:</td>
+          <td style="padding: 6px 0; color: #718096; text-decoration: line-through;">${formattedDate} at ${formattedTime}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  // 1. Send Mentor Email (Formatted in Mentor's timezone)
+  const mentorTimes = formatDateTimeForUser(session.scheduledTime, mentor.timeZone);
+  const mentorSubject = `Mentorship Session Cancelled: ${mentee.firstName} ${mentee.lastName}`;
+
+  const mentorIntroText = initiatorRole === 'mentee'
+    ? `Your scheduled mentorship session with <strong>${mentee.firstName} ${mentee.lastName}</strong> has been cancelled by the mentee.`
+    : `Your scheduled mentorship session with <strong>${mentee.firstName} ${mentee.lastName}</strong> has been cancelled by you.`;
+
+  const mentorHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; color: #00212C;">
+      <h2 style="color: #e53e3e; border-bottom: 2px solid #fed7d7; padding-bottom: 10px;">Mentorship Session Cancelled</h2>
+      <p>Assalamu Alaikum ${mentor.firstName},</p>
+      <p>${mentorIntroText}</p>
+      
+      ${getCancellationDetailsHtml(
+        `${mentee.firstName} ${mentee.lastName} (${mentee.email})`, 
+        'Mentee', 
+        mentorTimes.formattedDate, 
+        mentorTimes.formattedTime
+      )}
+      
+      <p style="font-size: 14px; color: #718096; margin-top: 30px;">
+        A calendar cancellation file (.ics) has been attached to remove this session from your calendar automatically.
+      </p>
+      <p style="margin-top: 20px; font-weight: bold;">
+        Best regards,<br>
+        The Ummah Professionals Team
+      </p>
+    </div>
+  `;
+
+  await sendResendEmail({
+    apiKey,
+    to: mentor.email,
+    subject: mentorSubject,
+    html: mentorHtml,
+    attachments
+  });
+
+  // 2. Send Mentee Email (Formatted in Mentee's timezone)
+  const menteeTimes = formatDateTimeForUser(session.scheduledTime, mentee.timeZone);
+  const menteeSubject = `Mentorship Session Cancelled: ${mentor.firstName} ${mentor.lastName}`;
+
+  const menteeIntroText = initiatorRole === 'mentor'
+    ? `Your scheduled mentorship session with <strong>${mentor.firstName} ${mentor.lastName}</strong> has been cancelled by the mentor.`
+    : `Your scheduled mentorship session with <strong>${mentor.firstName} ${mentor.lastName}</strong> has been cancelled by you.`;
+
+  const menteeHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; color: #00212C;">
+      <h2 style="color: #e53e3e; border-bottom: 2px solid #fed7d7; padding-bottom: 10px;">Mentorship Session Cancelled</h2>
+      <p>Assalamu Alaikum ${mentee.firstName},</p>
+      <p>${menteeIntroText}</p>
+      
+      ${getCancellationDetailsHtml(
+        `${mentor.firstName} ${mentor.lastName} (${mentor.email})`, 
+        'Mentor', 
+        menteeTimes.formattedDate, 
+        menteeTimes.formattedTime
+      )}
+      
+      <p style="font-size: 14px; color: #718096; margin-top: 30px;">
+        A calendar cancellation file (.ics) has been attached to remove this session from your calendar automatically.
+      </p>
+      <p style="margin-top: 20px; font-weight: bold;">
+        Best regards,<br>
+        The Ummah Professionals Team
+      </p>
+    </div>
+  `;
+
+  await sendResendEmail({
+    apiKey,
+    to: mentee.email,
+    subject: menteeSubject,
+    html: menteeHtml,
+    attachments
+  });
+};
+
 module.exports = {
   sendSessionConfirmationEmail,
-  sendSessionRescheduleEmail
+  sendSessionRescheduleEmail,
+  sendSessionCancellationEmail
 };

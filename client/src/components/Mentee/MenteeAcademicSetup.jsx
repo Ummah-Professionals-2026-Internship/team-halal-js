@@ -156,7 +156,8 @@ const MenteeAcademicSetup = () => {
     const toSave = {
       ...oldData,
       ...formData,
-      manualAvailabilitySlots
+      manualAvailabilitySlots,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
     }
 
     try {

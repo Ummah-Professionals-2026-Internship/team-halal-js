@@ -1,6 +1,7 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const { sendSessionConfirmationEmail, sendSessionRescheduleEmail } = require('./emailService');
+const { sendSessionConfirmationEmail, sendSessionRescheduleEmail, sendSessionCancellationEmail } = require('./emailService');
+const { sendSMS } = require('./smsService');
 
 /**
  * Unified notification dispatcher.
@@ -72,18 +73,28 @@ const sendNotification = async ({
             console.error('Email dispatch in notification dispatcher failed:', err);
           });
         }
+      } else if (type === 'session_cancelled' && metadata.session) {
+        // For session cancellation, identify mentor and mentee roles
+        const mentor = recipient.role === 'mentor' ? recipient : sender;
+        const mentee = recipient.role === 'mentee' ? recipient : sender;
+        
+        const initiatorRole = sender ? sender.role : 'mentee';
+        
+        if (mentor && mentee) {
+          sendSessionCancellationEmail(mentor, mentee, metadata.session, initiatorRole).catch(err => {
+            console.error('Email dispatch in notification dispatcher failed:', err);
+          });
+        }
       }
     } else {
       console.log(`Email dispatch skipped for recipient ${recipientId} due to user preference.`);
     }
 
-    // 3. Dispatch SMS (Stub / Placeholder for Twilio)
+    // 3. Dispatch SMS (Real Twilio Integration)
     if (smsEnabled && recipient.phone) {
-      console.log('\n==================================================');
-      console.log('--- DEVELOPMENT MOCK SMS DISPATCH (TWILIO STUB) ---');
-      console.log(`To:      ${recipient.phone} (${recipient.firstName})`);
-      console.log(`Msg:     ${title} - ${message}`);
-      console.log('==================================================\n');
+      sendSMS(recipient.phone, `${title} - ${message}`).catch(err => {
+        console.error('Error sending SMS via notification dispatcher:', err);
+      });
     } else if (!smsEnabled) {
       console.log(`SMS dispatch skipped for recipient ${recipientId} due to user preference.`);
     }

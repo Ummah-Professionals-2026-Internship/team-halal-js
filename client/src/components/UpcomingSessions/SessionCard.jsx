@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { cancelSession } from '../../api-calls/sessions'
 
 const formatCountdown = (daysUntil) => {
   if (daysUntil <= 0) return 'Today'
@@ -26,10 +27,29 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
 
   const beyond48hrs = when.getTime() > Date.now() + 48 * 60 * 60 * 1000
   const canReschedule = status === 'scheduled' && beyond48hrs
+  const canCancel = status === 'scheduled' && beyond48hrs
+  const [cancelling, setCancelling] = useState(false)
 
   const handleReschedule = () => {
     if (!canReschedule) return
     navigate('/mentee/schedule', { state: { mentor: mentee, rescheduleSessionId: sessionId } })
+  }
+
+  const handleCancel = async () => {
+    if (!canCancel) return
+    if (!window.confirm('Are you sure you want to cancel this scheduled session? This will notify the other participant.')) {
+      return
+    }
+    setCancelling(true)
+    try {
+      await cancelSession(sessionId)
+      alert('Session successfully cancelled.')
+      window.location.reload()
+    } catch (err) {
+      alert(err.message || 'Failed to cancel session.')
+    } finally {
+      setCancelling(false)
+    }
   }
 
   return (
@@ -73,6 +93,18 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
             }`}
           >
             Reschedule
+          </button>
+          <button
+            onClick={handleCancel}
+            disabled={!canCancel || cancelling}
+            title={!canCancel && status === 'scheduled' ? 'Sessions can only be cancelled at least 48 hours in advance' : undefined}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              canCancel && !cancelling
+                ? 'text-red-600 border border-red-200 hover:bg-red-50 cursor-pointer'
+                : 'text-red-300 border border-red-100 cursor-not-allowed'
+            }`}
+          >
+            {cancelling ? 'Cancelling...' : 'Cancel'}
           </button>
           <button
             onClick={() => setShowModal(true)}

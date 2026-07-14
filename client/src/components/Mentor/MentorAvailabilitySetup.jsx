@@ -113,7 +113,15 @@ const MentorAvailabilitySetup = () => {
 
     setLoading(true)
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
-    const toSave = { ...saved, frequency, calendarAccess, profilePicture, manualAvailabilitySlots, customMeetingLink }
+    const toSave = { 
+      ...saved, 
+      frequency, 
+      calendarAccess, 
+      profilePicture, 
+      manualAvailabilitySlots, 
+      customMeetingLink,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    }
 
     try {
       await createMentorProfile(toSave)

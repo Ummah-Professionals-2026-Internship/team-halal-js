@@ -4,7 +4,7 @@ const Session = require('../models/Session');
 const User = require('../models/User');
 const Match = require('../models/Match');
 const requireAuth = require('../middleware/requireAuth');
-const { scheduleSessionOnGoogleCalendar, updateSessionOnGoogleCalendar } = require('../services/googleCalendarService');
+const { scheduleSessionOnGoogleCalendar, updateSessionOnGoogleCalendar, deleteSessionFromGoogleCalendar } = require('../services/googleCalendarService');
 const { sendNotification } = require('../services/notificationService');
 
 const MIN_LEAD_TIME_MS = 48 * 60 * 60 * 1000;
@@ -296,6 +296,99 @@ router.get('/', requireAuth, async (req, res) => {
             .populate('mentor', 'firstName lastName profilePicture email')
             .sort({ scheduledTime: 1 });
         res.json(sessions);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// PUT /api/sessions/:id/cancel - Cancel a scheduled session (mentor or mentee)
+router.put('/:id/cancel', requireAuth, async (req, res) => {
+    try {
+        const session = await Session.findOne({
+            _id: req.params.id,
+            status: 'scheduled',
+            $or: [{ mentee: req.user.id }, { mentor: req.user.id }]
+        });
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found, already cancelled, or access denied.' });
+        }
+
+        if (session.scheduledTime.getTime() < Date.now() + MIN_LEAD_TIME_MS) {
+            return res.status(400).json({ error: 'Sessions can only be cancelled at least 48 hours in advance.' });
+        }
+
+        session.status = 'cancelled';
+        await session.save();
+
+        const mentor = await User.findById(session.mentor);
+        const mentee = await User.findById(session.mentee);
+
+        // Delete from Google Calendar if event exists
+        if (mentor && mentee && session.googleCalendarEventId) {
+            try {
+                await deleteSessionFromGoogleCalendar(mentor, mentee, session.googleCalendarEventId);
+            } catch (calErr) {
+                console.error('Error deleting event from Google Calendar during cancellation:', calErr);
+            }
+        }
+
+        // Clean up cached calendarBusySlots for both users
+        const sessionStart = new Date(session.scheduledTime);
+        const durationMin = session.duration || 60;
+        const sessionEnd = new Date(sessionStart.getTime() + durationMin * 60 * 1000);
+
+        if (mentor && mentor.calendarBusySlots && mentor.calendarBusySlots.length > 0) {
+            mentor.calendarBusySlots = mentor.calendarBusySlots.filter(busy => {
+                const busyStart = new Date(busy.start);
+                const busyEnd = new Date(busy.end);
+                return !(busyStart < sessionEnd && busyEnd > sessionStart);
+            });
+            await mentor.save();
+        }
+
+        if (mentee && mentee.calendarBusySlots && mentee.calendarBusySlots.length > 0) {
+            mentee.calendarBusySlots = mentee.calendarBusySlots.filter(busy => {
+                const busyStart = new Date(busy.start);
+                const busyEnd = new Date(busy.end);
+                return !(busyStart < sessionEnd && busyEnd > sessionStart);
+            });
+            await mentee.save();
+        }
+
+        // Send notifications
+        const isMentor = String(session.mentor) === req.user.id;
+        const recipientId = isMentor ? session.mentee : session.mentor;
+        const senderId = isMentor ? session.mentor : session.mentee;
+        const actorName = isMentor ? `${mentor.firstName} ${mentor.lastName}` : `${mentee.firstName} ${mentee.lastName}`;
+
+        const sessionDate = new Date(session.scheduledTime);
+        const formattedDate = sessionDate.toLocaleDateString(undefined, { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        const formattedTime = sessionDate.toLocaleTimeString(undefined, { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+
+        const message = `${actorName} cancelled the session scheduled for ${formattedDate} at ${formattedTime}.`;
+
+        sendNotification({
+            recipientId,
+            senderId,
+            type: 'session_cancelled',
+            title: 'Session Cancelled',
+            message,
+            relatedId: session._id,
+            relatedModel: 'Session',
+            metadata: { session }
+        }).catch(err => {
+            console.error('Asynchronous notification dispatch failed:', err);
+        });
+
+        res.status(200).json(session);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
