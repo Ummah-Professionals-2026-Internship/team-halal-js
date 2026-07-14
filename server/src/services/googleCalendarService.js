@@ -121,6 +121,7 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   }
 
   const eventBody = {
+    iCalUID: `session_${session._id}@ummahprofessionals.com`,
     summary: `Mentorship Session: ${mentee.firstName} & ${mentor.firstName}`,
     description: `Service Type: ${session.service}\n\nSession Notes:\n${session.details || 'None'}`,
     start: {
