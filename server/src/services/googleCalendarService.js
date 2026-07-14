@@ -110,6 +110,16 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   const duration = session.duration || 60; // default 60 minutes
   const endTime = new Date(scheduledTime.getTime() + duration * 60 * 1000);
 
+  const attendees = [];
+  const hostEmail = host.googleCalendarTokens?.email || host.email;
+
+  if (mentor.email && mentor.email.toLowerCase() !== hostEmail.toLowerCase() && mentor._id.toString() !== host._id.toString()) {
+    attendees.push({ email: mentor.email });
+  }
+  if (mentee.email && mentee.email.toLowerCase() !== hostEmail.toLowerCase() && mentee._id.toString() !== host._id.toString()) {
+    attendees.push({ email: mentee.email });
+  }
+
   const eventBody = {
     summary: `Mentorship Session: ${mentee.firstName} & ${mentor.firstName}`,
     description: `Service Type: ${session.service}\n\nSession Notes:\n${session.details || 'None'}`,
@@ -121,10 +131,7 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
       dateTime: endTime.toISOString(),
       timeZone: 'UTC'
     },
-    attendees: [
-      { email: mentor.email },
-      { email: mentee.email }
-    ],
+    attendees,
     conferenceData: {
       createRequest: {
         requestId: `session_${session._id}_${Date.now()}`,
