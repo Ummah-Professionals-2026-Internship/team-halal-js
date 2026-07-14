@@ -72,6 +72,102 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
     host = mentee;
   }
 
+  const customMeetingLink = mentor.mentorProfile?.customMeetingLink;
+
+  if (customMeetingLink && customMeetingLink.trim()) {
+    console.log(`Mentor has custom meeting link configured: ${customMeetingLink}. Prioritizing it.`);
+
+    // If no calendar is connected or it is a mock token, return immediately
+    if (!host || host.googleCalendarTokens.accessToken === 'mock_access_token_123') {
+      return {
+        meetLink: customMeetingLink.trim(),
+        googleCalendarEventId: null
+      };
+    }
+
+    let accessToken = host.googleCalendarTokens.accessToken;
+    const expiryDate = host.googleCalendarTokens.expiryDate;
+
+    // Refresh token if necessary
+    if (expiryDate && Date.now() + 5 * 60 * 1000 >= expiryDate) {
+      try {
+        accessToken = await refreshGoogleTokens(host);
+      } catch (err) {
+        console.error('Error refreshing token for custom link event creation, falling back to link only:', err.message);
+        return {
+          meetLink: customMeetingLink.trim(),
+          googleCalendarEventId: null
+        };
+      }
+    }
+
+    const scheduledTime = new Date(session.scheduledTime);
+    const duration = session.duration || 60;
+    const endTime = new Date(scheduledTime.getTime() + duration * 60 * 1000);
+
+    const attendees = [];
+    const hostEmail = host.googleCalendarTokens?.email || host.email;
+
+    if (mentor.email && mentor.email.toLowerCase() !== hostEmail.toLowerCase() && mentor._id.toString() !== host._id.toString()) {
+      attendees.push({ email: mentor.email });
+    }
+    if (mentee.email && mentee.email.toLowerCase() !== hostEmail.toLowerCase() && mentee._id.toString() !== host._id.toString()) {
+      attendees.push({ email: mentee.email });
+    }
+
+    const eventBody = {
+      iCalUID: `session_${session._id}@ummahprofessionals.com`,
+      summary: `Mentorship Session: ${mentee.firstName} & ${mentor.firstName}`,
+      description: `Service Type: ${session.service}\n\nSession Notes:\n${session.details || 'None'}`,
+      location: customMeetingLink.trim(),
+      start: {
+        dateTime: scheduledTime.toISOString(),
+        timeZone: 'UTC'
+      },
+      end: {
+        dateTime: endTime.toISOString(),
+        timeZone: 'UTC'
+      },
+      attendees
+    };
+
+    try {
+      const response = await fetch(
+        'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(eventBody)
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to create Google Calendar event for custom link:', await response.text());
+        return {
+          meetLink: customMeetingLink.trim(),
+          googleCalendarEventId: null
+        };
+      }
+
+      const data = await response.json();
+      console.log('Successfully created Google Calendar Event for custom link. Event ID:', data.id);
+      return {
+        meetLink: customMeetingLink.trim(),
+        googleCalendarEventId: data.id
+      };
+    } catch (error) {
+      console.error('Error calling Google Calendar API for custom link:', error);
+      return {
+        meetLink: customMeetingLink.trim(),
+        googleCalendarEventId: null
+      };
+    }
+  }
+
   // If neither has connected Google Calendar, return a mock meet link to help in testing UI
   if (!host) {
     console.log('Neither user has connected Google Calendar. Generating a mock Meet link.');

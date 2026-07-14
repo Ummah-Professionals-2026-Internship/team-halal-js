@@ -102,7 +102,8 @@ const userSchema = new mongoose.Schema({
         yearsOfProfExp: Number,
         maxMentees: Number,
         frequency: String,
-        volunteeringFor: { type: [String], enum: ['general career advice', 'resume/portfolio review', 'mock interview']}
+        volunteeringFor: { type: [String], enum: ['general career advice', 'resume/portfolio review', 'mock interview']},
+        customMeetingLink: String
     },
 
     menteeProfile: {

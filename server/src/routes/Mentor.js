@@ -30,7 +30,8 @@ router.post('/', requireAuth, async (req, res) => {
       yearsOfProfExp: req.body.yearsOfProfExp,
       maxMentees: req.body.maxMentees,
       frequency: req.body.frequency,
-      volunteeringFor: req.body.volunteeringFor || []
+      volunteeringFor: req.body.volunteeringFor || [],
+      customMeetingLink: req.body.customMeetingLink
     }
     mentor.manualAvailabilitySlots = req.body.manualAvailabilitySlots || [];
     await mentor.save()
