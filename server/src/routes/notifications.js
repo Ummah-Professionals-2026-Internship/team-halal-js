@@ -50,6 +50,23 @@ router.patch('/:id/read', requireAuth, async (req, res) => {
   }
 });
 
+// PATCH /api/notifications/:id/unread - Mark a specific notification as unread
+router.patch('/:id/unread', requireAuth, async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, recipient: req.user.id },
+      { $set: { isRead: false } },
+      { new: true }
+    );
+    if (!notification) {
+      return res.status(404).json({ error: 'Notification not found or access denied.' });
+    }
+    res.json(notification);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/notifications/preferences - Get notification preferences for the logged-in user
 router.get('/preferences', requireAuth, async (req, res) => {
   try {
