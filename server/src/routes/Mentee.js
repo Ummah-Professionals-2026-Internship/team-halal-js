@@ -45,4 +45,19 @@ router.get('/', requireAuth, async (req, res) => {
   }
 })
 
+const UPDATABLE_FIELDS = ['firstName', 'lastName', 'email', 'linkedinUrl', 'university', 'majors', 'additionalInfo', 'manualAvailabilitySlots'];
+const UPDATABLE_MENTEE_PROFILE_FIELDS = ['academicStatus', 'desiredCareer', 'desiredServices'];
+
+router.patch('/me', requireAuth, async (req, res) => {
+  try {
+    const update = {};
+    UPDATABLE_FIELDS.forEach(f => { if (req.body[f] !== undefined) update[f] = req.body[f]; });
+    UPDATABLE_MENTEE_PROFILE_FIELDS.forEach(f => { if (req.body[f] !== undefined) update[`menteeProfile.${f}`] = req.body[f]; });
+    const mentee = await User.findByIdAndUpdate(req.user.id, update, { new: true, runValidators: true });
+    res.json(mentee);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+})
+
 module.exports = router;

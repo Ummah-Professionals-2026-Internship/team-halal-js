@@ -10,7 +10,10 @@ import MentorAvailabilitySetup from './components/Mentor/MentorAvailabilitySetup
 import MenteeProfileSetup from './components/Mentee/MenteeProfileSetup';
 import MenteeAcademicSetup from './components/Mentee/MenteeAcademicSetup';
 import MentorDashboard from './components/Mentor/MentorDashboard';
+import MentorViewProfile from './components/Mentor/MentorViewProfile';
 import MenteeDashboard from './components/Mentee/MenteeDashboard';
+import MenteeViewProfile from './components/Mentee/MenteeViewProfile';
+import MentorProfileView from './components/Mentee/MentorProfileView';
 import MenteeSchedulePage from './components/Mentee/MenteeSchedulePage';
 import MenteeBooking from './components/Mentee/MenteeBooking';
 import MenteeSessionsDashboard from './components/Mentee/MenteeSessionsDashboard';
@@ -33,7 +36,10 @@ function App() {
         
         {/* Dashboard Routes */}
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+        <Route path="/mentor/profile" element={<MentorViewProfile />} />
         <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
+        <Route path="/mentee/profile" element={<MenteeViewProfile />} />
+        <Route path="/mentee/mentor-profile" element={<MentorProfileView />} />
         <Route path="/mentee/schedule" element={<MenteeSchedulePage />} />
         <Route path="/mentee/booking" element={<MenteeBooking />} />
         <Route path="/mentee/sessions" element={<MenteeSessionsDashboard />} />

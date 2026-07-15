@@ -49,21 +49,16 @@ router.get('/', requireAuth, async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
-
+const UPDATABLE_FIELDS = ['firstName', 'lastName', 'email', 'linkedinUrl', 'university', 'majors', 'additionalInfo', 'manualAvailabilitySlots'];
+const UPDATABLE_MENTOR_PROFILE_FIELDS = ['jobTitle', 'employer', 'industry', 'yearsOfProfExp', 'volunteeringFor'];
 router.patch('/me',requireAuth, async (req, res) => {
   try{
-    const mentor=await User.findByIdAndUpdate(
-      req.user.id,
-      {
-        manualAvailabilitySlots: req.body.manualAvailabilitySlots
-      },
-      {
-        new:true
-      }
-    )
-      res.json(mentor)
-
-      }
+    const update = {};
+     UPDATABLE_FIELDS.forEach(f => { if (req.body[f] !== undefined) update[f] = req.body[f]; });
+    UPDATABLE_MENTOR_PROFILE_FIELDS.forEach(f => { if (req.body[f] !== undefined) update[`mentorProfile.${f}`] = req.body[f]; });
+    const mentor = await User.findByIdAndUpdate(req.user.id, update, { new: true, runValidators: true });
+    res.json(mentor);
+  }
       catch (err) {
     res.status(500).json({ error: err.message })
   }

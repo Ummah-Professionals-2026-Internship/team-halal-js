@@ -39,7 +39,9 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
               {userName} · {userRole}
             </p>
             <p onClick={handleLogout} className="text-[#8ACBDB] text-sm cursor-pointer hover:underline">Logout</p>
-            <p className="text-[#8ACBDB] text-sm cursor-pointer hover:underline">View Profile</p>
+            {(userRole === 'Mentor' || userRole === 'Mentee') && (
+              <p onClick={() => navigate(userRole === 'Mentor' ? '/mentor/profile' : '/mentee/profile')} className="text-[#8ACBDB] text-sm cursor-pointer hover:underline">View Profile</p>
+            )}
           </div>
 
           <input 
