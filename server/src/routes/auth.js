@@ -9,8 +9,15 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // GET /api/auth/me - Get current user
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('firstName lastName email role profilePicture mentorProfile menteeProfile manualAvailabilitySlots linkedinUrl university majors additionalInfo')
+    const user = await User.findById(req.user.id).select('firstName lastName email role profilePicture mentorProfile menteeProfile manualAvailabilitySlots linkedinUrl university majors additionalInfo timeZone')
     if (!user) return res.status(404).json({ message: 'User not found' })
+
+    const clientTimeZone = req.headers['x-timezone'];
+    if (clientTimeZone && user.timeZone !== clientTimeZone) {
+      user.timeZone = clientTimeZone;
+      await user.save();
+    }
+
     res.json(user)
   } catch (err) {
     res.status(500).json({ message: 'Server error' })

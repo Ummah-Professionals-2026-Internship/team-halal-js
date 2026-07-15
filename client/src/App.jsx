@@ -17,6 +17,9 @@ import MentorProfileView from './components/Mentee/MentorProfileView';
 import MenteeSchedulePage from './components/Mentee/MenteeSchedulePage';
 import MenteeBooking from './components/Mentee/MenteeBooking';
 import MenteeSessionsDashboard from './components/Mentee/MenteeSessionsDashboard';
+import NotificationsPage from './components/NotificationsPage';
+import LegalStatement from './components/LegalStatement';
+import UsageTerms from './components/UsageTerms';
 
 function App() {
   return (
@@ -43,6 +46,9 @@ function App() {
         <Route path="/mentee/schedule" element={<MenteeSchedulePage />} />
         <Route path="/mentee/booking" element={<MenteeBooking />} />
         <Route path="/mentee/sessions" element={<MenteeSessionsDashboard />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/privacy-policy" element={<LegalStatement />} />
+        <Route path="/terms-of-use" element={<UsageTerms />} />
 
         {/* Redirect any other path to /login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

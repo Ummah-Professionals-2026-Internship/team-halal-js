@@ -14,6 +14,7 @@ const sessionSchema = new mongoose.Schema({
     link: {type: String},
     details: {type: String},
     status: {type: String, enum: ['scheduled', 'completed', 'cancelled'], default: 'scheduled'},
+    googleCalendarEventId: {type: String},
 
 
 

@@ -16,7 +16,7 @@ router.post('/', requireAuth, async (req, res) => {
     mentee.referralSource = req.body.referralSource;
     if (req.body.profilePicture) mentee.profilePicture = req.body.profilePicture;
     mentee.state = req.body.state;
-    mentee.timeZone = req.body.timeZone;
+    mentee.timeZone = req.body.timeZone || mentee.timeZone || req.headers['x-timezone'] || 'UTC';
     mentee.additionalInfo = req.body.additionalInfo;
     mentee.university = req.body.university;
     mentee.majors = req.body.majors;
@@ -28,6 +28,7 @@ router.post('/', requireAuth, async (req, res) => {
       desiredCareer: req.body.desiredCareer,
       desiredServices: req.body.desiredServices
     }
+    mentee.manualAvailabilitySlots = req.body.manualAvailabilitySlots || [];
     await mentee.save();
     res.status(201).json({ message: 'Mentee saved successfully' });
   } catch (err) {

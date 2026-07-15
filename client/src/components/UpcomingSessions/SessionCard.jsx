@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { cancelSession } from '../../api-calls/sessions'
 
 const formatCountdown = (daysUntil) => {
   if (daysUntil <= 0) return 'Today'
@@ -11,8 +13,9 @@ const startOfDay = (d) => {
   return x
 }
 
-const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'scheduled' }) => {
+const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'scheduled', service, details }) => {
   const navigate = useNavigate()
+  const [showModal, setShowModal] = useState(false)
   const name = `${mentee?.firstName ?? ''} ${mentee?.lastName ?? ''}`.trim()
   const initial = mentee?.firstName?.[0]?.toUpperCase() ?? '?'
   const photo = mentee?.profilePicture
@@ -24,10 +27,29 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
 
   const beyond48hrs = when.getTime() > Date.now() + 48 * 60 * 60 * 1000
   const canReschedule = status === 'scheduled' && beyond48hrs
+  const canCancel = status === 'scheduled' && beyond48hrs
+  const [cancelling, setCancelling] = useState(false)
 
   const handleReschedule = () => {
     if (!canReschedule) return
     navigate('/mentee/schedule', { state: { mentor: mentee, rescheduleSessionId: sessionId } })
+  }
+
+  const handleCancel = async () => {
+    if (!canCancel) return
+    if (!window.confirm('Are you sure you want to cancel this scheduled session? This will notify the other participant.')) {
+      return
+    }
+    setCancelling(true)
+    try {
+      await cancelSession(sessionId)
+      alert('Session successfully cancelled.')
+      window.location.reload()
+    } catch (err) {
+      alert(err.message || 'Failed to cancel session.')
+    } finally {
+      setCancelling(false)
+    }
   }
 
   return (
@@ -35,14 +57,18 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
           {photo ? (
-            <img src={photo} alt={name} className="w-11 h-11 roundeded-full object-cover shrink-0"></img>
-          ) : (<div className="w-11 h-11 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold shrink-0">
-            {initial}
-          </div>
+            <img src={photo} alt={name} className="w-11 h-11 rounded-full object-cover shrink-0"></img>
+          ) : (
+            <div className="w-11 h-11 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold shrink-0">
+              {initial}
+            </div>
           )}
 
           <div className="min-w-0">
             <p className="font-bold text-[#00212C] text-sm truncate">{name}</p>
+            {service && (
+              <p className="text-xs text-slate-500 capitalize mt-0.5">{service}</p>
+            )}
           </div>
         </div>
         <div className="text-right shrink-0">
@@ -68,7 +94,22 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
           >
             Reschedule
           </button>
-          <button className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors">
+          <button
+            onClick={handleCancel}
+            disabled={!canCancel || cancelling}
+            title={!canCancel && status === 'scheduled' ? 'Sessions can only be cancelled at least 48 hours in advance' : undefined}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              canCancel && !cancelling
+                ? 'text-red-600 border border-red-200 hover:bg-red-50 cursor-pointer'
+                : 'text-red-300 border border-red-100 cursor-not-allowed'
+            }`}
+          >
+            {cancelling ? 'Cancelling...' : 'Cancel'}
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+          >
             View Details
           </button>
         </div>
@@ -89,6 +130,101 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
           {link ? 'Join Meeting' : 'No link yet'}
         </a>
       </div>
+
+      {/* Details Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col gap-4 text-left">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-base font-bold text-[#00212C]">Session Details</h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="flex flex-col gap-4 text-sm text-slate-700">
+              <div>
+                <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Participant</span>
+                <div className="flex items-center gap-2.5 mt-1.5">
+                  {photo ? (
+                    <img src={photo} alt={name} className="w-9 h-9 rounded-full object-cover shrink-0"></img>
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      {initial}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-slate-900 text-xs">{name}</p>
+                    <p className="text-[11px] text-slate-500">{mentee?.email || 'No email provided'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Service Type</span>
+                <p className="font-semibold text-slate-900 mt-1 capitalize text-xs">{service || 'Mentorship Program'}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Date</span>
+                  <p className="font-semibold text-slate-900 mt-1 text-xs">{dateStr}</p>
+                </div>
+                <div>
+                  <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Time</span>
+                  <p className="font-semibold text-slate-900 mt-1 text-xs">{timeStr}</p>
+                </div>
+              </div>
+
+              <div>
+                <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Meeting Link</span>
+                {link ? (
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#007CA6] font-semibold underline break-all block mt-1 text-xs"
+                  >
+                    {link}
+                  </a>
+                ) : (
+                  <p className="text-slate-400 mt-1 text-xs">No link available yet</p>
+                )}
+              </div>
+
+              <div>
+                <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Session Notes</span>
+                <p className="bg-slate-50 rounded-lg p-3 border border-slate-100 text-xs italic mt-1.5 text-slate-600 whitespace-pre-wrap leading-relaxed">
+                  {details ? `"${details}"` : 'No additional notes provided.'}
+                </p>
+              </div>
+
+              <div>
+                <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Status</span>
+                <span className={`inline-block rounded-full text-[10px] font-bold px-2.5 py-0.5 mt-1.5 capitalize ${
+                  status === 'scheduled' ? 'bg-emerald-100 text-emerald-800' :
+                  status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                  'bg-slate-100 text-slate-800'
+                }`}>
+                  {status}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2 text-right">
+              <button
+                onClick={() => setShowModal(false)}
+                className="bg-[#003F55] hover:bg-[#002B3B] text-white font-semibold px-4 py-2 rounded-lg text-xs transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

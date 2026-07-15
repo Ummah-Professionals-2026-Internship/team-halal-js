@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import CompatibilityRing from './CompatibilityRing';
 
 const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
   const navigate = useNavigate();
@@ -39,6 +40,13 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
           </div>
         )}
       </div>
+
+      {typeof mentor.compatibilityScore === 'number' && (
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <CompatibilityRing score={mentor.compatibilityScore} />
+          <span className="text-[10px] text-[#00212C] font-medium">Match</span>
+        </div>
+      )}
 
       <div className="flex flex-col items-end gap-2 shrink-0">
         <div className="flex flex-col text-sm items-end">

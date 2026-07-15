@@ -21,6 +21,7 @@ const MentorAvailabilitySetup = () => {
   const [profilePicture, setProfilePicture] = useState('')
   const [error, setError] = useState('')
   const [manualAvailabilitySlots, setManualAvailabilitySlots] = useState([])
+  const [customMeetingLink, setCustomMeetingLink] = useState('')
 
   useEffect(() => {
     const savedTemp = localStorage.getItem('mentorStep3Temp')
@@ -29,6 +30,7 @@ const MentorAvailabilitySetup = () => {
       if (parsed.frequency) setFrequency(parsed.frequency)
       if (parsed.profilePicture) setProfilePicture(parsed.profilePicture)
       if (parsed.profilePictureName) setProfilePictureName(parsed.profilePictureName)
+      if (parsed.customMeetingLink) setCustomMeetingLink(parsed.customMeetingLink)
       localStorage.removeItem('mentorStep3Temp')
       return
     }
@@ -54,7 +56,7 @@ const MentorAvailabilitySetup = () => {
       setError('Please log in again to connect your calendar.')
       return
     }
-    localStorage.setItem('mentorStep3Temp', JSON.stringify({ frequency, profilePicture, profilePictureName }))
+    localStorage.setItem('mentorStep3Temp', JSON.stringify({ frequency, profilePicture, profilePictureName, customMeetingLink }))
     window.location.href = `${apiBaseUrl}/api/auth/google?token=${token}`
   }
 
@@ -94,9 +96,32 @@ const MentorAvailabilitySetup = () => {
 
   const handleSubmit = async () => {
     if (loading) return
+
+    // URL Validation if custom link is provided
+    if (customMeetingLink.trim()) {
+      try {
+        const url = new URL(customMeetingLink.trim());
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          setError('Please enter a valid link starting with http:// or https://');
+          return;
+        }
+      } catch (_) {
+        setError('Please enter a valid meeting URL (e.g., https://zoom.us/j/000 or https://meet.google.com/abc-defg-hij)');
+        return;
+      }
+    }
+
     setLoading(true)
     const saved = JSON.parse(localStorage.getItem('mentorStep2') ?? '{}')
-    const toSave = { ...saved, frequency, calendarAccess, profilePicture, manualAvailabilitySlots }
+    const toSave = { 
+      ...saved, 
+      frequency, 
+      calendarAccess, 
+      profilePicture, 
+      manualAvailabilitySlots, 
+      customMeetingLink,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    }
 
     try {
       await createMentorProfile(toSave)
@@ -225,26 +250,44 @@ const MentorAvailabilitySetup = () => {
           </select>
         </div>
 
-        {/* Google Calendar */}
-        <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={googleCalIcon} alt="Google Calendar" className="w-9 h-9 object-contain shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Google Calendar Sync</p>
-              <p className="text-xs text-slate-400 mt-0.5">Link your calendar to simplify scheduling.</p>
+        {/* Google Calendar & Custom Meeting Link */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          {/* Google Calendar */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src={googleCalIcon} alt="Google Calendar" className="w-9 h-9 object-contain shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Google Calendar Sync</p>
+                <p className="text-xs text-slate-400 mt-0.5">Link your calendar to simplify scheduling.</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={calendarAccess ? handleDisconnectCalendar : handleConnectCalendar}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all flex-shrink-0 ${
+                calendarAccess
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              {calendarAccess ? '✓ Connected' : 'Connect'}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={calendarAccess ? handleDisconnectCalendar : handleConnectCalendar}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all flex-shrink-0 ${
-              calendarAccess
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
-                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-            }`}
-          >
-            {calendarAccess ? '✓ Connected' : 'Connect'}
-          </button>
+
+          {/* Custom Meeting Link */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-center">
+            <label className="text-sm font-semibold text-slate-800 mb-1">Custom Meeting Link (Optional)</label>
+            <input
+              type="url"
+              value={customMeetingLink}
+              onChange={(e) => setCustomMeetingLink(e.target.value)}
+              placeholder="e.g., https://zoom.us/j/... or https://meet.google.com/..."
+              className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors w-full"
+            />
+            <p className="text-[9px] text-slate-400 mt-1 leading-snug">
+              Accepts any persistent video link (Zoom, Google Meet, Teams, Webex, etc.) to prioritize it for scheduled sessions.
+            </p>
+          </div>
         </div>
 
         {/* Availability Picker */}

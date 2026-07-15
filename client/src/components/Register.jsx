@@ -131,8 +131,8 @@ const Register = () => {
           </button>
         </form>
       </AuthCard>
-      <button 
-        className="md:absolute md:bottom-10 md:left-[92px] w-[170px] h-[65px] bg-[#003F55] border border-[#036383] rounded-lg text-[#F5F5F5] text-[25px] font-bold cursor-pointer transition-all duration-200 active:scale-[0.98] hover:bg-[#002d3e] flex items-center justify-center self-center md:self-auto mt-5 md:mt-0" 
+      <button
+        className="w-[170px] h-[56px] bg-[#003F55] border border-[#036383] rounded-lg text-[#F5F5F5] text-lg font-bold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#002d3e] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#007CA6]/35 flex items-center justify-center shadow-[0_4px_12px_rgba(0,49,63,0.25)]"
         onClick={() => navigate('/login')}
       >
         Back

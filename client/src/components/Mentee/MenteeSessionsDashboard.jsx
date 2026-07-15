@@ -49,7 +49,7 @@ const MenteeSessionsDashboard = () => {
           />
           {upcomingSessions.length > 0
             ? upcomingSessions.map(s => (
-                <SessionCard key={s._id} sessionId={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} status={s.status} />
+                <SessionCard key={s._id} sessionId={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} status={s.status} details={s.details} />
               ))
             : <EmptyState text="No upcoming sessions yet." />}
         </div>
@@ -67,7 +67,7 @@ const MenteeSessionsDashboard = () => {
           <SectionHeading title="Completed Sessions" className="mb-4" />
           {completedSessions.length > 0
             ? completedSessions.map(s => (
-                <SessionCard key={s._id} sessionId={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} status={s.status} />
+                <SessionCard key={s._id} sessionId={s._id} mentee={s.mentor} service={s.service} scheduledTime={s.scheduledTime} link={s.link} status={s.status} details={s.details} />
               ))
             : <EmptyState text="No completed sessions so far." />}
         </div>

@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { MAJORS_LIST, UNIVERSITIES_LIST, MENTORSHIP_TAGS } from '../../constants/lists'
+import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import { MENTOR_SERVICES } from '../../constants/services'
+import AvailabilityPick from '../availability/AvailabilityPick'
 import googleCalIcon from '../../assets/google-cal-icon.png'
 import { disconnectGoogle } from '../../api-calls/auth'
 import { createMenteeProfile } from '../../api-calls/mentees'
@@ -19,7 +21,7 @@ const MenteeAcademicSetup = () => {
     majors: [],
     academicStatus: '',
     desiredCareer: '',
-    lookingFor: [],
+    desiredServices: [],
     calendarAccess: false,
     profilePicture: null,
     additionalInfo: '',
@@ -97,6 +99,7 @@ const MenteeAcademicSetup = () => {
   const [uploadingPic, setUploadingPic] = useState(false)
   const [picMessage, setPicMessage] = useState('')
   const [profilePictureName, setProfilePictureName] = useState('')
+  const [manualAvailabilitySlots, setManualAvailabilitySlots] = useState([])
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target
@@ -105,6 +108,16 @@ const MenteeAcademicSetup = () => {
     setFormData(function(prev) {
       return { ...prev, [name]: newValue }
     })
+  }
+
+  const handleCheckbox = (e) => {
+    const { name, value, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+        ? [...prev[name], value]
+        : prev[name].filter(v => v !== value)
+    }))
   }
 
   const handleProfilePictureChange = async (e) => {
@@ -142,7 +155,9 @@ const MenteeAcademicSetup = () => {
     const oldData = JSON.parse(localStorage.getItem('menteeStep1')) || {}
     const toSave = {
       ...oldData,
-      ...formData
+      ...formData,
+      manualAvailabilitySlots,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
     }
 
     try {
@@ -215,15 +230,33 @@ const MenteeAcademicSetup = () => {
 
 
 
-          <SearchableSelect
-            label="What are you looking for in a mentor?"
-            name="lookingFor"
-            value={formData.lookingFor}
-            options={MENTORSHIP_TAGS}
-            placeholder="Select all that apply..."
-            onChange={handleChange}
-            isMulti={true}
-          />
+          <label className="block mb-1">What are you looking for in a mentor?</label>
+          <div className="mb-4 flex flex-col gap-0.5">
+            {MENTOR_SERVICES.map(service => (
+              <label key={service.id} className="flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer hover:bg-slate-50 group transition-colors">
+                <input
+                  type="checkbox"
+                  name="desiredServices"
+                  value={service.id}
+                  checked={formData.desiredServices.includes(service.id)}
+                  onChange={handleCheckbox}
+                  className="sr-only"
+                />
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                  formData.desiredServices.includes(service.id)
+                    ? 'bg-[#007CA6] border-[#007CA6]'
+                    : 'border-slate-300 group-hover:border-[#007CA6]/50'
+                }`}>
+                  {formData.desiredServices.includes(service.id) && (
+                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-sm text-slate-700">{service.label}</span>
+              </label>
+            ))}
+          </div>
 
           {/* Google Calendar Connection Card */}
           <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
@@ -247,7 +280,13 @@ const MenteeAcademicSetup = () => {
               {formData.calendarAccess ? '✓ Connected' : 'Connect'}
             </button>
           </div>
-          
+
+          {/* Manual Availability */}
+          <div className="mb-5">
+            <p className="text-sm font-semibold text-slate-700 mb-3">Your Availability</p>
+            <AvailabilityPick onChange={setManualAvailabilitySlots} />
+          </div>
+
           {/* Profile Picture Upload Card */}
           <div className="mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">
             <label className="block text-sm font-semibold text-slate-700 mb-3 text-center">
