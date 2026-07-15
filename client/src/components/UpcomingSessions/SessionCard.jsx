@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { cancelSession } from '../../api-calls/sessions'
 
 const formatCountdown = (daysUntil) => {
-  if (daysUntil <= 0) return 'Today'
+  if (daysUntil === 0) return 'Today'
   if (daysUntil === 1) return 'Tomorrow'
-  return `In ${daysUntil} days`
+  if (daysUntil > 1) return `In ${daysUntil} days`
+  if (daysUntil === -1) return 'Yesterday'
+  return `${Math.abs(daysUntil)} days ago`
 }
 const startOfDay = (d) => {
   const x = new Date(d)
@@ -72,7 +74,9 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
           </div>
         </div>
         <div className="text-right shrink-0">
-          <span className="inline-block rounded-full bg-[#fdbb36] text-[#00212C] text-[11px] font-bold px-2.5 py-1">
+          <span className={`inline-block rounded-full text-[11px] font-bold px-2.5 py-1 ${
+            daysUntil < 0 ? 'bg-slate-200 text-slate-600' : 'bg-[#fdbb36] text-[#00212C]'
+          }`}>
             {formatCountdown(daysUntil)}
           </span>
           <p className="text-xs text-slate-500 mt-1.5">{dateStr}</p>

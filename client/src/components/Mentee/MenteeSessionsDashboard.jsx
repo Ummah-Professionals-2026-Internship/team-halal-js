@@ -30,8 +30,11 @@ const MenteeSessionsDashboard = () => {
       .catch(console.error);
   }, []);
 
-  const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
-  const completedSessions = sessions.filter(s => s.status === 'completed');
+  const isPast = s => new Date(s.scheduledTime) < new Date();
+  const upcomingSessions = sessions.filter(s => s.status === 'scheduled' && !isPast(s));
+  const completedSessions = sessions
+    .filter(s => s.status === 'completed' || (s.status === 'scheduled' && isPast(s)))
+    .sort((a, b) => new Date(b.scheduledTime) - new Date(a.scheduledTime));
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser}>
