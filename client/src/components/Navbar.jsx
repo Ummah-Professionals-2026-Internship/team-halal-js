@@ -81,14 +81,12 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
     const formData = new FormData();
     formData.append('profilePicture', file);
 
-    const token = localStorage.getItem('token');
-    await fetch('/api/upload/profile-picture', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`},
-      body: formData,
-    });
-
-    onPhotoUpdate?.();
+    try {
+      await uploadProfilePicture(formData);
+      onPhotoUpdate?.();
+    } catch (err) {
+      console.error(err);
+    }
   };
   return (
     <header className="relative z-20 w-full h-[126px] bg-gradient-to-b from-[#0c4a63] to-[#00303f] flex justify-between items-center px-[42px] box-border shadow-[0_4px_18px_rgba(0,0,0,0.25)]">

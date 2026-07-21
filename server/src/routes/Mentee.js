@@ -46,7 +46,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 })
 
-const UPDATABLE_FIELDS = ['firstName', 'lastName', 'email', 'linkedinUrl', 'university', 'majors', 'additionalInfo', 'manualAvailabilitySlots'];
+const UPDATABLE_FIELDS = ['firstName', 'lastName', 'email', 'phone', 'state', 'referralSource', 'resume', 'linkedinUrl', 'websiteUrl', 'university', 'majors', 'additionalInfo', 'manualAvailabilitySlots', 'notificationPreferences'];
 const UPDATABLE_MENTEE_PROFILE_FIELDS = ['academicStatus', 'desiredCareer', 'desiredServices'];
 
 router.patch('/me', requireAuth, async (req, res) => {

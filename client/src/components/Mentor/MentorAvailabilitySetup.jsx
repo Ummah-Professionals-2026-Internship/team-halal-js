@@ -4,7 +4,7 @@ import PageLayout from '../PageLayout'
 import googleCalIcon from '../../assets/google-cal-icon.png'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import { createMentorProfile } from '../../api-calls/mentors'
-import { disconnectGoogle } from '../../api-calls/auth'
+import { disconnectGoogle, getMe } from '../../api-calls/auth'
 import { uploadProfilePicture } from '../../api-calls/upload'
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || ''
@@ -35,13 +35,9 @@ const MentorAvailabilitySetup = () => {
       return
     }
     // Pre-fill with existing profile picture (e.g. Google photo) if no manual upload yet
-    const token = localStorage.getItem('token')
-    if (token) {
-      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => { if (data?.profilePicture && !profilePicture) setProfilePicture(data.profilePicture) })
-        .catch(() => {})
-    }
+    getMe()
+      .then(data => { if (data?.profilePicture && !profilePicture) setProfilePicture(data.profilePicture) })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {

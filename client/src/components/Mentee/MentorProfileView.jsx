@@ -44,6 +44,7 @@ const MentorProfileView = () => {
           {title && <p className="text-sm text-[#00212C] text-center mt-1">{title}</p>}
           {education && <p className="text-sm text-[#00212C] text-center">({education})</p>}
           {experience && <p className="text-sm text-[#00212C] text-center mt-1">{experience}</p>}
+          {mentor.state && <p className="text-xs font-semibold text-[#007CA6] text-center mt-1">Location: {mentor.state}</p>}
 
           {topics.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2 mt-3">
@@ -59,16 +60,38 @@ const MentorProfileView = () => {
             </div>
           )}
 
-          {mentor.linkedinUrl && (
-            <a
-              href={/^https?:\/\//i.test(mentor.linkedinUrl) ? mentor.linkedinUrl : `https://${mentor.linkedinUrl}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-[#003F55] underline mt-3"
-            >
-              LinkedIn
-            </a>
-          )}
+          <div className="flex flex-wrap justify-center gap-3 mt-3 text-xs font-semibold">
+            {mentor.linkedinUrl && (
+              <a
+                href={/^https?:\/\//i.test(mentor.linkedinUrl) ? mentor.linkedinUrl : `https://${mentor.linkedinUrl}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#007CA6] bg-white px-3 py-1 rounded-lg shadow-sm hover:underline"
+              >
+                LinkedIn Profile
+              </a>
+            )}
+            {mentor.websiteUrl && (
+              <a
+                href={/^https?:\/\//i.test(mentor.websiteUrl) ? mentor.websiteUrl : `https://${mentor.websiteUrl}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#007CA6] bg-white px-3 py-1 rounded-lg shadow-sm hover:underline"
+              >
+                Portfolio / Website
+              </a>
+            )}
+            {mentor.resume && (
+              <a
+                href={mentor.resume}
+                target="_blank"
+                rel="noreferrer"
+                className="text-slate-700 bg-white px-3 py-1 rounded-lg shadow-sm hover:underline"
+              >
+                View Resume
+              </a>
+            )}
+          </div>
 
           {mentor.additionalInfo && (
             <div className="w-full mt-4">

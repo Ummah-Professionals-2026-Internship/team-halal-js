@@ -50,8 +50,8 @@ router.get('/', requireAuth, async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
-const UPDATABLE_FIELDS = ['firstName', 'lastName', 'email', 'linkedinUrl', 'university', 'majors', 'additionalInfo', 'manualAvailabilitySlots'];
-const UPDATABLE_MENTOR_PROFILE_FIELDS = ['jobTitle', 'employer', 'industry', 'yearsOfProfExp', 'volunteeringFor'];
+const UPDATABLE_FIELDS = ['firstName', 'lastName', 'email', 'phone', 'state', 'referralSource', 'resume', 'linkedinUrl', 'websiteUrl', 'university', 'majors', 'additionalInfo', 'manualAvailabilitySlots', 'notificationPreferences'];
+const UPDATABLE_MENTOR_PROFILE_FIELDS = ['jobTitle', 'employer', 'industry', 'yearsOfProfExp', 'volunteeringFor', 'customMeetingLink', 'maxMentees', 'frequency'];
 router.patch('/me',requireAuth, async (req, res) => {
   try{
     const update = {};
