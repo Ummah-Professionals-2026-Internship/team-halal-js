@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import AuthCard from './AuthCard';
+import { googleRegister } from '../api-calls/auth';
 
 const GoogleRegister = () => {
   const navigate = useNavigate();
@@ -26,18 +27,7 @@ const GoogleRegister = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/google/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tempToken, role }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || 'Registration failed. Please try again.');
-        return;
-      }
+      const data = await googleRegister(tempToken, role);
 
       localStorage.setItem('token', data.token);
 

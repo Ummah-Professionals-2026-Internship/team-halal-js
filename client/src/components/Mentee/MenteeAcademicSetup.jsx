@@ -7,7 +7,7 @@ import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
 import AvailabilityPick from '../availability/AvailabilityPick'
 import googleCalIcon from '../../assets/google-cal-icon.png'
-import { disconnectGoogle } from '../../api-calls/auth'
+import { disconnectGoogle, getMe } from '../../api-calls/auth'
 import { createMenteeProfile } from '../../api-calls/mentees'
 import { uploadProfilePicture } from '../../api-calls/upload'
 
@@ -23,9 +23,14 @@ const MenteeAcademicSetup = () => {
     desiredCareer: '',
     desiredServices: [],
     calendarAccess: false,
-    profilePicture: null,
+    profilePicture: '',
+    manualAvailabilitySlots: [],
     additionalInfo: '',
   })
+  const [profilePictureName, setProfilePictureName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [uploadingPic, setUploadingPic] = useState(false)
+  const [picMessage, setPicMessage] = useState('')
 
   useEffect(() => {
     const savedTemp = localStorage.getItem('menteeStep2Temp');
@@ -37,17 +42,13 @@ const MenteeAcademicSetup = () => {
       return;
     }
     // Pre-fill with existing profile picture (e.g. Google photo) if no manual upload yet
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.profilePicture) {
-            setFormData(prev => ({ ...prev, profilePicture: data.profilePicture }));
-          }
-        })
-        .catch(() => {});
-    }
+    getMe()
+      .then(data => {
+        if (data?.profilePicture) {
+          setFormData(prev => ({ ...prev, profilePicture: data.profilePicture }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -89,16 +90,10 @@ const MenteeAcademicSetup = () => {
           ...prev,
           university: parsed.university || prev.university,
           majors: parsedMajors,
-          desiredCareer: parsed.desiredCareer || prev.desiredCareer
         };
       })
     }
   }, [])
-
-  const [loading, setLoading] = useState(false)
-  const [uploadingPic, setUploadingPic] = useState(false)
-  const [picMessage, setPicMessage] = useState('')
-  const [profilePictureName, setProfilePictureName] = useState('')
   const [manualAvailabilitySlots, setManualAvailabilitySlots] = useState([])
 
   const handleChange = (e) => {

@@ -277,6 +277,52 @@ router.get('/mentor/:mentorId/booked', requireAuth, async (req, res) => {
     }
 });
 
+router.get('/mentee/:menteeId/booked', requireAuth, async (req, res) => {
+    try {
+        // 1. Fetch scheduled mentorship sessions from the database
+        const sessions = await Session.find({ mentee: req.params.menteeId, status: 'scheduled' })
+            .select('scheduledTime');
+
+        // 2. Fetch the mentee's user document to check Google Calendar busy slots
+        const mentee = await User.findById(req.params.menteeId).select('calendarBusySlots');
+
+        if (mentee && mentee.calendarBusySlots && mentee.calendarBusySlots.length > 0) {
+            const now = new Date();
+            // Start from 2 days ago to cover current week views and timezone boundary shifts
+            const startTimeLimit = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+            startTimeLimit.setMinutes(0, 0, 0);
+
+            // Look up to 45 days in the future
+            const endTimeLimit = new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000);
+
+            // Convert existing sessions' scheduled times to a Set of timestamps for quick lookup and de-duplication
+            const existingBookings = new Set(sessions.map(s => new Date(s.scheduledTime).getTime()));
+
+            for (let time = startTimeLimit.getTime(); time <= endTimeLimit.getTime(); time += 60 * 60 * 1000) {
+                // If there's already a mentorship session at this hour, skip to avoid duplicates
+                if (existingBookings.has(time)) continue;
+
+                const slotStart = new Date(time);
+                const slotEnd = new Date(time + 60 * 60 * 1000);
+
+                const isBusy = mentee.calendarBusySlots.some(busy => {
+                    const busyStart = new Date(busy.start);
+                    const busyEnd = new Date(busy.end);
+                    return busyStart < slotEnd && busyEnd > slotStart;
+                });
+
+                if (isBusy) {
+                    sessions.push({ scheduledTime: slotStart });
+                }
+            }
+        }
+
+        res.json(sessions);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/mentee', requireAuth, async (req, res) => {
     try {
         const sessions = await Session.find({ mentee: req.user.id })
@@ -292,7 +338,7 @@ router.get('/', requireAuth, async (req, res) => {
     try {
         // Retrieve sessions for mentors, populating both to be safe
         const sessions = await Session.find({ mentor: req.user.id })
-            .populate('mentee', 'firstName lastName profilePicture email')
+            .populate('mentee', 'firstName lastName profilePicture email manualAvailabilitySlots menteeProfile majors university linkedinUrl additionalInfo')
             .populate('mentor', 'firstName lastName profilePicture email')
             .sort({ scheduledTime: 1 });
         res.json(sessions);

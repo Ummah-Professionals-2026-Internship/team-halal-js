@@ -38,7 +38,12 @@ const MentorProfileCard = ({ mentor, recommended }) => {
       )}
 
       {mentor.linkedinUrl && (
-        <a href={mentor.linkedinUrl} target="_blank" rel="noreferrer" className="text-sm text-[#003F55] underline mt-3">
+        <a
+          href={/^https?:\/\//i.test(mentor.linkedinUrl) ? mentor.linkedinUrl : `https://${mentor.linkedinUrl}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-[#003F55] underline mt-3"
+        >
           LinkedIn
         </a>
       )}

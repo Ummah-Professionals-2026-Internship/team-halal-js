@@ -29,7 +29,7 @@ const times = [
   "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
 ]
 
-const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
+const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", availabilityLabel = "Mentor's Availability", onChange, conflicts = [], sessions = [], mentorBusy = [], conflictInfo = {}, sessionInfo = {}, sessionMentorName = '', readOnly = false, mentorSlots = [], initialSlots=[], onSlotSelect, selectedSlot = null }) => {
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()))
   const [selectedSlots, setSelectedSlots] = useState([])
   const [slotInfo, setSlotInfo] = useState(null)
@@ -251,10 +251,10 @@ const AvailabilityPick = ({ title = "Set Weekly Mentoring Hours", onChange, conf
             <div className="w-2 h-2 rounded-full bg-red-400" /> {readOnly ? 'Your Conflicts' : 'Your Conflicts'}
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-300" /> {readOnly ? "Mentor's Availability" : 'Your Mentoring Hours'}
+            <div className="w-2 h-2 rounded-full bg-green-300" /> {readOnly ? availabilityLabel : 'Your Mentoring Hours'}
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-purple-300" /> {readOnly ? 'Booked With This Mentor' : 'Your Sessions'}
+            <div className="w-2 h-2 rounded-full bg-purple-300" /> {readOnly ? `Booked With ${sessionMentorName || 'This Person'}` : 'Your Sessions'}
           </div>
         </div>
         {!readOnly && <p className="text-center text-gray-500 mt-0.5" style={{ fontSize: '9px' }}>Drag to Edit Mentoring Hours</p>}

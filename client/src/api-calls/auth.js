@@ -84,3 +84,20 @@ export async function disconnectGoogle() {
     throw new Error(data.message || 'Failed to disconnect Google Calendar');
   }
 }
+
+export async function googleRegister(tempToken, role) {
+  const res = await apiFetch('/api/auth/google/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tempToken, role }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Registration failed. Please try again.');
+  }
+
+  return data;
+}
+
