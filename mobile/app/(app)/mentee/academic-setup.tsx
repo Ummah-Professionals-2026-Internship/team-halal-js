@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { Text, TextInput, Pressable, ActivityIndicator, Image, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { SimplePicker } from '../../../components/onboarding/SimplePicker';
@@ -11,6 +11,7 @@ import { Screen } from '../../../components/Screen';
 import { UNIVERSITIES_LIST, MAJORS_LIST } from '../../../constants/lists';
 import { MENTOR_SERVICES } from '../../../constants/services';
 import { uploadProfilePicture } from '../../../lib/upload-api';
+import { resolveUploadUrl } from '../../../lib/upload-url';
 import { loadStep, clearSteps } from '../../../lib/onboarding-storage';
 import { createMenteeProfile, type AvailabilitySlot } from '../../../lib/onboarding-api';
 import { useSession } from '../../../lib/session-context';
@@ -41,6 +42,8 @@ type MenteeResumeData = {
   desiredCareer: string;
 };
 
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 const inputClasses = 'h-[56px] bg-white rounded-lg px-4 text-base text-brand-text border border-brand-border';
 
 export default function MenteeAcademicSetup() {
@@ -53,6 +56,7 @@ export default function MenteeAcademicSetup() {
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [profilePicturePath, setProfilePicturePath] = useState('');
+  const [localPhotoUri, setLocalPhotoUri] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -79,6 +83,7 @@ export default function MenteeAcademicSetup() {
     if (result.canceled || !result.assets?.[0]) return;
 
     const asset = result.assets[0];
+    setLocalPhotoUri(asset.uri);
     setUploadingPhoto(true);
     setError('');
     try {
@@ -128,10 +133,6 @@ export default function MenteeAcademicSetup() {
         manualAvailabilitySlots: slots,
       });
       await clearSteps(['menteeStep1', 'menteeResumeData']);
-      // Navigate straight to the dashboard rather than '/', which would
-      // re-run (app)/index.tsx's redirect based on session `user` state —
-      // that state update from refreshUser() isn't guaranteed to have landed
-      // yet, which could bounce back into onboarding on a stale read.
       router.replace('/mentee-dashboard');
       refreshUser().catch(() => {});
     } catch (err) {
@@ -141,10 +142,12 @@ export default function MenteeAcademicSetup() {
     }
   };
 
+  const previewUri = localPhotoUri || (profilePicturePath ? resolveUploadUrl(profilePicturePath) : null);
+
   return (
     <Screen>
       <OnboardingHeader title="Mentee Academic — Step 2 of 2" />
-      {error ? <Text className="text-brand-error">{error}</Text> : null}
+      {error ? <Text className="text-brand-error" style={fontStyle}>{error}</Text> : null}
 
       <SearchableSelectField
         label="University"
@@ -176,10 +179,11 @@ export default function MenteeAcademicSetup() {
         placeholderTextColor="#9a9a9a"
         value={desiredCareer}
         onChangeText={setDesiredCareer}
+        style={fontStyle}
         className={inputClasses}
       />
 
-      <Text className="text-sm font-semibold text-brand-text mt-2">
+      <Text className="text-sm text-brand-text mt-2" style={fontBoldStyle}>
         Which services are you looking for? (optional)
       </Text>
       <TagChipGroup tags={MENTOR_SERVICES} value={desiredServices} onChange={setDesiredServices} />
@@ -187,13 +191,22 @@ export default function MenteeAcademicSetup() {
       <Pressable
         onPress={handlePickPhoto}
         disabled={uploadingPhoto}
-        className="h-[56px] rounded-lg border border-dashed border-brand-primary items-center justify-center"
+        className={`rounded-lg border items-center justify-center p-4 ${
+          previewUri ? 'border-brand-primary bg-brand-primary/5' : 'border-dashed border-brand-primary bg-white h-[56px]'
+        }`}
       >
         {uploadingPhoto ? (
           <ActivityIndicator color="#007CA6" />
+        ) : previewUri ? (
+          <View className="items-center gap-2">
+            <Image source={{ uri: previewUri }} className="w-20 h-20 rounded-full border-2 border-brand-primary" />
+            <Text className="text-brand-primary text-sm" style={fontBoldStyle}>
+              ✓ Photo Uploaded (Tap to Change)
+            </Text>
+          </View>
         ) : (
-          <Text className="text-brand-primary font-semibold">
-            {profilePicturePath ? 'Photo uploaded ✓' : 'Upload Profile Picture (optional)'}
+          <Text className="text-brand-primary" style={fontBoldStyle}>
+            Upload Profile Picture (optional)
           </Text>
         )}
       </Pressable>
@@ -205,11 +218,12 @@ export default function MenteeAcademicSetup() {
         onChangeText={setAdditionalInfo}
         multiline
         numberOfLines={4}
+        style={fontStyle}
         className="bg-white rounded-lg px-4 py-3 text-base text-brand-text border border-brand-border min-h-[100px]"
         textAlignVertical="top"
       />
 
-      <Text className="text-sm font-semibold text-brand-text mt-2">Weekly Availability</Text>
+      <Text className="text-sm text-brand-text mt-2" style={fontBoldStyle}>Weekly Availability</Text>
       <AvailabilityGrid onChange={setSlots} />
 
       <Pressable
@@ -217,7 +231,7 @@ export default function MenteeAcademicSetup() {
         disabled={submitting}
         className="h-[56px] bg-brand-button rounded-lg items-center justify-center mt-4 disabled:opacity-50"
       >
-        <Text className="text-white text-lg font-bold">
+        <Text className="text-white text-lg" style={fontBoldStyle}>
           {submitting ? 'Saving...' : 'Finish Setup'}
         </Text>
       </Pressable>

@@ -19,7 +19,10 @@ export function ToggleGroup<T extends string>({ options, value, onChange }: Prop
             value === opt.value ? 'bg-brand-button border-brand-button' : 'bg-white border-brand-border'
           }`}
         >
-          <Text className={value === opt.value ? 'text-white font-semibold' : 'text-brand-text font-semibold'}>
+          <Text
+            style={{ fontFamily: 'Kollektif-Bold' }}
+            className={value === opt.value ? 'text-white' : 'text-brand-text'}
+          >
             {opt.label}
           </Text>
         </Pressable>

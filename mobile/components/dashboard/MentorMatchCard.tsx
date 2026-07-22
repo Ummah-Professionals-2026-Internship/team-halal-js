@@ -11,6 +11,7 @@ const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 
 export function MentorMatchCard({ mentor, recommended }: Props) {
   const name = `${mentor.firstName} ${mentor.lastName}`;
+  const initial = mentor.firstName?.[0]?.toUpperCase() ?? '?';
   const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer].filter(Boolean).join(' at ');
   const education = [mentor.majors?.[0], mentor.university].filter(Boolean).join(' from ');
   const topics = mentor.mentorProfile?.volunteeringFor ?? [];
@@ -35,7 +36,9 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} className="w-14 h-14 rounded-full" />
         ) : (
-          <View className="w-14 h-14 rounded-full bg-gray-300" />
+          <View className="w-14 h-14 rounded-full bg-brand-button items-center justify-center">
+            <Text className="text-white text-xl" style={fontBoldStyle}>{initial}</Text>
+          </View>
         )}
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap">

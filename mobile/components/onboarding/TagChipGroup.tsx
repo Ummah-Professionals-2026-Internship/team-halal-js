@@ -29,11 +29,17 @@ export function TagChipGroup({ tags, value, onChange }: Props) {
               selected ? 'bg-brand-button border-brand-button' : 'bg-white border-brand-border'
             }`}
           >
-            <Text className={selected ? 'text-white font-semibold' : 'text-brand-text font-semibold'}>
+            <Text
+              style={{ fontFamily: 'Kollektif-Bold' }}
+              className={selected ? 'text-white' : 'text-brand-text'}
+            >
               {tag.label}
             </Text>
             {tag.description ? (
-              <Text className={selected ? 'text-white/80 text-xs mt-0.5' : 'text-brand-muted text-xs mt-0.5'}>
+              <Text
+                style={{ fontFamily: 'Kollektif' }}
+                className={selected ? 'text-white/80 text-xs mt-0.5' : 'text-brand-muted text-xs mt-0.5'}
+              >
                 {tag.description}
               </Text>
             ) : null}

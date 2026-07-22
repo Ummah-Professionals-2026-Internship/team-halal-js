@@ -1,34 +1,12 @@
-import { apiFetch } from './api-client';
+import * as FileSystem from 'expo-file-system/legacy';
+import { FileSystemUploadType } from 'expo-file-system/legacy';
+import * as SecureStore from 'expo-secure-store';
 
 export type PickedFile = {
   uri: string;
   name: string;
   type: string;
 };
-
-// React Native's FormData expects a { uri, name, type } part for files, unlike
-// the web's raw File object — the TS DOM lib doesn't know this shape, hence the cast.
-function buildFormData(fieldName: string, file: PickedFile): FormData {
-  const formData = new FormData();
-  formData.append(fieldName, {
-    uri: file.uri,
-    name: file.name,
-    type: file.type,
-  } as unknown as Blob);
-  return formData;
-}
-
-export async function uploadProfilePicture(file: PickedFile): Promise<{ filePath: string }> {
-  const formData = buildFormData('profilePicture', file);
-  // Do not set Content-Type — fetch must set it automatically to include the multipart boundary.
-  const res = await apiFetch('/api/upload/profile-picture', {
-    method: 'POST',
-    body: formData,
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || data.message || 'Profile picture upload failed');
-  return data;
-}
 
 export type ResumeParsedData = {
   university: string;
@@ -38,15 +16,96 @@ export type ResumeParsedData = {
   linkedinUrl: string;
 };
 
+function getMimeType(fileName: string, mimeType?: string): string {
+  if (mimeType && mimeType !== 'application/octet-stream') {
+    return mimeType;
+  }
+  const ext = fileName?.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'txt':
+      return 'text/plain';
+    case 'docx':
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'doc':
+      return 'application/msword';
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    default:
+      return 'application/pdf';
+  }
+}
+
+export async function uploadProfilePicture(file: PickedFile): Promise<{ filePath: string }> {
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.100:5000';
+  const token = await SecureStore.getItemAsync('token');
+  const mimeType = getMimeType(file.name, file.type);
+  const uploadUrl = `${baseUrl}/api/upload/profile-picture`;
+
+  const headers: Record<string, string> = {
+    'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await FileSystem.uploadAsync(uploadUrl, file.uri, {
+    httpMethod: 'POST',
+    uploadType: FileSystemUploadType.MULTIPART,
+    fieldName: 'profilePicture',
+    mimeType: mimeType,
+    parameters: {},
+    headers: headers,
+  });
+
+  if (response.status < 200 || response.status >= 300) {
+    let errorMsg = 'Profile picture upload failed';
+    try {
+      const parsedErr = JSON.parse(response.body);
+      errorMsg = parsedErr.error || parsedErr.message || errorMsg;
+    } catch {}
+    throw new Error(errorMsg);
+  }
+
+  return JSON.parse(response.body);
+}
+
 export async function uploadResume(
   file: PickedFile
 ): Promise<{ filePath: string; parsedData: ResumeParsedData }> {
-  const formData = buildFormData('resume', file);
-  const res = await apiFetch('/api/upload/resume', {
-    method: 'POST',
-    body: formData,
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.100:5000';
+  const token = await SecureStore.getItemAsync('token');
+  const mimeType = getMimeType(file.name, file.type);
+  const uploadUrl = `${baseUrl}/api/upload/resume`;
+
+  const headers: Record<string, string> = {
+    'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await FileSystem.uploadAsync(uploadUrl, file.uri, {
+    httpMethod: 'POST',
+    uploadType: FileSystemUploadType.MULTIPART,
+    fieldName: 'resume',
+    mimeType: mimeType,
+    parameters: {},
+    headers: headers,
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || data.message || 'Resume upload failed');
-  return data;
+
+  if (response.status < 200 || response.status >= 300) {
+    let errorMsg = 'Resume upload failed';
+    try {
+      const parsedErr = JSON.parse(response.body);
+      errorMsg = parsedErr.error || parsedErr.message || errorMsg;
+    } catch {}
+    throw new Error(errorMsg);
+  }
+
+  return JSON.parse(response.body);
 }

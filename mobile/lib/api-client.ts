@@ -25,9 +25,8 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}): Pro
       ...options,
       headers,
     });
-  } catch {
-    // fetch() itself only throws on network-level failures (unreachable host, offline) —
-    // a reachable-but-erroring server (500, etc.) still resolves normally.
+  } catch (err) {
+    console.error('[apiFetch Network Error]:', err);
     throw new Error('Could not connect to the server. Please check your connection and try again.');
   }
 

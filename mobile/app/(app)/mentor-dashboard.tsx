@@ -37,6 +37,7 @@ export default function MentorDashboard() {
   };
 
   const avatarUrl = resolveUploadUrl(user?.profilePicture);
+  const initial = user?.firstName?.[0]?.toUpperCase() ?? '?';
   const services = user?.mentorProfile?.volunteeringFor ?? [];
 
   return (
@@ -46,7 +47,9 @@ export default function MentorDashboard() {
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} className="w-12 h-12 rounded-full" />
           ) : (
-            <View className="w-12 h-12 rounded-full bg-gray-300" />
+            <View className="w-12 h-12 rounded-full bg-brand-button items-center justify-center">
+              <Text className="text-white text-lg" style={fontBoldStyle}>{initial}</Text>
+            </View>
           )}
           <View>
             <Text className="text-lg text-brand-text" style={fontBoldStyle}>Welcome, {user?.firstName}</Text>

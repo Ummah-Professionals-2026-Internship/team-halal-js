@@ -9,6 +9,7 @@ type SessionContextValue = {
   status: Status;
   user: MeUser | null;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithToken: (token: string) => Promise<void>;
   signUp: (
     firstName: string,
     lastName: string,
@@ -40,8 +41,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
         return;
       }
       try {
-        // Validates the stored token server-side, mirrors the web app's
-        // useCurrentUser hook treating an invalid/expired token as signed out.
         const me = await getMe();
         setUser(me);
         setStatus('signedIn');
@@ -52,14 +51,16 @@ export function SessionProvider({ children }: PropsWithChildren) {
     })();
   }, []);
 
-  // Both signIn and signUp fetch the full /me projection right after auth,
-  // rather than trusting the login/register response's slimmer `user` object
-  // (id/firstName/lastName/email/role/hasCompletedProfile only) — an existing
-  // mentor/mentee logging back in needs mentorProfile/manualAvailabilitySlots
-  // etc. immediately for the dashboard, not just after a later refresh.
   async function signIn(email: string, password: string) {
     const data = await apiLogin(email, password);
     await SecureStore.setItemAsync('token', data.token);
+    const me = await getMe();
+    setUser(me);
+    setStatus('signedIn');
+  }
+
+  async function signInWithToken(token: string) {
+    await SecureStore.setItemAsync('token', token);
     const me = await getMe();
     setUser(me);
     setStatus('signedIn');
@@ -81,23 +82,18 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   async function signOut() {
     await SecureStore.deleteItemAsync('token');
-    // Onboarding step keys aren't namespaced per-account — clear them so a
-    // different user signing in next doesn't see this account's leftover data.
     await clearSteps(ALL_ONBOARDING_KEYS);
     setUser(null);
     setStatus('signedOut');
   }
 
-  // Re-fetches /api/auth/me — used after onboarding completes so the cached
-  // user (still hasCompletedProfile: false) doesn't send the user straight
-  // back into onboarding via the (app)/index.tsx redirect.
   async function refreshUser() {
     const me = await getMe();
     setUser(me);
   }
 
   return (
-    <SessionContext.Provider value={{ status, user, signIn, signUp, signOut, refreshUser }}>
+    <SessionContext.Provider value={{ status, user, signIn, signInWithToken, signUp, signOut, refreshUser }}>
       {children}
     </SessionContext.Provider>
   );

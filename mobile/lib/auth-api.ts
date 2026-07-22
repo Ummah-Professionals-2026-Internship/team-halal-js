@@ -1,4 +1,8 @@
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { apiFetch } from './api-client';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export type Role = 'mentee' | 'mentor';
 
@@ -16,12 +20,7 @@ type AuthResponse = {
   user: SessionUser;
 };
 
-// Shape of GET /api/auth/me — a different (larger, non-overlapping-on-id/email) projection
-// of the User document than the login/register response's `user` object.
-// Field list must match server/src/routes/auth.js's GET /me .select(...) string exactly.
 export type MeUser = {
-  // Mongoose always returns _id regardless of the .select() field list — the
-  // server already sends it, this type just never declared it until now.
   _id: string;
   firstName: string;
   lastName: string;
@@ -71,4 +70,23 @@ export async function getMe(): Promise<MeUser> {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Failed to fetch current user');
   return data;
+}
+
+/**
+ * Triggers Google OAuth sign-in flow via in-app browser sheet (expo-web-browser).
+ * Returns the issued JWT token string upon successful Google authentication, or null if cancelled.
+ */
+export async function promptGoogleSignIn(): Promise<string | null> {
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.100:5000';
+  const authUrl = `${baseUrl}/api/auth/google/signin`;
+  const redirectUrl = Linking.createURL('/');
+
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+
+  if (result.type === 'success' && result.url) {
+    const parsed = Linking.parse(result.url);
+    const token = (parsed.queryParams?.token as string) || new URLSearchParams(result.url.split('?')[1] || '').get('token');
+    return token || null;
+  }
+  return null;
 }

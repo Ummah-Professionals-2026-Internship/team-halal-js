@@ -42,6 +42,8 @@ const EMPTY: MentorStep1 = {
   volunteeringFor: [],
 };
 
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 const inputClasses = 'h-[56px] bg-white rounded-lg px-4 text-base text-brand-text border border-brand-border';
 
 export default function MentorProfileSetup() {
@@ -113,23 +115,25 @@ export default function MentorProfileSetup() {
   return (
     <Screen>
       <OnboardingHeader title="Mentor Profile — Step 1 of 3" />
-      {error ? <Text className="text-brand-error">{error}</Text> : null}
+      {error ? <Text className="text-brand-error" style={fontStyle}>{error}</Text> : null}
 
       <Pressable
         onPress={handlePickResume}
         disabled={uploading}
-        className="h-[56px] rounded-lg border border-dashed border-brand-primary items-center justify-center flex-row gap-2"
+        className={`h-[56px] rounded-lg border items-center justify-center ${
+          formData.resumePath ? 'border-brand-primary bg-brand-primary/10' : 'border-dashed border-brand-primary bg-white'
+        }`}
       >
         {uploading ? (
           <ActivityIndicator color="#007CA6" />
         ) : (
-          <Text className="text-brand-primary font-semibold">
-            {formData.resumeName || 'Upload Resume (pdf, doc, docx, txt)'}
+          <Text className="text-brand-primary" style={fontBoldStyle}>
+            {formData.resumePath ? '✓ Resume Uploaded' : 'Upload Resume (pdf, doc, docx, txt)'}
           </Text>
         )}
       </Pressable>
 
-      <Text className="text-sm font-semibold text-brand-text">Gender</Text>
+      <Text className="text-sm text-brand-text" style={fontBoldStyle}>Gender</Text>
       <ToggleGroup
         options={[
           { value: 'male', label: 'Male' },
@@ -152,6 +156,7 @@ export default function MentorProfileSetup() {
         placeholderTextColor="#9a9a9a"
         value={formData.university}
         onChangeText={(university) => setFormData((prev) => ({ ...prev, university }))}
+        style={fontStyle}
         className={inputClasses}
       />
 
@@ -170,6 +175,7 @@ export default function MentorProfileSetup() {
         autoCapitalize="none"
         value={formData.linkedinUrl}
         onChangeText={(linkedinUrl) => setFormData((prev) => ({ ...prev, linkedinUrl }))}
+        style={fontStyle}
         className={inputClasses}
       />
 
@@ -179,6 +185,7 @@ export default function MentorProfileSetup() {
         keyboardType="phone-pad"
         value={formData.phone}
         onChangeText={(phone) => setFormData((prev) => ({ ...prev, phone: formatPhoneNumber(phone) }))}
+        style={fontStyle}
         className={inputClasses}
       />
 
@@ -190,7 +197,7 @@ export default function MentorProfileSetup() {
         onChange={(referralSource) => setFormData((prev) => ({ ...prev, referralSource }))}
       />
 
-      <Text className="text-sm font-semibold text-brand-text mt-2">
+      <Text className="text-sm text-brand-text mt-2" style={fontBoldStyle}>
         Which services are you willing to offer?
       </Text>
       <TagChipGroup
@@ -203,7 +210,7 @@ export default function MentorProfileSetup() {
         onPress={handleNext}
         className="h-[56px] bg-brand-button rounded-lg items-center justify-center mt-4"
       >
-        <Text className="text-white text-lg font-bold">Next</Text>
+        <Text className="text-white text-lg" style={fontBoldStyle}>Next</Text>
       </Pressable>
     </Screen>
   );

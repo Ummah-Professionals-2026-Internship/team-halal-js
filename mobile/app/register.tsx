@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useSession } from '../lib/session-context';
+import { promptGoogleSignIn, type Role } from '../lib/auth-api';
 import { Screen } from '../components/Screen';
-import type { Role } from '../lib/auth-api';
+import { GoogleIcon } from '../components/GoogleIcon';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export default function RegisterScreen() {
-  const { signUp } = useSession();
+  const { signUp, signInWithToken } = useSession();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -19,6 +20,7 @@ export default function RegisterScreen() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const setField = (key: keyof typeof formData) => (value: string) =>
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -46,6 +48,22 @@ export default function RegisterScreen() {
       setError(err instanceof Error ? err.message : 'Could not connect to server. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      const token = await promptGoogleSignIn();
+      if (token) {
+        await signInWithToken(token);
+        router.replace('/');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google sign-in failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -121,12 +139,39 @@ export default function RegisterScreen() {
 
       <Pressable
         onPress={handleSubmit}
-        disabled={loading}
+        disabled={loading || googleLoading}
         className="h-[60px] bg-brand-button rounded-lg items-center justify-center mt-2 disabled:opacity-50"
       >
         <Text className="text-white text-lg" style={fontBoldStyle}>
           {loading ? 'Creating Account...' : 'Create Account'}
         </Text>
+      </Pressable>
+
+      {/* Divider */}
+      <View className="flex-row items-center gap-3 my-1">
+        <View className="flex-1 h-[1px] bg-[#CFC5B3]/40" />
+        <Text className="text-[#9a9a9a] text-sm font-medium" style={{ fontFamily: 'Kollektif' }}>
+          or
+        </Text>
+        <View className="flex-1 h-[1px] bg-[#CFC5B3]/40" />
+      </View>
+
+      {/* Sign in with Google */}
+      <Pressable
+        onPress={handleGoogleSignIn}
+        disabled={loading || googleLoading}
+        className="h-[60px] bg-white rounded-lg flex-row items-center justify-center gap-3 border border-[#CFC5B3] disabled:opacity-50"
+      >
+        {googleLoading ? (
+          <ActivityIndicator color="#007CA6" />
+        ) : (
+          <>
+            <GoogleIcon size={24} />
+            <Text className="text-[#3c3c3c] text-lg" style={{ fontFamily: 'Kollektif-Bold' }}>
+              Sign in with Google
+            </Text>
+          </>
+        )}
       </Pressable>
 
       <Link href="/login" className="text-center text-white text-base mt-2" style={fontStyle}>

@@ -21,10 +21,9 @@ type Props = {
   initialSlots?: AvailabilitySlot[];
 };
 
-// Simplified RN port of the web's AvailabilityPick.jsx for onboarding use only
-// (no conflicts/booked-session overlay props — onboarding never passes those on
-// web either). Tap-to-toggle per cell instead of web's drag-select, a deliberate
-// simplification (see plan) rather than a gesture-parity port.
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
+
 export function AvailabilityGrid({ onChange, initialSlots = [] }: Props) {
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(initialSlots.map((s) => slotId(s.day, s.startTime)))
@@ -54,7 +53,7 @@ export function AvailabilityGrid({ onChange, initialSlots = [] }: Props) {
 
   return (
     <View>
-      <Text className="text-sm text-brand-muted mb-2">
+      <Text className="text-sm text-brand-muted mb-2" style={fontStyle}>
         Tap a cell to mark yourself available that hour, weekly.
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -63,14 +62,14 @@ export function AvailabilityGrid({ onChange, initialSlots = [] }: Props) {
             <View className="w-[56px]" />
             {DAYS.map((day) => (
               <View key={day} className="w-[40px] items-center justify-center py-1">
-                <Text className="text-xs font-semibold text-brand-text">{day}</Text>
+                <Text className="text-xs text-brand-text" style={fontBoldStyle}>{day}</Text>
               </View>
             ))}
           </View>
           {TIME_SLOTS.map((time) => (
             <View key={time} className="flex-row items-center">
               <View className="w-[56px] justify-center">
-                <Text className="text-xs text-brand-muted">{time}</Text>
+                <Text className="text-xs text-brand-muted" style={fontStyle}>{time}</Text>
               </View>
               {DAYS.map((day) => {
                 const isOn = selected.has(slotId(day, time));
