@@ -4,6 +4,12 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Kollektif', 'sans-serif'],
+        kollektif: ['Kollektif', 'sans-serif'],
+        'kollektif-bold': ['Kollektif-Bold', 'sans-serif'],
+        'kollektif-italic': ['Kollektif-Italic', 'sans-serif'],
+      },
       colors: {
         // Keep in sync with constants/theme.ts — that file is for raw JS
         // values (style props, shadow objects); these are for className use.

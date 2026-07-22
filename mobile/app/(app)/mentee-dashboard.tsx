@@ -6,6 +6,9 @@ import { resolveUploadUrl } from '../../lib/upload-url';
 import { Screen } from '../../components/Screen';
 import { MentorMatchCard } from '../../components/dashboard/MentorMatchCard';
 
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
+
 export default function MenteeDashboard() {
   const { user, signOut } = useSession();
   const [mentors, setMentors] = useState<MatchedMentor[]>([]);
@@ -46,31 +49,31 @@ export default function MenteeDashboard() {
             <View className="w-12 h-12 rounded-full bg-gray-300" />
           )}
           <View>
-            <Text className="text-lg font-bold text-brand-text">Welcome, {user?.firstName}</Text>
-            <Text className="text-xs text-slate-500">Mentee</Text>
+            <Text className="text-lg text-brand-text" style={fontBoldStyle}>Welcome, {user?.firstName}</Text>
+            <Text className="text-xs text-slate-500" style={fontStyle}>Mentee</Text>
           </View>
         </View>
         <Pressable onPress={signOut} className="rounded-lg bg-brand-primary px-4 py-2">
-          <Text className="text-white text-xs font-semibold">Sign out</Text>
+          <Text className="text-white text-xs" style={fontBoldStyle}>Sign out</Text>
         </Pressable>
       </View>
 
       {loading ? (
         <ActivityIndicator color="#007CA6" className="mt-6" />
       ) : error ? (
-        <Text className="text-brand-error text-center mt-4">{error}</Text>
+        <Text className="text-brand-error text-center mt-4" style={fontStyle}>{error}</Text>
       ) : mentors.length === 0 ? (
-        <Text className="text-slate-500 text-center mt-4">
+        <Text className="text-slate-500 text-center mt-4" style={fontStyle}>
           No mentor matches yet — check back soon as more mentors join.
         </Text>
       ) : (
         <>
-          <Text className="text-base font-bold text-brand-text">Recommended Mentor</Text>
+          <Text className="text-base text-brand-text" style={fontBoldStyle}>Recommended Mentor</Text>
           <MentorMatchCard mentor={recommended} recommended />
 
           {moreMentors.length > 0 && (
             <>
-              <Text className="text-base font-bold text-brand-text mt-2">More Mentors</Text>
+              <Text className="text-base text-brand-text mt-2" style={fontBoldStyle}>More Mentors</Text>
               <View className="gap-3">
                 {moreMentors.map((mentor) => (
                   <MentorMatchCard key={mentor._id} mentor={mentor} />

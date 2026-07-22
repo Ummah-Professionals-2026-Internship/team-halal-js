@@ -47,3 +47,11 @@ export const cardShadow = {
   shadowRadius: 3,
   elevation: 2,
 } as const;
+
+export const fonts = {
+  regular: 'Kollektif',
+  bold: 'Kollektif-Bold',
+  italic: 'Kollektif-Italic',
+  boldItalic: 'Kollektif-BoldItalic',
+} as const;
+

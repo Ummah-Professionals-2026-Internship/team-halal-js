@@ -15,8 +15,6 @@ type Props = {
   services?: string[];
 };
 
-// Port of MentorServicesCard.jsx — static grid of MENTOR_SERVICES tiles,
-// marking each "Offering" if its id is in `services`.
 export function ServicesCard({ services = [] }: Props) {
   const hasSelection = services.length > 0;
 

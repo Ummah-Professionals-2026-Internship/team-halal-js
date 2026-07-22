@@ -8,10 +8,6 @@ type Props = {
   initialSlots: AvailabilitySlot[];
 };
 
-// Port of MentorAvailabilityCard.jsx: editable weekly grid + submit via
-// PATCH /api/mentors/me. Intentionally skips the web version's live
-// booked-session overlay (see plan) — Upcoming Sessions on the same screen
-// already surfaces booked sessions in text form.
 export function AvailabilityCard({ initialSlots }: Props) {
   const [slots, setSlots] = useState<AvailabilitySlot[]>(initialSlots);
   const [saved, setSaved] = useState(false);
@@ -41,7 +37,7 @@ export function AvailabilityCard({ initialSlots }: Props) {
     <View className="bg-white rounded-2xl p-5 border border-brand-cardBorder" style={cardShadow}>
       <Text className="text-base font-bold text-brand-text">Mentoring Hours</Text>
       <Text className="text-xs text-slate-500 mt-0.5 mb-4">
-        Tap cells to set when you're available.
+        Tap cells to set when you are available.
       </Text>
 
       <View className="rounded-xl bg-[#8ACBDB]/25 p-3">

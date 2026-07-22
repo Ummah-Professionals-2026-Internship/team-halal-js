@@ -50,18 +50,21 @@ export default function RegisterScreen() {
   };
 
   const inputClasses = 'h-[60px] bg-white rounded-lg px-5 text-lg text-brand-text';
+  const fontStyle = { fontFamily: 'Kollektif' };
+  const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 
   return (
     <Screen backgroundColor="#00202b" contentContainerClassName="flex-grow justify-center px-6 py-10 gap-4">
-      <Text className="text-3xl font-bold text-white text-center mb-4">Create an Account</Text>
+      <Text className="text-3xl text-white text-center mb-4" style={fontBoldStyle}>Create an Account</Text>
 
-      {error ? <Text className="text-brand-errorDark text-center">{error}</Text> : null}
+      {error ? <Text className="text-brand-errorDark text-center" style={fontStyle}>{error}</Text> : null}
 
       <TextInput
         placeholder="First Name"
         placeholderTextColor="#656565"
         value={formData.firstName}
         onChangeText={setField('firstName')}
+        style={fontStyle}
         className={inputClasses}
       />
       <TextInput
@@ -69,6 +72,7 @@ export default function RegisterScreen() {
         placeholderTextColor="#656565"
         value={formData.lastName}
         onChangeText={setField('lastName')}
+        style={fontStyle}
         className={inputClasses}
       />
       <TextInput
@@ -79,6 +83,7 @@ export default function RegisterScreen() {
         keyboardType="email-address"
         value={formData.email}
         onChangeText={setField('email')}
+        style={fontStyle}
         className={inputClasses}
       />
       <TextInput
@@ -87,6 +92,7 @@ export default function RegisterScreen() {
         secureTextEntry
         value={formData.password}
         onChangeText={setField('password')}
+        style={fontStyle}
         className={inputClasses}
       />
       <TextInput
@@ -95,6 +101,7 @@ export default function RegisterScreen() {
         secureTextEntry
         value={formData.confirmPassword}
         onChangeText={setField('confirmPassword')}
+        style={fontStyle}
         className={inputClasses}
       />
 
@@ -107,7 +114,7 @@ export default function RegisterScreen() {
               formData.role === role ? 'bg-brand-button border-brand-button' : 'bg-transparent border-white/40'
             }`}
           >
-            <Text className="text-white font-semibold capitalize">{role}</Text>
+            <Text className="text-white font-semibold capitalize" style={fontBoldStyle}>{role}</Text>
           </Pressable>
         ))}
       </View>
@@ -117,12 +124,12 @@ export default function RegisterScreen() {
         disabled={loading}
         className="h-[60px] bg-brand-button rounded-lg items-center justify-center mt-2 disabled:opacity-50"
       >
-        <Text className="text-white text-lg font-bold">
+        <Text className="text-white text-lg" style={fontBoldStyle}>
           {loading ? 'Creating Account...' : 'Create Account'}
         </Text>
       </Pressable>
 
-      <Link href="/login" className="text-center text-white text-base mt-2">
+      <Link href="/login" className="text-center text-white text-base mt-2" style={fontStyle}>
         Already have an account? Log in
       </Link>
     </Screen>

@@ -8,6 +8,9 @@ import { ServicesCard } from '../../components/dashboard/ServicesCard';
 import { AvailabilityCard } from '../../components/dashboard/AvailabilityCard';
 import { UpcomingSessionsList } from '../../components/dashboard/UpcomingSessionsList';
 
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
+
 export default function MentorDashboard() {
   const { user, signOut } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -19,8 +22,7 @@ export default function MentorDashboard() {
       const data = await getSessions();
       setSessions(data);
     } catch {
-      // Sessions are secondary to the rest of the dashboard — fail silently
-      // and leave the list empty rather than blocking the whole screen.
+      // Sessions are secondary to the rest of the dashboard
     }
   }, []);
 
@@ -47,12 +49,12 @@ export default function MentorDashboard() {
             <View className="w-12 h-12 rounded-full bg-gray-300" />
           )}
           <View>
-            <Text className="text-lg font-bold text-brand-text">Welcome, {user?.firstName}</Text>
-            <Text className="text-xs text-slate-500">Mentor</Text>
+            <Text className="text-lg text-brand-text" style={fontBoldStyle}>Welcome, {user?.firstName}</Text>
+            <Text className="text-xs text-slate-500" style={fontStyle}>Mentor</Text>
           </View>
         </View>
         <Pressable onPress={signOut} className="rounded-lg bg-brand-primary px-4 py-2">
-          <Text className="text-white text-xs font-semibold">Sign out</Text>
+          <Text className="text-white text-xs" style={fontBoldStyle}>Sign out</Text>
         </Pressable>
       </View>
 

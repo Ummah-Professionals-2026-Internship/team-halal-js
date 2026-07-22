@@ -77,7 +77,7 @@ export default function BookingScreen() {
         )}
 
         <Text className="text-sm text-brand-text">
-          Your mentor will be notified that a session is scheduled. You'll both get a reminder
+          Your mentor will be notified that a session is scheduled. You will both get a reminder
           before the session begins.
         </Text>
 

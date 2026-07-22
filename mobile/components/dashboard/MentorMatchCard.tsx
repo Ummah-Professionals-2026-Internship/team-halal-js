@@ -6,14 +6,9 @@ import { setPendingBooking } from '../../lib/booking-handoff';
 import { cardShadow } from '../../constants/theme';
 import type { MatchedMentor } from '../../lib/matches-api';
 
-type Props = {
-  mentor: MatchedMentor;
-  recommended?: boolean;
-};
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 
-// Port of MentorCard.jsx (the mentee dashboard's mentor row). Omits the web's
-// "View Profile" button — it has no onClick handler on web either (dead
-// control), so it isn't ported rather than replicated non-functional.
 export function MentorMatchCard({ mentor, recommended }: Props) {
   const name = `${mentor.firstName} ${mentor.lastName}`;
   const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer].filter(Boolean).join(' at ');
@@ -44,20 +39,20 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
         )}
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap">
-            <Text className="font-bold text-brand-text text-base">{name}</Text>
+            <Text className="text-brand-text text-base" style={fontBoldStyle}>{name}</Text>
             {recommended && (
               <View className="bg-brand-accent/20 rounded-full px-2 py-0.5">
-                <Text className="text-brand-text text-xs font-semibold">★ Recommended</Text>
+                <Text className="text-brand-text text-xs" style={fontBoldStyle}>★ Recommended</Text>
               </View>
             )}
           </View>
-          {title ? <Text className="text-sm text-brand-text">{title}</Text> : null}
-          {education ? <Text className="text-sm text-brand-text">({education})</Text> : null}
+          {title ? <Text className="text-sm text-brand-text" style={fontStyle}>{title}</Text> : null}
+          {education ? <Text className="text-sm text-brand-text" style={fontStyle}>({education})</Text> : null}
         </View>
         {typeof mentor.compatibilityScore === 'number' && (
           <View className="items-center gap-1">
             <CompatibilityRing score={mentor.compatibilityScore} />
-            <Text className="text-[10px] text-brand-text font-medium">Match</Text>
+            <Text className="text-[10px] text-brand-text" style={fontStyle}>Match</Text>
           </View>
         )}
       </View>
@@ -67,7 +62,7 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
           {topics.map((topic) => (
             <View key={topic} className="flex-row items-center gap-1.5 bg-brand-accent/15 rounded-full px-2.5 py-1">
               <View className="w-2 h-2 rounded-full bg-brand-accent" />
-              <Text className="text-brand-text text-xs font-semibold">{topic}</Text>
+              <Text className="text-brand-text text-xs" style={fontBoldStyle}>{topic}</Text>
             </View>
           ))}
         </View>
@@ -76,15 +71,20 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
       <View className="flex-row items-center justify-between">
         {mentor.linkedinUrl ? (
           <Pressable onPress={handleLinkedIn}>
-            <Text className="text-brand-dark underline text-sm">LinkedIn</Text>
+            <Text className="text-brand-dark underline text-sm" style={fontStyle}>LinkedIn</Text>
           </Pressable>
         ) : (
           <View />
         )}
         <Pressable onPress={handleSchedule} className="bg-brand-dark rounded-lg px-5 py-2">
-          <Text className="text-white font-semibold text-sm">Schedule Meeting</Text>
+          <Text className="text-white text-sm" style={fontBoldStyle}>Schedule Meeting</Text>
         </Pressable>
       </View>
     </View>
   );
 }
+
+type Props = {
+  mentor: MatchedMentor;
+  recommended?: boolean;
+};
