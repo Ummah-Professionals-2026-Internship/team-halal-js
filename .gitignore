@@ -8,9 +8,15 @@ client/node_modules/
 client/dist/
 client/.vite/
 
+# Mobile
+mobile/node_modules/
+mobile/.env
+mobile/.expo/
+
 # Editor/OS directories
 .vscode/
 .idea/
+.claude/
 .DS_Store
 Thumbs.db
 *.suo
