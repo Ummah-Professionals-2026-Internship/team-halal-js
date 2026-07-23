@@ -269,7 +269,7 @@ const MenteeAcademicSetup = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all ${
                 formData.calendarAccess 
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  : 'bg-[#007CA6] text-white border-transparent hover:bg-[#006080]'
               }`}
             >
               {formData.calendarAccess ? '✓ Connected' : 'Connect'}
