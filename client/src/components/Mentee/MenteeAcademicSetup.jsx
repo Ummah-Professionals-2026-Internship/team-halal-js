@@ -251,7 +251,7 @@ const MenteeAcademicSetup = () => {
                   className={inputClass}
                   required
                 >
-                  <option value="">Select Academic Year</option>
+                  <option value="" disabled hidden>Select Academic Year</option>
                   <option value="Freshman (Year 1)">Freshman (Year 1)</option>
                   <option value="Sophomore (Year 2)">Sophomore (Year 2)</option>
                   <option value="Junior (Year 3)">Junior (Year 3)</option>

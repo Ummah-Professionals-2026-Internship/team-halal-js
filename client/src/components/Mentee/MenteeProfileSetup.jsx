@@ -173,7 +173,7 @@ const MenteeProfileSetup = () => {
                   className={inputClass}
                   required
                 >
-                  <option value="">Select Gender</option>
+                  <option value="" disabled hidden>Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                 </select>
@@ -188,7 +188,7 @@ const MenteeProfileSetup = () => {
                   className={inputClass}
                   required
                 >
-                  <option value="">Select State</option>
+                  <option value="" disabled hidden>Select State</option>
                   {STATES_LIST.map(st => (
                     <option key={st} value={st}>{st}</option>
                   ))}
@@ -233,7 +233,7 @@ const MenteeProfileSetup = () => {
                 className={inputClass}
                 required
               >
-                <option value="">Select an option</option>
+                <option value="" disabled hidden>Select an option</option>
                 <option value="Social Media">Social Media</option>
                 <option value="Friend or Family">Friend or Family</option>
                 <option value="Other">Other</option>
