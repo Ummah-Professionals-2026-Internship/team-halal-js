@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import AuthCard from './AuthCard';
 import { login } from '../api-calls/auth';
+import { getMenteeSessions } from '../api-calls/sessions';
 
 const GoogleIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -52,8 +53,7 @@ const Login = () => {
           if (payload.role === 'mentor') {
             navigate('/mentor-dashboard');
           } else {
-            fetch('/api/sessions/mentee', { headers: { Authorization: `Bearer ${token}` } })
-              .then(r => r.json())
+            getMenteeSessions()
               .then(sessions => navigate(sessions.length > 0 ? '/mentee/sessions' : '/mentee-dashboard'))
               .catch(() => navigate('/mentee-dashboard'));
           }
@@ -94,9 +94,7 @@ const Login = () => {
 
         }
         else {
-          const token = localStorage.getItem('token');
-          fetch('/api/sessions/mentee', { headers: { Authorization: `Bearer ${token}` } })
-            .then(r => r.json())
+          getMenteeSessions()
             .then(sessions => navigate(sessions.length > 0 ? '/mentee/sessions' : '/mentee-dashboard'))
             .catch(() => navigate('/mentee-dashboard'));
         }

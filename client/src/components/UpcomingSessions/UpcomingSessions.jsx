@@ -16,8 +16,11 @@ const EmptyState = ({ text }) => (
 
 const UpcomingSessions = () => {
   const {sessions} = useSessions();
-  const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
-  const completedSessions = sessions.filter(s => s.status === 'completed');
+  const isPast = s => new Date(s.scheduledTime) < new Date();
+  const upcomingSessions = sessions.filter(s => s.status === 'scheduled' && !isPast(s));
+  const completedSessions = sessions
+    .filter(s => s.status === 'completed' || (s.status === 'scheduled' && isPast(s)))
+    .sort((a, b) => new Date(b.scheduledTime) - new Date(a.scheduledTime));
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,16 +30,20 @@ const UpcomingSessions = () => {
           right={<CountBadge count={upcomingSessions.length} />}
           className="mb-4"
         />
-        {upcomingSessions.length > 0
-          ? upcomingSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
-          : <EmptyState text="No upcoming sessions yet." />}
+        <div className="max-h-80 overflow-y-auto pr-1 -mr-1">
+          {upcomingSessions.length > 0
+            ? upcomingSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
+            : <EmptyState text="No upcoming sessions yet." />}
+        </div>
       </div>
 
       <div>
         <SectionHeading title="Completed Sessions" className="mb-4" />
-        {completedSessions.length > 0
-          ? completedSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
-          : <EmptyState text="No completed sessions so far." />}
+        <div className="max-h-80 overflow-y-auto pr-1 -mr-1">
+          {completedSessions.length > 0
+            ? completedSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
+            : <EmptyState text="No completed sessions so far." />}
+        </div>
       </div>
     </div>
   )
