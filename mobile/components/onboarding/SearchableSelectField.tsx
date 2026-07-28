@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, Modal, FlatList, Animated, StyleSheet } from 'react-native';
+import { View, Pressable, Modal, FlatList, Animated, StyleSheet } from 'react-native';
+import { Text, TextInput } from '../AppText';
 
 type SingleProps = {
   label: string;

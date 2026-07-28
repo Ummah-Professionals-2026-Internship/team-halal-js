@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../AppText';
 import { SessionCard } from './SessionCard';
 import { cardShadow } from '../../constants/theme';
 import type { Session } from '../../lib/sessions-api';

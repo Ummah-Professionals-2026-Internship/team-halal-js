@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, Modal, FlatList, Animated, StyleSheet } from 'react-native';
+import { View, Pressable, Modal, FlatList, Animated, StyleSheet } from 'react-native';
+import { Text } from '../AppText';
 
 type Props = {
   label: string;

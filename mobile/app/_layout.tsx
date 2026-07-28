@@ -1,23 +1,10 @@
 import React from 'react';
 import '../global.css';
-import { Text, TextInput } from 'react-native';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { SessionProvider, useSession } from '../lib/session-context';
 import { SplashScreenController } from '../components/SplashScreenController';
 
-// Set Kollektif default props for Text and TextInput
-if ((Text as any).defaultProps) {
-  (Text as any).defaultProps.style = { fontFamily: 'Kollektif', ...((Text as any).defaultProps.style || {}) };
-} else {
-  (Text as any).defaultProps = { style: { fontFamily: 'Kollektif' } };
-}
-
-if ((TextInput as any).defaultProps) {
-  (TextInput as any).defaultProps.style = { fontFamily: 'Kollektif', ...((TextInput as any).defaultProps.style || {}) };
-} else {
-  (TextInput as any).defaultProps = { style: { fontFamily: 'Kollektif' } };
-}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({

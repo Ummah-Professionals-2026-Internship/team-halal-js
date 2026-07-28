@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { MENTOR_SERVICES } from '../../constants/services';
 import { cardShadow } from '../../constants/theme';

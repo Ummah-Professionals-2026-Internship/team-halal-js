@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { Pressable, ActivityIndicator } from 'react-native';
+import { Text, TextInput } from '../../../components/AppText';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { SimplePicker } from '../../../components/onboarding/SimplePicker';

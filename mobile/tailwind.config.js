@@ -9,6 +9,7 @@ module.exports = {
         kollektif: ['Kollektif', 'sans-serif'],
         'kollektif-bold': ['Kollektif-Bold', 'sans-serif'],
         'kollektif-italic': ['Kollektif-Italic', 'sans-serif'],
+        'kollektif-bold-italic': ['Kollektif-BoldItalic', 'sans-serif'],
       },
       colors: {
         // Keep in sync with constants/theme.ts — that file is for raw JS

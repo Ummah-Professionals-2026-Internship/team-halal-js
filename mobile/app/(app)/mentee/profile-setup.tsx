@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { Pressable, ActivityIndicator } from 'react-native';
+import { Text, TextInput } from '../../../components/AppText';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { ToggleGroup } from '../../../components/onboarding/ToggleGroup';

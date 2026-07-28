@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
+import { Text } from '../AppText';
 import { AvailabilityGrid } from '../onboarding/AvailabilityGrid';
 import { updateMentorAvailability, type AvailabilitySlot } from '../../lib/onboarding-api';
 import { cardShadow } from '../../constants/theme';

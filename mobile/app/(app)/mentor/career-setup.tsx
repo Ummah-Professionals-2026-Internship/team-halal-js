@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Text, TextInput, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
+import { Text, TextInput } from '../../../components/AppText';
 import { router } from 'expo-router';
 import { SearchableSelectField } from '../../../components/onboarding/SearchableSelectField';
 import { OnboardingHeader } from '../../../components/onboarding/OnboardingHeader';

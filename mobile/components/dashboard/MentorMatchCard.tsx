@@ -1,13 +1,11 @@
-import { View, Text, Image, Pressable, Linking } from 'react-native';
+import { View, Image, Pressable, Linking } from 'react-native';
 import { router } from 'expo-router';
+import { Text } from '../AppText';
 import { CompatibilityRing } from './CompatibilityRing';
 import { resolveUploadUrl } from '../../lib/upload-url';
 import { setPendingBooking } from '../../lib/booking-handoff';
 import { cardShadow } from '../../constants/theme';
 import type { MatchedMentor } from '../../lib/matches-api';
-
-const fontStyle = { fontFamily: 'Kollektif' };
-const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 
 export function MentorMatchCard({ mentor, recommended }: Props) {
   const name = `${mentor.firstName} ${mentor.lastName}`;
@@ -37,25 +35,25 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
           <Image source={{ uri: avatarUrl }} className="w-14 h-14 rounded-full" />
         ) : (
           <View className="w-14 h-14 rounded-full bg-brand-button items-center justify-center">
-            <Text className="text-white text-xl" style={fontBoldStyle}>{initial}</Text>
+            <Text className="text-white text-xl font-bold">{initial}</Text>
           </View>
         )}
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap">
-            <Text className="text-brand-text text-base" style={fontBoldStyle}>{name}</Text>
+            <Text className="text-brand-text text-base font-bold">{name}</Text>
             {recommended && (
               <View className="bg-brand-accent/20 rounded-full px-2 py-0.5">
-                <Text className="text-brand-text text-xs" style={fontBoldStyle}>★ Recommended</Text>
+                <Text className="text-brand-text text-xs font-bold">★ Recommended</Text>
               </View>
             )}
           </View>
-          {title ? <Text className="text-sm text-brand-text" style={fontStyle}>{title}</Text> : null}
-          {education ? <Text className="text-sm text-brand-text" style={fontStyle}>({education})</Text> : null}
+          {title ? <Text className="text-sm text-brand-text">{title}</Text> : null}
+          {education ? <Text className="text-sm text-brand-text">({education})</Text> : null}
         </View>
         {typeof mentor.compatibilityScore === 'number' && (
           <View className="items-center gap-1">
             <CompatibilityRing score={mentor.compatibilityScore} />
-            <Text className="text-[10px] text-brand-text" style={fontStyle}>Match</Text>
+            <Text className="text-[10px] text-brand-text">Match</Text>
           </View>
         )}
       </View>
@@ -65,7 +63,7 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
           {topics.map((topic) => (
             <View key={topic} className="flex-row items-center gap-1.5 bg-brand-accent/15 rounded-full px-2.5 py-1">
               <View className="w-2 h-2 rounded-full bg-brand-accent" />
-              <Text className="text-brand-text text-xs" style={fontBoldStyle}>{topic}</Text>
+              <Text className="text-brand-text text-xs font-bold">{topic}</Text>
             </View>
           ))}
         </View>
@@ -74,13 +72,13 @@ export function MentorMatchCard({ mentor, recommended }: Props) {
       <View className="flex-row items-center justify-between">
         {mentor.linkedinUrl ? (
           <Pressable onPress={handleLinkedIn}>
-            <Text className="text-brand-dark underline text-sm" style={fontStyle}>LinkedIn</Text>
+            <Text className="text-brand-dark underline text-sm">LinkedIn</Text>
           </Pressable>
         ) : (
           <View />
         )}
         <Pressable onPress={handleSchedule} className="bg-brand-dark rounded-lg px-5 py-2">
-          <Text className="text-white text-sm" style={fontBoldStyle}>Schedule Meeting</Text>
+          <Text className="text-white text-sm font-bold">Schedule Meeting</Text>
         </Pressable>
       </View>
     </View>

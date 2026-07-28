@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, Image, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Image, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { Text } from '../../components/AppText';
 import { useSession } from '../../lib/session-context';
 import { getMatchSuggestions, type MatchedMentor } from '../../lib/matches-api';
 import { resolveUploadUrl } from '../../lib/upload-url';

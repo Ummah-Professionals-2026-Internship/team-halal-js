@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Alert } from 'react-native';
+import { View, Pressable, Alert } from 'react-native';
+import { Text } from '../AppText';
 import { useSession } from '../../lib/session-context';
 
 type Props = {

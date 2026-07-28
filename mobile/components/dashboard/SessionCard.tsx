@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, Image, Pressable, Modal, Linking, Alert } from 'react-native';
+import { View, Image, Pressable, Modal, Linking, Alert } from 'react-native';
+import { Text } from '../AppText';
 import { router } from 'expo-router';
 import { cancelSession, type Session } from '../../lib/sessions-api';
 import { resolveUploadUrl } from '../../lib/upload-url';

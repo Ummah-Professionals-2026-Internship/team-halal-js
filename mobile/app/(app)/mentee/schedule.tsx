@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Pressable, ActivityIndicator } from 'react-native';
+import { Text } from '../../../components/AppText';
 import { router } from 'expo-router';
 import { useSession } from '../../../lib/session-context';
 import { getPendingBooking, setPendingBooking } from '../../../lib/booking-handoff';
