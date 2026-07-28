@@ -6,6 +6,7 @@ export type SessionParticipant = {
   lastName: string;
   profilePicture?: string;
   email?: string;
+  manualAvailabilitySlots?: { day: string; startTime: string; endTime: string }[];
 };
 
 export type Session = {
