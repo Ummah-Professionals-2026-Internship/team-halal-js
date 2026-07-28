@@ -44,7 +44,11 @@ export async function login(email: string, password: string): Promise<AuthRespon
     body: JSON.stringify({ email, password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Login failed');
+  if (!res.ok) {
+    const err: any = new Error(data.message || 'Login failed');
+    err.isGoogleAccount = data.isGoogleAccount;
+    throw err;
+  }
   return data;
 }
 
@@ -78,14 +82,20 @@ export async function getMe(): Promise<MeUser> {
  */
 export async function promptGoogleSignIn(): Promise<string | null> {
   const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.100:5000';
-  const authUrl = `${baseUrl}/api/auth/google/signin`;
-  const redirectUrl = Linking.createURL('/');
+  const returnUrl = Linking.createURL('/');
+  const authUrl = `${baseUrl}/api/auth/google/signin?app_redirect=${encodeURIComponent(returnUrl)}`;
 
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
 
   if (result.type === 'success' && result.url) {
-    const parsed = Linking.parse(result.url);
-    const token = (parsed.queryParams?.token as string) || new URLSearchParams(result.url.split('?')[1] || '').get('token');
+    const urlStr = result.url;
+    const parsed = Linking.parse(urlStr);
+    let token = (parsed.queryParams?.token as string) || (parsed.queryParams?.tempToken as string);
+    
+    if (!token && (urlStr.includes('token=') || urlStr.includes('tempToken='))) {
+      const match = urlStr.match(/[?&](?:tempT|t)oken=([^&]+)/);
+      if (match) token = decodeURIComponent(match[1]);
+    }
     return token || null;
   }
   return null;

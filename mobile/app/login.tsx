@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Pressable, ActivityIndicator } from 'react-native';
+import { View, Pressable, ActivityIndicator, Modal } from 'react-native';
 import { Text, TextInput } from '../components/AppText';
 import { Link, router } from 'expo-router';
 import { useSession } from '../lib/session-context';
@@ -14,6 +14,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   const handleSubmit = async () => {
     setError('');
@@ -21,8 +22,12 @@ export default function LoginScreen() {
     try {
       await signIn(email, password);
       router.replace('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not connect to server. Please try again.');
+    } catch (err: any) {
+      if (err?.isGoogleAccount) {
+        setShowGoogleModal(true);
+      } else {
+        setError(err instanceof Error ? err.message : 'Could not connect to server. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -115,6 +120,52 @@ export default function LoginScreen() {
           Don&apos;t have an account? Sign Up
         </Link>
       </View>
+
+      {/* Google Sign-In Popup Modal */}
+      <Modal
+        visible={showGoogleModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowGoogleModal(false)}
+      >
+        <View className="flex-1 bg-black/60 justify-center items-center p-6">
+          <View className="bg-white rounded-3xl p-6 w-full max-w-sm items-center gap-4 border border-[#CFC5B3]">
+            <View className="w-14 h-14 rounded-full bg-[#007CA6]/10 items-center justify-center mb-1">
+              <GoogleIcon size={32} />
+            </View>
+
+            <Text className="text-xl text-[#00202b] text-center" style={{ fontFamily: 'Kollektif-Bold' }}>
+              Google Account Detected
+            </Text>
+
+            <Text className="text-sm text-slate-600 text-center leading-5" style={{ fontFamily: 'Kollektif' }}>
+              An account for <Text style={{ fontFamily: 'Kollektif-Bold' }}>{email}</Text> was created using Google Sign-In. Please sign in with Google below.
+            </Text>
+
+            <Pressable
+              onPress={() => {
+                setShowGoogleModal(false);
+                handleGoogleSignIn();
+              }}
+              className="w-full h-[54px] bg-white border border-[#CFC5B3] rounded-xl flex-row items-center justify-center gap-3 mt-2 shadow-sm"
+            >
+              <GoogleIcon size={22} />
+              <Text className="text-[#3c3c3c] text-base" style={{ fontFamily: 'Kollektif-Bold' }}>
+                Sign in with Google
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setShowGoogleModal(false)}
+              className="py-1"
+            >
+              <Text className="text-slate-500 text-sm font-medium" style={{ fontFamily: 'Kollektif' }}>
+                Cancel
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }

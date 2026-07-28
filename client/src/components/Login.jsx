@@ -33,6 +33,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   // Handle redirect back from Google OAuth (existing users get a ?token= in the URL)
   useEffect(() => {
@@ -50,7 +51,9 @@ const Login = () => {
         // Fallback: decode role from JWT and go to dashboard
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
-          if (payload.role === 'mentor') {
+          if (payload.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else if (payload.role === 'mentor') {
             navigate('/mentor-dashboard');
           } else {
             getMenteeSessions()
@@ -88,6 +91,11 @@ const Login = () => {
 
       // Navigate to dashboard if user completed their profile, otherwise navigate to onboarding info
       let role = data.user.role;
+      if (role === 'admin') {
+        navigate('/admin/dashboard');
+        return;
+      }
+
       if (data.user.hasCompletedProfile) {
         if (role === 'mentor') {
           navigate('/mentor-dashboard');
@@ -109,7 +117,11 @@ const Login = () => {
 
       }
     } catch (err) {
-      setError(err.message || 'Could not connect to server. Please try again.');
+      if (err.isGoogleAccount) {
+        setShowGoogleModal(true);
+      } else {
+        setError(err.message || 'Could not connect to server. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -117,7 +129,8 @@ const Login = () => {
 
   // Redirect to the server-side Google OAuth flow
   const handleGoogleSignIn = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google/signin';
+    const origin = window.location.origin;
+    window.location.href = `/api/auth/google/signin?app_redirect=${encodeURIComponent(origin)}`;
   };
 
   const inputClasses = "w-full max-w-[385px] h-[70px] bg-white border border-[#CFC5B3] rounded-lg pl-5 box-border text-2xl font-normal text-[#656565] transition-all duration-200 block mx-auto hover:border-[#007CA6]/50 focus:border-[#007CA6] focus:ring-3 focus:ring-[rgba(0,124,166,0.15)] focus:shadow-[0_0_0_4px_rgba(0,124,166,0.10)] focus:outline-none placeholder:text-[#656565] placeholder:opacity-80";
@@ -179,6 +192,41 @@ const Login = () => {
           </button>
         </form>
       </AuthCard>
+
+      {/* Google Account Modal */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-[#CFC5B3] text-center flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-200">
+            <div className="w-14 h-14 rounded-full bg-[#007CA6]/10 flex items-center justify-center mb-1">
+              <GoogleIcon />
+            </div>
+            <h3 className="text-2xl font-bold text-[#00202b]">Google Account Detected</h3>
+            <p className="text-[#656565] text-base leading-relaxed">
+              An account for <strong className="text-[#00202b]">{email}</strong> was created using Google Sign-In. Please sign in with your Google account below.
+            </p>
+            
+            <button
+              type="button"
+              onClick={() => {
+                setShowGoogleModal(false);
+                handleGoogleSignIn();
+              }}
+              className="w-full h-[58px] bg-white border border-[#CFC5B3] rounded-xl text-[#3c3c3c] text-lg font-semibold flex items-center justify-center gap-3 shadow-md hover:bg-[#f7f3ee] transition-all cursor-pointer mt-2"
+            >
+              <GoogleIcon />
+              Sign in with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowGoogleModal(false)}
+              className="text-[#656565] hover:text-[#00202b] text-sm font-medium transition-colors cursor-pointer mt-1"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </AuthLayout>
   );
 };

@@ -20,6 +20,8 @@ import MenteeSessionsDashboard from './components/Mentee/MenteeSessionsDashboard
 import NotificationsPage from './components/NotificationsPage';
 import LegalStatement from './components/LegalStatement';
 import UsageTerms from './components/UsageTerms';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import AdminRegister from './components/Admin/AdminRegister';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/google-register" element={<GoogleRegister />} />
+        <Route path="/admin/register" element={<AdminRegister />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
         
         {/* Profile Wizard Routes */}
         <Route path="/create-profile" element={<MentorMenteeProfile />} />
