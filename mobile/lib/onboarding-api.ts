@@ -88,3 +88,37 @@ export async function updateMentorAvailability(manualAvailabilitySlots: Availabi
   if (!res.ok) throw new Error(data.error || data.message || 'Failed to update availability');
   return data;
 }
+
+// Accepts any subset of mentor profile fields to update — mirrors
+// server/src/routes/Mentor.js's PATCH /me, which reads a flat body (top-level
+// fields plus jobTitle/employer/industry/etc. nested under mentorProfile
+// server-side).
+export type UpdateMentorProfilePayload = Partial<{
+  phone: string;
+  state: string;
+  linkedinUrl: string;
+  websiteUrl: string;
+  university: string;
+  majors: string[];
+  additionalInfo: string;
+  manualAvailabilitySlots: AvailabilitySlot[];
+  jobTitle: string;
+  employer: string;
+  industry: string;
+  yearsOfProfExp: number;
+  volunteeringFor: string[];
+  customMeetingLink: string;
+  maxMentees: number;
+  frequency: string;
+}>;
+
+export async function updateMentorProfile(updates: UpdateMentorProfilePayload) {
+  const res = await apiFetch('/api/mentors/me', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || 'Failed to update mentor profile');
+  return data;
+}

@@ -24,9 +24,19 @@ export type MeUser = {
   _id: string;
   firstName: string;
   lastName: string;
+  email: string;
   role: Role;
   profilePicture?: string;
   hasCompletedProfile: boolean;
+  phone?: string;
+  state?: string;
+  linkedinUrl?: string;
+  websiteUrl?: string;
+  university?: string;
+  majors?: string[];
+  additionalInfo?: string;
+  resume?: string;
+  notificationPreferences?: { email: boolean; sms: boolean; inApp: boolean };
   manualAvailabilitySlots?: { day: string; startTime: string; endTime: string }[];
   mentorProfile?: {
     jobTitle?: string;
@@ -34,6 +44,14 @@ export type MeUser = {
     industry?: string;
     yearsOfProfExp?: number;
     volunteeringFor?: string[];
+    customMeetingLink?: string;
+    maxMentees?: number;
+    frequency?: string;
+  };
+  menteeProfile?: {
+    academicStatus?: string;
+    desiredCareer?: string;
+    desiredServices?: string[];
   };
 };
 
