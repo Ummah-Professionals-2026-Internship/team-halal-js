@@ -25,9 +25,10 @@ type Props = {
   onCancelled: () => void;
 };
 
-// Port of web's SessionCard.jsx. Rendered on the mentor dashboard only, so
-// the current user viewing this card is always the mentor and `mentee` is
-// always the other party.
+// Port of web's SessionCard.jsx. Renders on both the mentor and mentee
+// dashboards — "the other party" is session.mentee when viewed by a mentor,
+// session.mentor when viewed by a mentee, resolved below from the logged-in
+// user's role rather than assuming one fixed direction.
 //
 // Layout note: the 4 actions (Reschedule/Cancel/View Details/Join Meeting)
 // used to sit in one non-wrapping row, which reliably overflowed on narrow
@@ -36,13 +37,15 @@ type Props = {
 // Meeting proper visual weight as the actual primary action on the card.
 export function SessionCard({ session, onCancelled }: Props) {
   const { user } = useSession();
-  const { _id: sessionId, mentee, scheduledTime, link, status, service, details } = session;
+  const isMentor = user?.role === 'mentor';
+  const { _id: sessionId, mentor, mentee, scheduledTime, link, status, service, details } = session;
+  const otherParty = isMentor ? mentee : mentor;
   const [showModal, setShowModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const name = `${mentee?.firstName ?? ''} ${mentee?.lastName ?? ''}`.trim();
-  const initial = mentee?.firstName?.[0]?.toUpperCase() ?? '?';
-  const avatarUrl = resolveUploadUrl(mentee?.profilePicture);
+  const name = `${otherParty?.firstName ?? ''} ${otherParty?.lastName ?? ''}`.trim();
+  const initial = otherParty?.firstName?.[0]?.toUpperCase() ?? '?';
+  const avatarUrl = resolveUploadUrl(otherParty?.profilePicture);
 
   const when = new Date(scheduledTime);
   const dateStr = when.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
@@ -86,9 +89,12 @@ export function SessionCard({ session, onCancelled }: Props) {
   const handleReschedule = () => {
     if (!canCancel || !user) return; // same 48h gate as cancel
     setPendingBooking({
-      mentorId: user._id,
-      mentorName: name, // the mentee's name, for the schedule screen's title
-      mentorAvailability: user.manualAvailabilitySlots ?? [],
+      // Booking always needs the mentor's own id/availability, whichever
+      // side is doing the rescheduling: a mentor reschedules against their
+      // own hours, a mentee reschedules against the mentor's hours.
+      mentorId: isMentor ? user._id : mentor._id,
+      mentorName: name,
+      mentorAvailability: (isMentor ? user.manualAvailabilitySlots : mentor.manualAvailabilitySlots) ?? [],
       rescheduleSessionId: sessionId,
     });
     router.push('/mentee/schedule');
@@ -177,7 +183,7 @@ export function SessionCard({ session, onCancelled }: Props) {
                 )}
                 <View>
                   <Text className="font-semibold text-slate-900 text-xs">{name}</Text>
-                  <Text className="text-[11px] text-slate-500">{mentee?.email || 'No email provided'}</Text>
+                  <Text className="text-[11px] text-slate-500">{otherParty?.email || 'No email provided'}</Text>
                 </View>
               </View>
             </View>

@@ -7,9 +7,17 @@ import { cardShadow } from '../../constants/theme';
 
 type Props = {
   initialSlots: AvailabilitySlot[];
+  title?: string;
+  subtitle?: string;
+  onSave?: (slots: AvailabilitySlot[]) => Promise<unknown>;
 };
 
-export function AvailabilityCard({ initialSlots }: Props) {
+export function AvailabilityCard({
+  initialSlots,
+  title = 'Mentoring Hours',
+  subtitle = 'Tap cells to set when you are available.',
+  onSave = updateMentorAvailability,
+}: Props) {
   const [slots, setSlots] = useState<AvailabilitySlot[]>(initialSlots);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +33,7 @@ export function AvailabilityCard({ initialSlots }: Props) {
     setSubmitting(true);
     setError('');
     try {
-      await updateMentorAvailability(slots);
+      await onSave(slots);
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update availability');
@@ -36,9 +44,9 @@ export function AvailabilityCard({ initialSlots }: Props) {
 
   return (
     <View className="bg-white rounded-2xl p-5 border border-brand-cardBorder" style={cardShadow}>
-      <Text className="text-base font-bold text-brand-text">Mentoring Hours</Text>
+      <Text className="text-base font-bold text-brand-text">{title}</Text>
       <Text className="text-xs text-slate-500 mt-0.5 mb-4">
-        Tap cells to set when you are available.
+        {subtitle}
       </Text>
 
       <View className="rounded-xl bg-[#8ACBDB]/25 p-3">
