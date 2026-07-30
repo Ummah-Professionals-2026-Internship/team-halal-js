@@ -36,7 +36,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'An account with that email already exists' });
     }
 
-    const user = new User({ firstName, lastName, email, password, role: isAdminEmail(email) ? 'admin' : role });
+    if (role === 'admin' && !isAdminEmail(email)) {
+      return res.status(403).json({ message: `Admin accounts require a ${ADMIN_EMAIL_DOMAIN} email address.` });
+    }
+
+    const user = new User({ firstName, lastName, email, password, role });
     await user.save();
 
     const token = jwt.sign(
@@ -74,11 +78,6 @@ router.post('/login', async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    if (isAdminEmail(user.email) && user.role !== 'admin') {
-      user.role = 'admin';
-      await user.save();
     }
 
     const token = jwt.sign(
