@@ -44,6 +44,9 @@ export type MeUser = {
     industry?: string;
     yearsOfProfExp?: number;
     volunteeringFor?: string[];
+    customMeetingLink?: string;
+    maxMentees?: number;
+    frequency?: string;
   };
   menteeProfile?: {
     academicStatus?: string;
