@@ -6,6 +6,8 @@ const requireAuth = require('../middleware/requireAuth');
 const router = express.Router();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const ADMIN_EMAIL_DOMAIN = '@ummahprofessionals.com';
+const isAdminEmail = (email) => (email || '').toLowerCase().endsWith(ADMIN_EMAIL_DOMAIN);
 // GET /api/auth/me - Get current user
 router.get('/me', requireAuth, async (req, res) => {
   try {
@@ -34,7 +36,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'An account with that email already exists' });
     }
 
-    const user = new User({ firstName, lastName, email, password, role });
+    const user = new User({ firstName, lastName, email, password, role: isAdminEmail(email) ? 'admin' : role });
     await user.save();
 
     const token = jwt.sign(
@@ -72,6 +74,11 @@ router.post('/login', async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (isAdminEmail(user.email) && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
     }
 
     const token = jwt.sign(

@@ -18,6 +18,15 @@ export async function getMenteeSessions(){
     return data;
 }
 
+export async function getAllSessions(){
+    const res = await apiFetch('/api/sessions/all');
+    const data = await res.json();
+    if(!res.ok){
+        throw new Error(data.error || 'Failed to load sessions');
+    }
+    return data;
+}
+
 export async function createSession(sessionData){
     const res = await apiFetch('/api/sessions', {
         method: 'POST',
@@ -29,6 +38,15 @@ export async function createSession(sessionData){
     const data = await res.json();
     if(!res.ok){
         throw new Error(data.error || 'Failed to schedule session');
+    }
+    return data;
+}
+
+export async function getSessionById(sessionId){
+    const res = await apiFetch(`/api/sessions/${sessionId}`);
+    const data = await res.json();
+    if(!res.ok){
+        throw new Error(data.error || 'Failed to load session');
     }
     return data;
 }
@@ -55,6 +73,21 @@ export async function cancelSession(sessionId){
     const data = await res.json();
     if(!res.ok){
         throw new Error(data.error || 'Failed to cancel session');
+    }
+    return data;
+}
+
+export async function requestReschedule(sessionId, reason, recipient = 'both'){
+    const res = await apiFetch(`/api/sessions/${sessionId}/request-reschedule`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason, recipient })
+    });
+    const data = await res.json();
+    if(!res.ok){
+        throw new Error(data.error || 'Failed to request reschedule');
     }
     return data;
 }

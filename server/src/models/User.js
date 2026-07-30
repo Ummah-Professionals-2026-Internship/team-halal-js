@@ -109,7 +109,8 @@ const userSchema = new mongoose.Schema({
     menteeProfile: {
         academicStatus: String,
         desiredCareer: String,
-        desiredServices: {type: [String], enum: ['general career advice', 'resume/portfolio review', 'mock interview']}
+        desiredServices: {type: [String], enum: ['general career advice', 'resume/portfolio review', 'mock interview']},
+        preferredMentorGender: { type: String, enum: ['male', 'female', ''] }
     },
 
     notificationPreferences: {

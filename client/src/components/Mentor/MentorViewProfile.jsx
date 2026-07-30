@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PageLayoutDashboard from '../PageLayoutDashboard'
 import SectionHeading from '../SectionHeading'
 import SearchableSelect from '../SearchableSelect'
@@ -26,6 +27,7 @@ const emptyForm = {
 }
 
 const MentorViewProfile = () => {
+  const navigate = useNavigate()
   const { user, refreshUser } = useCurrentUser()
   const [formData, setFormData] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
@@ -86,7 +88,7 @@ const MentorViewProfile = () => {
   const education = [formData.majors?.[0], formData.university].filter(Boolean).join(' from ')
 
   return (
-    <PageLayoutDashboard userName={name} userRole="Mentor" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser}>
+    <PageLayoutDashboard userName={name} userRole="Mentor" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
       <div className="max-w-6xl mx-auto w-full pb-4">
 
         <div className="mb-6 mt-2">
@@ -97,12 +99,12 @@ const MentorViewProfile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
           {/* What mentees see */}
-          <div>
-            <SectionHeading title="What mentees see" className="mb-4" />
-            <div className="bg-[#C5DCE8] rounded-xl p-6">
+          <div className="lg:sticky lg:top-4">
+            <SectionHeading title="What mentees see" subtitle="A preview of your public profile card." className="mb-4" />
+            <div className="max-w-sm mx-auto bg-white rounded-xl border border-slate-100 shadow-sm p-6">
               {user.profilePicture
                 ? <img src={user.profilePicture} alt={name} className="w-20 h-20 rounded-full object-cover mx-auto" />
-                : <div className="w-20 h-20 rounded-full bg-gray-300 mx-auto" />
+                : <div className="w-20 h-20 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-xl mx-auto">{name?.[0]?.toUpperCase() ?? '?'}</div>
               }
               <p className="font-bold text-[#00212C] text-lg text-center mt-3">{name}</p>
               {title && <p className="text-sm text-[#00212C] text-center">{title}</p>}
@@ -134,8 +136,8 @@ const MentorViewProfile = () => {
               )}
 
               <div className="mt-4">
-                <p className="text-xs font-semibold text-[#00212C] mb-1">Bio:</p>
-                <div className="bg-white rounded-lg p-3 min-h-[80px] text-sm text-slate-700 whitespace-pre-wrap">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Bio</p>
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 min-h-[80px] text-sm text-slate-700 whitespace-pre-wrap">
                   {formData.additionalInfo || <span className="text-slate-400">No bio added yet.</span>}
                 </div>
               </div>
@@ -145,7 +147,7 @@ const MentorViewProfile = () => {
           {/* Edit form */}
           <div>
             <SectionHeading title="View or Update Your Information" className="mb-4" />
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-100 p-5">
+            <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
 
               <div className="mb-4">
                 <label className={labelClass}>LinkedIn URL</label>
@@ -163,12 +165,12 @@ const MentorViewProfile = () => {
                 </div>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-5">
                 <label className={labelClass}>Email</label>
                 <input name="email" type="email" value={formData.email} onChange={handleChange} className={inputClass} required />
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4 pt-4 border-t border-slate-100">
                 <label className={labelClass}>Years of Professional Experience</label>
                 <input name="yearsOfProfExp" type="number" min="0" value={formData.yearsOfProfExp} onChange={handleChange} className={inputClass} />
               </div>
@@ -207,7 +209,7 @@ const MentorViewProfile = () => {
                 isMulti={true}
               />
 
-              <div className="mb-4">
+              <div className="mb-5 pt-4 border-t border-slate-100">
                 <label className={labelClass}>Services You Offer</label>
                 <div className="flex flex-col gap-0.5">
                   {MENTOR_SERVICES.map(service => (
@@ -225,7 +227,7 @@ const MentorViewProfile = () => {
                 </div>
               </div>
 
-              <div className="mb-5">
+              <div className="mb-5 pt-4 border-t border-slate-100">
                 <label className={labelClass}>Bio</label>
                 <textarea
                   name="additionalInfo"
@@ -238,7 +240,11 @@ const MentorViewProfile = () => {
               </div>
 
               {message && (
-                <p className={`text-xs font-medium mb-4 ${message.includes('successfully') ? 'text-emerald-600' : 'text-red-600'}`}>
+                <p className={`text-xs font-medium mb-4 rounded-lg px-3 py-2 border ${
+                  message.includes('successfully')
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
+                    : 'text-red-600 bg-red-50 border-red-100'
+                }`}>
                   {message}
                 </p>
               )}

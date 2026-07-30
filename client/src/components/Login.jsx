@@ -88,7 +88,10 @@ const Login = () => {
 
       // Navigate to dashboard if user completed their profile, otherwise navigate to onboarding info
       let role = data.user.role;
-      if (data.user.hasCompletedProfile) {
+      if (role === 'admin') {
+        navigate('/admin-dashboard');
+      }
+      else if (data.user.hasCompletedProfile) {
         if (role === 'mentor') {
           navigate('/mentor-dashboard');
 

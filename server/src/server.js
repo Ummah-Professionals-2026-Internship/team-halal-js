@@ -10,9 +10,15 @@ const uploadRoutes = require('./routes/upload');
 const calendarRoutes = require('./routes/calendar');
 const sessionRoutes = require('./routes/sessions');
 const notificationRoutes = require('./routes/notifications');
+const helpRequestRoutes = require('./routes/helpRequests');
+const feedbackRoutes = require('./routes/feedback');
+const { startCompleteSessionsJob } = require('./jobs/completeSessionsJob');
 
 // Connect to database
 connectDB();
+
+// Periodically marks past sessions as completed
+startCompleteSessionsJob();
 
 const app = express();
 
@@ -33,6 +39,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/help-requests', helpRequestRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

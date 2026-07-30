@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { submitHelpRequest } from '../api-calls/helpRequests';
 
 const GetHelp = ({ onClose }) => {
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const options = ['Technical Issues with the platform', 'Questions about the service', 'Other'];
 
@@ -11,6 +14,19 @@ const GetHelp = ({ onClose }) => {
     setSelected(prev =>
       prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]
     );
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError('');
+    try {
+      await submitHelpRequest({ topics: selected, message });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || 'Failed to submit. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -65,12 +81,14 @@ const GetHelp = ({ onClose }) => {
           The Ummah Professionals team will respond to you as soon as possible.
         </p>
 
+        {error && <p className="text-red-600 text-sm text-center font-medium">{error}</p>}
+
         <button
-          onClick={() => setSubmitted(true)}
-          disabled={selected.length === 0 && message.trim() === ''}
+          onClick={handleSubmit}
+          disabled={(selected.length === 0 && message.trim() === '') || submitting}
           className="bg-[#003F55] text-white font-semibold py-2 rounded-lg text-sm w-full disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Submit
+          {submitting ? 'Submitting...' : 'Submit'}
         </button>
       </div>
     </div>

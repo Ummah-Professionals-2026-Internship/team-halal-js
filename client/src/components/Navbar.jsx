@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
+import NotificationDetailModal from './NotificationDetailModal';
+import SessionFeedbackModal from './SessionFeedbackModal';
 import {
   getNotifications,
   markAsRead,
@@ -11,6 +13,8 @@ import {
 const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
   const navigate = useNavigate()
   const fileInputRef = useRef(null);
+  const [viewingNotification, setViewingNotification] = useState(null);
+  const [feedbackNotification, setFeedbackNotification] = useState(null);
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -144,9 +148,17 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
                 <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
                   {notifications.length > 0 ? (
                     notifications.slice(0, 5).map(n => (
-                      <div 
-                        key={n._id} 
-                        onClick={() => !n.isRead && handleMarkAsRead(n._id)}
+                      <div
+                        key={n._id}
+                        onClick={() => {
+                          if (!n.isRead) handleMarkAsRead(n._id);
+                          if (n.type === 'feedback_requested') {
+                            setFeedbackNotification(n);
+                          } else {
+                            setViewingNotification(n);
+                          }
+                          setShowDropdown(false);
+                        }}
                         className={`p-3 text-xs leading-normal transition-colors flex gap-2.5 items-start cursor-pointer hover:bg-slate-50 ${!n.isRead ? 'bg-slate-50/50 font-medium' : ''}`}
                       >
                         <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.isRead ? 'bg-[#007CA6]' : 'bg-transparent'}`} />
@@ -213,6 +225,22 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
           
           
         </div>
+      )}
+
+      {viewingNotification && (
+        <NotificationDetailModal
+          notification={viewingNotification}
+          onClose={() => setViewingNotification(null)}
+        />
+      )}
+
+      {feedbackNotification && (
+        <SessionFeedbackModal
+          sessionId={feedbackNotification.relatedId}
+          otherPersonName={feedbackNotification.sender?.firstName}
+          onClose={() => setFeedbackNotification(null)}
+          onSubmitted={() => setFeedbackNotification(null)}
+        />
       )}
 
     </header>

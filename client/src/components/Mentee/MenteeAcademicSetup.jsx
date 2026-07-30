@@ -22,6 +22,7 @@ const MenteeAcademicSetup = () => {
     academicStatus: '',
     desiredCareer: '',
     desiredServices: [],
+    preferredMentorGender: '',
     calendarAccess: false,
     profilePicture: null,
     additionalInfo: '',
@@ -257,6 +258,18 @@ const MenteeAcademicSetup = () => {
               </label>
             ))}
           </div>
+
+          <label className="block mb-1">Mentor Gender Preference</label>
+          <select
+            name="preferredMentorGender"
+            value={formData.preferredMentorGender}
+            onChange={handleChange}
+            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
+          >
+            <option value="">No Preference</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
 
           {/* Google Calendar Connection Card */}
           <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">

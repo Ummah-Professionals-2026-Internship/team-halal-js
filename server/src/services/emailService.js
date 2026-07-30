@@ -101,7 +101,7 @@ const generateICSString = (mentor, mentee, session, isCancel = false) => {
  * Supports mock console logging in development.
  */
 const sendResendEmail = async ({ apiKey, to, subject, html, attachments }) => {
-  const fromEmail = 'Ummah Professionals <no-reply@lahagetutoring.com>';
+  const fromEmail = 'Ummah Professionals <onboarding@resend.dev>';
 
   if (!apiKey) {
     console.log('\n==================================================');
@@ -546,8 +546,35 @@ const sendSessionCancellationEmail = async (mentor, mentee, session, initiatorRo
   });
 };
 
+/**
+ * Sends a follow-up email to a user who left a low session rating,
+ * carrying the admin's custom message asking what went wrong and how to improve.
+ * @param {Object} user - The User who submitted the negative feedback.
+ * @param {string} message - The admin-composed follow-up message.
+ */
+const sendFeedbackFollowUpEmail = async (user, message) => {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  const subject = `We'd like to hear more about your recent session`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; color: #00212C;">
+      <h2 style="color: #003F55; border-bottom: 2px solid #C5DCE8; padding-bottom: 10px;">We'd Love Your Feedback</h2>
+      <p>Assalamu Alaikum ${user.firstName},</p>
+      <p style="white-space: pre-wrap;">${message}</p>
+      <p style="font-size: 14px; color: #718096;">Just reply to this email with your thoughts.</p>
+      <p style="margin-top: 20px; font-weight: bold;">
+        Best regards,<br>
+        The Ummah Professionals Team
+      </p>
+    </div>
+  `;
+
+  await sendResendEmail({ apiKey, to: user.email, subject, html });
+};
+
 module.exports = {
   sendSessionConfirmationEmail,
   sendSessionRescheduleEmail,
-  sendSessionCancellationEmail
+  sendSessionCancellationEmail,
+  sendFeedbackFollowUpEmail
 };
