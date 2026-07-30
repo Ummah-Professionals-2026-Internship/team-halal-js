@@ -12,6 +12,9 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   bulb: 'bulb-outline',
 };
 
+const fontStyle = { fontFamily: 'Kollektif' };
+const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
+
 type Props = {
   services?: string[];
 };
@@ -23,17 +26,17 @@ export function ServicesCard({ services = [] }: Props) {
     <View className="bg-white rounded-2xl p-5 border border-brand-cardBorder" style={cardShadow}>
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-1 pr-3">
-          <Text className="text-base font-bold text-brand-text">
+          <Text className="text-base text-brand-text" style={fontBoldStyle}>
             {hasSelection ? 'Services You Offer' : 'Services You Can Offer'}
           </Text>
-          <Text className="text-xs text-slate-500 mt-0.5">
+          <Text className="text-xs text-slate-500 mt-0.5" style={fontStyle}>
             {hasSelection
               ? 'The services mentees can request from you.'
               : 'Select services during setup to start matching with mentees.'}
           </Text>
         </View>
         <View className="rounded-full bg-brand-accent/15 px-3 py-1">
-          <Text className="text-xs font-bold text-brand-text">
+          <Text className="text-xs text-brand-text" style={fontBoldStyle}>
             {services.length} / {MENTOR_SERVICES.length}
           </Text>
         </View>
@@ -62,12 +65,12 @@ export function ServicesCard({ services = [] }: Props) {
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-semibold text-brand-text">{service.label}</Text>
-                  <Text className="text-[11px] text-slate-500 mt-0.5">{service.description}</Text>
+                  <Text className="text-sm text-brand-text" style={fontBoldStyle}>{service.label}</Text>
+                  <Text className="text-[11px] text-slate-500 mt-0.5" style={fontStyle}>{service.description}</Text>
                 </View>
                 {isOffered && (
                   <View className="rounded-full bg-brand-accent px-2 py-0.5">
-                    <Text className="text-[9px] font-bold uppercase text-brand-text">Offering</Text>
+                    <Text className="text-[9px] uppercase text-brand-text" style={fontBoldStyle}>Offering</Text>
                   </View>
                 )}
               </View>

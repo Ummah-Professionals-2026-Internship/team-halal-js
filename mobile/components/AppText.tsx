@@ -33,12 +33,15 @@ function resolveFontFamily(
     bold ||
     className.includes('font-bold') ||
     className.includes('font-semibold') ||
+    className.includes('font-medium') ||
     className.includes('font-extrabold') ||
     styleFontWeight === 'bold' ||
     styleFontWeight === '700' ||
     styleFontWeight === '600' ||
     styleFontWeight === '800' ||
-    styleFontWeight === '900';
+    styleFontWeight === '900' ||
+    styleFontWeight === 700 ||
+    styleFontWeight === 600;
 
   const isItalic =
     italic ||
@@ -54,13 +57,20 @@ function resolveFontFamily(
 /**
  * Universal Text component for the mobile app.
  * Guarantees that the Kollektif font family (Regular, Bold, Italic, BoldItalic)
- * is universally applied across all mobile UI text.
+ * is universally applied across all mobile UI text without falling back to system fonts.
  */
 export function Text({ style, className = '', bold, italic, children, ...props }: AppTextProps) {
   const fontFamily = resolveFontFamily(bold, italic, className, style);
+  const flattenedStyle = style ? StyleSheet.flatten(style) : {};
+  
+  // Strip fontWeight from the final style object. On React Native (iOS & Android),
+  // passing a numeric or string fontWeight alongside a custom postscript font family
+  // (like 'Kollektif-Bold') causes React Native to fail font matching and fall back
+  // to the system default font (San Francisco / Roboto).
+  const { fontWeight, ...styleClean } = flattenedStyle;
 
   return (
-    <RNText style={[{ fontFamily }, style]} className={className} {...props}>
+    <RNText style={[styleClean, { fontFamily }]} className={className} {...props}>
       {children}
     </RNText>
   );
@@ -72,10 +82,12 @@ export function Text({ style, className = '', bold, italic, children, ...props }
  */
 export function TextInput({ style, className = '', bold, italic, ...props }: AppTextInputProps) {
   const fontFamily = resolveFontFamily(bold, italic, className, style);
+  const flattenedStyle = style ? StyleSheet.flatten(style) : {};
+  const { fontWeight, ...styleClean } = flattenedStyle;
 
   return (
     <RNTextInput
-      style={[{ fontFamily }, style]}
+      style={[styleClean, { fontFamily }]}
       className={className}
       placeholderTextColor={props.placeholderTextColor ?? '#9a9a9a'}
       {...props}
@@ -86,4 +98,3 @@ export function TextInput({ style, className = '', bold, italic, ...props }: App
 export const AppText = Text;
 export const AppTextInput = TextInput;
 export default Text;
-

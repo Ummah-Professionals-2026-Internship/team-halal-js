@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type PropsWithChildren 
 import * as SecureStore from 'expo-secure-store';
 import { getMe, login as apiLogin, register as apiRegister, type MeUser, type Role } from './auth-api';
 import { clearSteps, ALL_ONBOARDING_KEYS } from './onboarding-storage';
+import { registerForPushNotificationsAsync } from './push-notifications';
 
 type Status = 'loading' | 'signedIn' | 'signedOut';
 
@@ -44,6 +45,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         const me = await getMe();
         setUser(me);
         setStatus('signedIn');
+        registerForPushNotificationsAsync().catch(() => {});
       } catch {
         await SecureStore.deleteItemAsync('token');
         setStatus('signedOut');
@@ -57,6 +59,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const me = await getMe();
     setUser(me);
     setStatus('signedIn');
+    registerForPushNotificationsAsync().catch(() => {});
   }
 
   async function signInWithToken(token: string) {
@@ -64,6 +67,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const me = await getMe();
     setUser(me);
     setStatus('signedIn');
+    registerForPushNotificationsAsync().catch(() => {});
   }
 
   async function signUp(
@@ -78,6 +82,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const me = await getMe();
     setUser(me);
     setStatus('signedIn');
+    registerForPushNotificationsAsync().catch(() => {});
   }
 
   async function signOut() {

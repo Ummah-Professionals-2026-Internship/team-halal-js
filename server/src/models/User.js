@@ -61,6 +61,7 @@ const userSchema = new mongoose.Schema({
     },
 
     phone: {type: String},
+    expoPushToken: {type: String},
     referralSource: {type: String},
     profilePicture: {type: String},
     resume: {type: String},

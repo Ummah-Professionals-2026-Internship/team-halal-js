@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Pressable, Image, ActivityIndicator } from 'react-native';
+import { View, Pressable, Image, ActivityIndicator, Switch } from 'react-native';
 import { Text, TextInput } from '../../../components/AppText';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
@@ -16,6 +16,11 @@ import { uploadProfilePicture } from '../../../lib/upload-api';
 import { resolveUploadUrl } from '../../../lib/upload-url';
 import { formatPhoneNumber } from '../../../lib/format';
 import { updateMenteeProfile, type AvailabilitySlot } from '../../../lib/onboarding-api';
+import {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  type NotificationPreferences,
+} from '../../../lib/notifications-api';
 import { useSession } from '../../../lib/session-context';
 
 const ACADEMIC_STATUS_OPTIONS = [
@@ -45,6 +50,8 @@ export default function MenteeProfileSettings() {
   const [desiredCareer, setDesiredCareer] = useState('');
   const [desiredServices, setDesiredServices] = useState<string[]>([]);
   const [additionalInfo, setAdditionalInfo] = useState('');
+  const [preferences, setPreferences] = useState<NotificationPreferences>({ email: true, sms: true, inApp: true });
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [localPhotoUri, setLocalPhotoUri] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -63,7 +70,22 @@ export default function MenteeProfileSettings() {
     setDesiredCareer(user.menteeProfile?.desiredCareer ?? '');
     setDesiredServices(user.menteeProfile?.desiredServices ?? []);
     setAdditionalInfo(user.additionalInfo ?? '');
+    getNotificationPreferences().then(setPreferences).catch(() => {});
   }, [user]);
+
+  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
+    const next = { ...preferences, [key]: value };
+    setPreferences(next);
+    setSavingPrefs(true);
+    try {
+      await updateNotificationPreferences({ [key]: value });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save preference');
+      setPreferences(preferences);
+    } finally {
+      setSavingPrefs(false);
+    }
+  };
 
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -250,6 +272,54 @@ export default function MenteeProfileSettings() {
           {submitting ? 'Saving...' : 'Save Changes'}
         </Text>
       </Pressable>
+
+      <Text className="text-sm text-brand-text mt-4" style={fontBoldStyle}>Notification Preferences</Text>
+      <View className="bg-white rounded-2xl border border-brand-cardBorder p-4 gap-4" style={cardShadow}>
+        <View className="flex-row items-center justify-between gap-3">
+          <View className="flex-1">
+            <Text className="text-sm text-brand-text" style={fontBoldStyle}>Email Alerts</Text>
+            <Text className="text-xs text-slate-500 mt-0.5" style={fontStyle}>
+              Receipts for bookings and reschedules.
+            </Text>
+          </View>
+          <Switch
+            value={preferences.email}
+            disabled={savingPrefs}
+            onValueChange={(v) => handlePreferenceChange('email', v)}
+            trackColor={{ true: '#007CA6' }}
+          />
+        </View>
+
+        <View className="flex-row items-center justify-between gap-3">
+          <View className="flex-1">
+            <Text className="text-sm text-brand-text" style={fontBoldStyle}>SMS Alerts</Text>
+            <Text className="text-xs text-slate-500 mt-0.5" style={fontStyle}>
+              Reminders sent to your phone. Msg & data rates may apply.
+            </Text>
+          </View>
+          <Switch
+            value={preferences.sms}
+            disabled={savingPrefs}
+            onValueChange={(v) => handlePreferenceChange('sms', v)}
+            trackColor={{ true: '#007CA6' }}
+          />
+        </View>
+
+        <View className="flex-row items-center justify-between gap-3">
+          <View className="flex-1">
+            <Text className="text-sm text-brand-text" style={fontBoldStyle}>In-App Alerts</Text>
+            <Text className="text-xs text-slate-500 mt-0.5" style={fontStyle}>
+              Show updates in your notifications feed.
+            </Text>
+          </View>
+          <Switch
+            value={preferences.inApp}
+            disabled={savingPrefs}
+            onValueChange={(v) => handlePreferenceChange('inApp', v)}
+            trackColor={{ true: '#007CA6' }}
+          />
+        </View>
+      </View>
 
       <Text className="text-sm text-brand-text mt-4" style={fontBoldStyle}>Availability</Text>
       {user && (

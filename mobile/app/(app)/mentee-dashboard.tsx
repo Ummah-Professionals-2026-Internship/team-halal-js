@@ -7,6 +7,7 @@ import { useSession } from '../../lib/session-context';
 import { getMatchSuggestions, type MatchedMentor } from '../../lib/matches-api';
 import { getMenteeSessions, type Session } from '../../lib/sessions-api';
 import { resolveUploadUrl } from '../../lib/upload-url';
+import { getNotifications } from '../../lib/notifications-api';
 import { Screen } from '../../components/Screen';
 import { MentorMatchCard } from '../../components/dashboard/MentorMatchCard';
 import { UpcomingSessionsList } from '../../components/dashboard/UpcomingSessionsList';
@@ -25,15 +26,17 @@ export default function MenteeDashboard() {
   const { user, signOut } = useSession();
   const [mentors, setMentors] = useState<MatchedMentor[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
   const loadDashboard = useCallback(async () => {
     setError('');
-    const [matchesResult, sessionsResult] = await Promise.allSettled([
+    const [matchesResult, sessionsResult, notifsResult] = await Promise.allSettled([
       getMatchSuggestions(),
       getMenteeSessions(),
+      getNotifications(),
     ]);
     if (matchesResult.status === 'fulfilled') {
       setMentors(matchesResult.value);
@@ -42,6 +45,9 @@ export default function MenteeDashboard() {
     }
     if (sessionsResult.status === 'fulfilled') {
       setSessions(sessionsResult.value);
+    }
+    if (notifsResult.status === 'fulfilled') {
+      setUnreadCount(notifsResult.value.filter((n) => !n.isRead).length);
     }
   }, []);
 
@@ -76,6 +82,18 @@ export default function MenteeDashboard() {
           </View>
         </View>
         <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => router.push('/notifications')}
+            hitSlop={8}
+            className="w-10 h-10 rounded-full bg-white border border-brand-cardBorder items-center justify-center relative"
+          >
+            <Ionicons name="notifications-outline" size={20} color="#00212C" />
+            {unreadCount > 0 && (
+              <View className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-brand-error items-center justify-center">
+                <Text className="text-white text-[9px]" style={fontBoldStyle}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </Pressable>
           <Pressable
             onPress={() => router.push('/mentee/profile-settings')}
             hitSlop={8}

@@ -44,7 +44,7 @@ export function CompatibilityRing({ score = 0, size = 52, strokeWidth = 5 }: Pro
           justifyContent: 'center',
         }}
       >
-        <Text style={{ fontSize: 11, fontWeight: 'bold', color }}>{clamped}%</Text>
+        <Text style={{ fontSize: 11, fontFamily: 'Kollektif-Bold', color }}>{clamped}%</Text>
       </View>
     </View>
   );

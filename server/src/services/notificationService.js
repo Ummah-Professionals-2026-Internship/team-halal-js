@@ -99,6 +99,31 @@ const sendNotification = async ({
       console.log(`SMS dispatch skipped for recipient ${recipientId} due to user preference.`);
     }
 
+    // 4. Dispatch Expo Push Notification to mobile lockscreen
+    if (recipient.expoPushToken) {
+      try {
+        const pushResponse = await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: recipient.expoPushToken,
+            sound: 'default',
+            title,
+            body: message,
+            data: { relatedId, relatedModel, type },
+          }),
+        });
+        const pushResult = await pushResponse.json();
+        console.log('Dispatched Expo Push Notification:', pushResult);
+      } catch (pushErr) {
+        console.error('Error sending Expo push notification:', pushErr);
+      }
+    }
+
   } catch (err) {
     console.error('Error in sendNotification dispatcher:', err);
   }

@@ -162,7 +162,7 @@ export default function NotificationsScreen() {
 
             <View className="flex-row items-center justify-between gap-3">
               <View className="flex-1">
-                <Text className="text-sm text-brand-text" style={fontBoldStyle}>SMS / WhatsApp Alerts</Text>
+                <Text className="text-sm text-brand-text" style={fontBoldStyle}>SMS Alerts</Text>
                 <Text className="text-xs text-slate-500 mt-0.5" style={fontStyle}>
                   Reminders sent to your phone. Msg & data rates may apply.
                 </Text>
