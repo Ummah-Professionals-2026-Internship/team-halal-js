@@ -89,6 +89,7 @@ export async function updateMentorAvailability(manualAvailabilitySlots: Availabi
   return data;
 }
 
+
 // Accepts any subset of mentor profile fields to update — mirrors
 // server/src/routes/Mentor.js's PATCH /me, which reads a flat body (top-level
 // fields plus jobTitle/employer/industry/etc. nested under mentorProfile
@@ -120,5 +121,34 @@ export async function updateMentorProfile(updates: UpdateMentorProfilePayload) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || data.message || 'Failed to update mentor profile');
+  return data;
+}
+
+// Accepts any subset of mentee profile fields to update — mirrors
+// server/src/routes/Mentee.js's PATCH /me, which reads a flat body (top-level
+// fields plus academicStatus/desiredCareer/desiredServices nested under
+// menteeProfile server-side).
+export type UpdateMenteeProfilePayload = Partial<{
+  phone: string;
+  state: string;
+  linkedinUrl: string;
+  websiteUrl: string;
+  university: string;
+  majors: string[];
+  additionalInfo: string;
+  manualAvailabilitySlots: AvailabilitySlot[];
+  academicStatus: string;
+  desiredCareer: string;
+  desiredServices: string[];
+}>;
+
+export async function updateMenteeProfile(updates: UpdateMenteeProfilePayload) {
+  const res = await apiFetch('/api/mentees/me', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || 'Failed to update mentee profile');
   return data;
 }
