@@ -25,24 +25,26 @@ async function completePastSessions() {
         for (const session of toComplete) {
             const message = `Your ${session.service} session has ended. Share your feedback with the Ummah Professionals team.`;
 
-            sendNotification({
+            await sendNotification({
                 recipientId: session.mentor,
                 senderId: session.mentee,
                 type: 'feedback_requested',
                 title: 'How was your session?',
                 message,
                 relatedId: session._id,
-                relatedModel: 'Session'
+                relatedModel: 'Session',
+                metadata: { session }
             }).catch(err => console.error('Feedback request notification failed:', err));
 
-            sendNotification({
+            await sendNotification({
                 recipientId: session.mentee,
                 senderId: session.mentor,
                 type: 'feedback_requested',
                 title: 'How was your session?',
                 message,
                 relatedId: session._id,
-                relatedModel: 'Session'
+                relatedModel: 'Session',
+                metadata: { session }
             }).catch(err => console.error('Feedback request notification failed:', err));
         }
 

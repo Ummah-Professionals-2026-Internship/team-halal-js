@@ -3,6 +3,7 @@ const router = express.Router();
 const Session = require('../models/Session');
 const User = require('../models/User');
 const Match = require('../models/Match');
+const Feedback = require('../models/Feedback');
 const requireAuth = require('../middleware/requireAuth');
 const { scheduleSessionOnGoogleCalendar, updateSessionOnGoogleCalendar, deleteSessionFromGoogleCalendar } = require('../services/googleCalendarService');
 const { sendNotification } = require('../services/notificationService');
@@ -328,7 +329,17 @@ router.get('/mentee', requireAuth, async (req, res) => {
         const sessions = await Session.find({ mentee: req.user.id })
             .populate('mentor', 'firstName lastName profilePicture email manualAvailabilitySlots mentorProfile majors university linkedinUrl')
             .sort({ scheduledTime: 1 });
-        res.json(sessions);
+
+        const userFeedbacks = await Feedback.find({ submittedBy: req.user.id }).select('session');
+        const feedbackSessionIds = new Set(userFeedbacks.map(f => String(f.session)));
+
+        const results = sessions.map(s => {
+            const obj = s.toObject();
+            obj.hasSubmittedFeedback = feedbackSessionIds.has(String(s._id));
+            return obj;
+        });
+
+        res.json(results);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -341,7 +352,17 @@ router.get('/', requireAuth, async (req, res) => {
             .populate('mentee', 'firstName lastName profilePicture email manualAvailabilitySlots menteeProfile majors university linkedinUrl additionalInfo')
             .populate('mentor', 'firstName lastName profilePicture email')
             .sort({ scheduledTime: 1 });
-        res.json(sessions);
+
+        const userFeedbacks = await Feedback.find({ submittedBy: req.user.id }).select('session');
+        const feedbackSessionIds = new Set(userFeedbacks.map(f => String(f.session)));
+
+        const results = sessions.map(s => {
+            const obj = s.toObject();
+            obj.hasSubmittedFeedback = feedbackSessionIds.has(String(s._id));
+            return obj;
+        });
+
+        res.json(results);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

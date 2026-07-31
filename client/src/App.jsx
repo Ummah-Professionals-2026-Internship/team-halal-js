@@ -19,6 +19,10 @@ import MenteeBooking from './components/Mentee/MenteeBooking';
 import MenteeSessionsDashboard from './components/Mentee/MenteeSessionsDashboard';
 import NotificationsPage from './components/NotificationsPage';
 import AdminDashboard from './components/Admin/AdminDashboard';
+import AdminLogin from './components/Admin/AdminLogin';
+import AdminSetup from './components/Admin/AdminSetup';
+import AdminRegister from './components/Admin/AdminRegister';
+import AdminViewProfile from './components/Admin/AdminViewProfile';
 import LegalStatement from './components/LegalStatement';
 import UsageTerms from './components/UsageTerms';
 
@@ -29,6 +33,12 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/google-register" element={<GoogleRegister />} />
+
+        {/* Admin Auth Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/setup" element={<AdminSetup />} />
+        <Route path="/admin/register" element={<AdminRegister />} />
+        <Route path="/admin/profile" element={<AdminViewProfile />} />
         
         {/* Profile Wizard Routes */}
         <Route path="/create-profile" element={<MentorMenteeProfile />} />

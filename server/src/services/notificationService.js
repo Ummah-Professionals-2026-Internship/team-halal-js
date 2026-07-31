@@ -1,6 +1,6 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const { sendSessionConfirmationEmail, sendSessionRescheduleEmail, sendSessionCancellationEmail } = require('./emailService');
+const { sendSessionConfirmationEmail, sendSessionRescheduleEmail, sendSessionCancellationEmail, sendSessionFeedbackRequestEmail } = require('./emailService');
 const { sendSMS } = require('./smsService');
 
 /**
@@ -85,13 +85,17 @@ const sendNotification = async ({
             console.error('Email dispatch in notification dispatcher failed:', err);
           });
         }
+      } else if (type === 'feedback_requested') {
+        sendSessionFeedbackRequestEmail(recipient, sender, metadata.session).catch(err => {
+          console.error('Feedback request email dispatch failed:', err);
+        });
       }
     } else {
       console.log(`Email dispatch skipped for recipient ${recipientId} due to user preference.`);
     }
 
-    // 3. Dispatch SMS (Real Twilio Integration)
-    if (smsEnabled && recipient.phone) {
+    // 3. Dispatch SMS (Real Twilio Integration) - skip SMS for feedback_requested
+    if (type !== 'feedback_requested' && smsEnabled && recipient.phone) {
       sendSMS(recipient.phone, `${title} - ${message}`).catch(err => {
         console.error('Error sending SMS via notification dispatcher:', err);
       });

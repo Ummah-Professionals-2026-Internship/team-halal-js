@@ -572,9 +572,90 @@ const sendFeedbackFollowUpEmail = async (user, message) => {
   await sendResendEmail({ apiKey, to: user.email, subject, html });
 };
 
+/**
+ * Sends an invitation email to a newly invited admin.
+ * @param {string} email - The recipient email address.
+ * @param {string} inviteUrl - The registration invite URL with token.
+ */
+const sendAdminInviteEmail = async (email, inviteUrl) => {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  const subject = `You're Invited to Join as an Administrator - Ummah Professionals`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; color: #00212C; background-color: #ffffff;">
+      <h2 style="color: #003F55; border-bottom: 2px solid #C5DCE8; padding-bottom: 12px; margin-top: 0;">Administrator Invitation</h2>
+      <p style="font-size: 16px; line-height: 1.5;">Assalamu Alaikum,</p>
+      <p style="font-size: 15px; line-height: 1.5;">You have been invited to join <strong>Ummah Professionals</strong> as an Administrator.</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${inviteUrl}" style="background-color: #0089b8; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 137, 184, 0.3);" target="_blank" rel="noopener noreferrer">
+          Accept Invitation & Set Up Account
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #718096; line-height: 1.5;">Or copy and paste this link into your browser:<br>
+        <a href="${inviteUrl}" style="color: #0089b8; word-break: break-all;">${inviteUrl}</a>
+      </p>
+
+      <p style="font-size: 13px; color: #a0aec0; margin-top: 30px;">
+        Note: This invitation link is valid for 48 hours and can only be used once.
+      </p>
+      
+      <p style="margin-top: 24px; font-weight: bold;">
+        Best regards,<br>
+        The Ummah Professionals Team
+      </p>
+    </div>
+  `;
+
+  await sendResendEmail({ apiKey, to: email, subject, html });
+};
+
+/**
+ * Sends a feedback request email to a user after a session completes.
+ * @param {Object} recipient - User recipient.
+ * @param {Object} partner - User partner (the other participant).
+ * @param {Object} session - Session document.
+ */
+const sendSessionFeedbackRequestEmail = async (recipient, partner, session) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const partnerName = `${partner?.firstName ?? 'your participant'} ${partner?.lastName ?? ''}`.trim();
+  const dashboardPath = recipient.role === 'mentor' ? '/mentor-dashboard' : '/mentee-dashboard';
+  const feedbackUrl = `${frontendUrl}${dashboardPath}`;
+
+  const subject = `How was your session with ${partnerName}? - Ummah Professionals`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; color: #00212C; background-color: #ffffff;">
+      <h2 style="color: #003F55; border-bottom: 2px solid #C5DCE8; padding-bottom: 12px; margin-top: 0;">How Was Your Session?</h2>
+      <p style="font-size: 16px; line-height: 1.5;">Assalamu Alaikum ${recipient.firstName},</p>
+      <p style="font-size: 15px; line-height: 1.5;">Congratulations on completing your mentorship session with <strong>${partnerName}</strong> (${session?.service || 'Mentorship Session'}).</p>
+
+      <p style="font-size: 15px; line-height: 1.5;">Your feedback helps us continuously improve the platform experience for the entire community.</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${feedbackUrl}" style="background-color: #0089b8; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 137, 184, 0.3);" target="_blank" rel="noopener noreferrer">
+          View Dashboard & Leave Feedback
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #718096; line-height: 1.5;">Or visit your dashboard to submit your feedback.</p>
+      
+      <p style="margin-top: 24px; font-weight: bold;">
+        Best regards,<br>
+        The Ummah Professionals Team
+      </p>
+    </div>
+  `;
+
+  await sendResendEmail({ apiKey, to: recipient.email, subject, html });
+};
+
 module.exports = {
   sendSessionConfirmationEmail,
   sendSessionRescheduleEmail,
   sendSessionCancellationEmail,
-  sendFeedbackFollowUpEmail
+  sendFeedbackFollowUpEmail,
+  sendAdminInviteEmail,
+  sendSessionFeedbackRequestEmail
 };

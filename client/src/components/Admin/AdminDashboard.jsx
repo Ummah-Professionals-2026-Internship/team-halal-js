@@ -107,7 +107,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-[#f4f5f7] flex flex-col">
       <AdminHeader />
 
-      <div className="flex-1 flex gap-8 p-8 max-w-7xl mx-auto w-full">
+      <div className="flex-1 flex gap-8 2xl:gap-12 3xl:gap-16 p-6 sm:p-8 2xl:p-12 3xl:p-16 max-w-[1400px] 2xl:max-w-[1920px] 3xl:max-w-[2560px] mx-auto w-full">
         <AdminSidebar
           activeNav={activeNav}
           onNavChange={setActiveNav}

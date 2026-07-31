@@ -10,7 +10,9 @@ export async function login(email, password) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || 'Login failed');
+    const err = new Error(data.message || 'Login failed');
+    err.isGoogleAccount = data.isGoogleAccount || false;
+    throw err;
   }
 
   return data;

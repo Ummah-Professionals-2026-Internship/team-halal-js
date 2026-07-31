@@ -35,64 +35,70 @@ const Gauge = ({ value, label, color }) => {
   const pct = Math.max(0, Math.min(100, (numeric / 5) * 100));
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2 2xl:gap-3">
       <div
-        className="w-20 h-20 rounded-full flex items-center justify-center"
+        className="w-20 h-20 2xl:w-28 2xl:h-28 3xl:w-36 3xl:h-36 rounded-full flex items-center justify-center transition-all"
         style={{ background: `conic-gradient(${color} ${pct}%, #eef2f6 ${pct}%)` }}
       >
-        <div className="w-17 h-17 rounded-full bg-white flex flex-col items-center justify-center leading-none">
-          <span className="text-xl font-extrabold text-[#00212C]">{value}</span>
-          <span className="text-[9px] font-semibold text-slate-400 mt-0.5">out of 5</span>
+        <div className="w-17 h-17 2xl:w-24 2xl:h-24 3xl:w-31 3xl:h-31 rounded-full bg-white flex flex-col items-center justify-center leading-none">
+          <span className="text-xl 2xl:text-3xl 3xl:text-4xl font-extrabold text-[#00212C]">{value}</span>
+          <span className="text-[9px] 2xl:text-xs 3xl:text-sm font-semibold text-slate-400 mt-0.5">out of 5</span>
         </div>
       </div>
-      <span className="text-sm font-semibold text-slate-600">{label}</span>
+      <span className="text-sm 2xl:text-lg 3xl:text-xl font-semibold text-slate-600">{label}</span>
     </div>
   );
 };
 
 const AdminSidebar = ({ activeNav, onNavChange, mentorCount, menteeCount, sessionAnalytics }) => (
-  <aside className="w-56 shrink-0 flex flex-col gap-6">
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Go To</p>
-      <nav className="flex flex-col gap-1">
+  <aside className="w-56 2xl:w-72 3xl:w-84 shrink-0 flex flex-col gap-6 2xl:gap-8">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 2xl:p-6 3xl:p-8">
+      <p className="text-xs 2xl:text-sm 3xl:text-base font-bold text-slate-400 uppercase tracking-wider mb-3 2xl:mb-4 px-1">Go To</p>
+      <nav className="flex flex-col gap-1 2xl:gap-2">
         {NAV_ITEMS.map(item => (
           <button
             key={item}
             onClick={() => onNavChange(item)}
-            className={`flex items-center gap-2.5 text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-2.5 2xl:gap-3.5 text-left px-3 2xl:px-4.5 3xl:px-6 py-2.5 2xl:py-3.5 3xl:py-4 rounded-lg 2xl:rounded-xl text-sm 2xl:text-base 3xl:text-lg font-semibold transition-colors ${
               activeNav === item
                 ? 'bg-[#fdbb36] text-[#00212C]'
                 : 'text-[#00212C] hover:bg-slate-100'
             }`}
           >
-            {NAV_ICONS[item]}
+            <span className="[&>svg]:w-4 [&>svg]:h-4 [&>svg]:2xl:w-5 [&>svg]:2xl:h-5 [&>svg]:3xl:w-6 [&>svg]:3xl:h-6">
+              {NAV_ICONS[item]}
+            </span>
             {item}
           </button>
         ))}
         <button
           onClick={() => onNavChange('Mentors')}
-          className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+          className={`flex items-center justify-between px-3 2xl:px-4.5 3xl:px-6 py-2.5 2xl:py-3.5 3xl:py-4 rounded-lg 2xl:rounded-xl text-sm 2xl:text-base 3xl:text-lg font-semibold transition-colors ${
             activeNav === 'Mentors' ? 'bg-[#fdbb36] text-[#00212C]' : 'text-[#00212C] hover:bg-slate-100'
           }`}
         >
-          <span className="flex items-center gap-2.5"><PeopleIcon />Mentors</span>
-          <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${activeNav === 'Mentors' ? 'bg-white/50' : 'bg-slate-100 text-slate-500'}`}>{mentorCount}</span>
+          <span className="flex items-center gap-2.5 2xl:gap-3.5 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:2xl:w-5 [&>svg]:2xl:h-5 [&>svg]:3xl:w-6 [&>svg]:3xl:h-6">
+            <PeopleIcon />Mentors
+          </span>
+          <span className={`text-xs 2xl:text-sm font-bold rounded-full px-2 2xl:px-3 py-0.5 ${activeNav === 'Mentors' ? 'bg-white/50' : 'bg-slate-100 text-slate-500'}`}>{mentorCount}</span>
         </button>
         <button
           onClick={() => onNavChange('Mentees')}
-          className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+          className={`flex items-center justify-between px-3 2xl:px-4.5 3xl:px-6 py-2.5 2xl:py-3.5 3xl:py-4 rounded-lg 2xl:rounded-xl text-sm 2xl:text-base 3xl:text-lg font-semibold transition-colors ${
             activeNav === 'Mentees' ? 'bg-[#fdbb36] text-[#00212C]' : 'text-[#00212C] hover:bg-slate-100'
           }`}
         >
-          <span className="flex items-center gap-2.5"><PeopleIcon />Mentees</span>
-          <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${activeNav === 'Mentees' ? 'bg-white/50' : 'bg-slate-100 text-slate-500'}`}>{menteeCount}</span>
+          <span className="flex items-center gap-2.5 2xl:gap-3.5 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:2xl:w-5 [&>svg]:2xl:h-5 [&>svg]:3xl:w-6 [&>svg]:3xl:h-6">
+            <PeopleIcon />Mentees
+          </span>
+          <span className={`text-xs 2xl:text-sm font-bold rounded-full px-2 2xl:px-3 py-0.5 ${activeNav === 'Mentees' ? 'bg-white/50' : 'bg-slate-100 text-slate-500'}`}>{menteeCount}</span>
         </button>
       </nav>
     </div>
 
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-      <p className="text-sm font-bold text-[#00212C] mb-4">Session Analytics</p>
-      <div className="flex flex-col gap-6 items-center">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 2xl:p-7 3xl:p-9">
+      <p className="text-sm 2xl:text-lg 3xl:text-xl font-bold text-[#00212C] mb-4 2xl:mb-6">Session Analytics</p>
+      <div className="flex flex-col gap-6 2xl:gap-8 items-center">
         <Gauge value={sessionAnalytics.quality ?? '—'} label="Quality" color="#007CA6" />
         <Gauge value={sessionAnalytics.usefulness ?? '—'} label="Usefulness" color="#22b573" />
       </div>

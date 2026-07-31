@@ -32,6 +32,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   // Handle redirect back from Google OAuth (existing users get a ?token= in the URL)
   useEffect(() => {
@@ -79,6 +80,7 @@ const Login = () => {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setShowGoogleModal(false);
     setLoading(true);
 
     try {
@@ -114,7 +116,11 @@ const Login = () => {
 
       }
     } catch (err) {
-      setError(err.message || 'Could not connect to server. Please try again.');
+      if (err.isGoogleAccount) {
+        setShowGoogleModal(true);
+      } else {
+        setError(err.message || 'Could not connect to server. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -184,6 +190,73 @@ const Login = () => {
           </button>
         </form>
       </AuthCard>
+
+      {/* Modal for Google Sign-In recommendation - Rendered at root layout level for perfect backdrop clipping */}
+      {showGoogleModal && (
+        <>
+          <style>{`
+            @keyframes softBackdrop {
+              0% { opacity: 0; backdrop-filter: blur(0px); }
+              100% { opacity: 1; backdrop-filter: blur(6px); }
+            }
+            @keyframes gentleFloatIn {
+              0% {
+                opacity: 0;
+                transform: translateY(14px);
+              }
+              100% {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[999] p-4"
+            style={{ animation: 'softBackdrop 0.5s ease-out forwards' }}
+          >
+            <div
+              className="bg-white rounded-[28px] p-7 max-w-md w-full shadow-[0_20px_50px_-10px_rgba(0,0,0,0.25)] border border-slate-100 flex flex-col items-center text-center gap-5 relative overflow-hidden"
+              style={{ animation: 'gentleFloatIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+            >
+              <button
+                onClick={() => setShowGoogleModal(false)}
+                className="absolute top-4 right-5 text-slate-400 hover:text-slate-700 text-2xl font-bold transition-colors cursor-pointer w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100"
+              >
+                &times;
+              </button>
+
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100/60 flex items-center justify-center p-3 shadow-inner">
+                <GoogleIcon />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <h3 className="text-xl font-extrabold text-[#00212C]">Google Sign-In Required</h3>
+                <p className="text-sm text-slate-600 leading-relaxed px-2">
+                  The account associated with <span className="font-bold text-[#003F55]">{email}</span> was created using Google Sign-In and does not have a separate password.
+                </p>
+              </div>
+
+              <div className="w-full flex flex-col gap-3 mt-1">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full h-13 bg-white border border-[#CFC5B3] rounded-xl text-[#3c3c3c] text-base font-bold flex items-center justify-center gap-3 shadow-sm hover:bg-[#f7f3ee] hover:border-[#b0a899] transition-all cursor-pointer hover:shadow-md active:scale-[0.98]"
+                >
+                  <GoogleIcon />
+                  Sign in with Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleModal(false)}
+                  className="w-full py-2 text-xs text-slate-400 font-semibold hover:text-slate-600 transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </AuthLayout>
   );
 };
