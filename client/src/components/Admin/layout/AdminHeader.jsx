@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../../assets/logo.svg';
 import NotificationDetailModal from '../../NotificationDetailModal';
 import AdminInviteModal from '../modals/AdminInviteModal';
+import useCurrentUser from '../../useCurrentUser';
 import {
   getNotifications,
   markAsRead,
@@ -12,6 +13,9 @@ import {
 const AdminHeader = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const { user, refreshUser } = useCurrentUser();
+  const adminName = `${user.firstName} ${user.lastName}`.trim() || 'Admin';
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -22,6 +26,22 @@ const AdminHeader = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    const token = localStorage.getItem('token');
+    await fetch('/api/upload/profile-picture', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    });
+
+    refreshUser();
   };
 
   const fetchNotifications = async () => {
@@ -147,11 +167,31 @@ const AdminHeader = () => {
         </div>
 
         <div className="text-right">
-          <p className="text-white font-semibold text-base 2xl:text-xl 3xl:text-2xl">Admin Access</p>
+          <p className="text-white font-semibold text-base 2xl:text-xl 3xl:text-2xl">{adminName}</p>
           <p onClick={handleLogout} className="text-[#8ACBDB] text-sm 2xl:text-base 3xl:text-lg cursor-pointer hover:underline">Logout</p>
           <Link to="/admin/profile" className="text-[#8ACBDB] text-sm 2xl:text-base 3xl:text-lg cursor-pointer hover:underline block">View Profile</Link>
         </div>
-        <div className="w-11 h-11 2xl:w-14 2xl:h-14 3xl:w-16 3xl:h-16 rounded-full bg-slate-300" />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handlePhotoChange}
+        />
+
+        <div onClick={() => fileInputRef.current.click()} className="cursor-pointer relative group">
+          {user.profilePicture ? (
+            <img src={user.profilePicture} alt={adminName} referrerPolicy="no-referrer" className="w-11 h-11 2xl:w-14 2xl:h-14 3xl:w-16 3xl:h-16 rounded-full object-cover shrink-0" />
+          ) : (
+            <div className="w-11 h-11 2xl:w-14 2xl:h-14 3xl:w-16 3xl:h-16 rounded-full bg-slate-300 shrink-0 flex items-center justify-center text-[#00212C] text-lg 2xl:text-xl font-bold">
+              {adminName?.[0] ?? '?'}
+            </div>
+          )}
+
+          <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white font-bold">
+            📷
+          </div>
+        </div>
       </div>
 
       {viewingNotification && (

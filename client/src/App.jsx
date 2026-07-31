@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Register from './components/Register';
+import AdminRegister from './components/AdminRegister';
 import Login from './components/Login';
 import GoogleRegister from './components/GoogleRegister';
 import MentorMenteeProfile from './MentorMenteeProfile';
@@ -32,6 +33,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/google-register" element={<GoogleRegister />} />
 
         {/* Admin Auth Routes */}
