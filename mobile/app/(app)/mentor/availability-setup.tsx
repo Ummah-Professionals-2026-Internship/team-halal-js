@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ActivityIndicator } from 'react-native';
 import { Text, TextInput } from '../../../components/AppText';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,6 +7,7 @@ import { SimplePicker } from '../../../components/onboarding/SimplePicker';
 import { AvailabilityGrid } from '../../../components/onboarding/AvailabilityGrid';
 import { OnboardingHeader } from '../../../components/onboarding/OnboardingHeader';
 import { Screen } from '../../../components/Screen';
+import { GoogleCalendarButton } from '../../../components/GoogleCalendarButton';
 import { uploadProfilePicture } from '../../../lib/upload-api';
 import { loadStep, clearSteps } from '../../../lib/onboarding-storage';
 import { createMentorProfile, type AvailabilitySlot } from '../../../lib/onboarding-api';
@@ -37,14 +38,21 @@ type MentorStep2 = {
 const inputClasses = 'h-[56px] bg-white rounded-lg px-4 text-base text-brand-text border border-brand-border';
 
 export default function MentorAvailabilitySetup() {
-  const { refreshUser } = useSession();
+  const { user, refreshUser } = useSession();
   const [profilePicturePath, setProfilePicturePath] = useState('');
   const [frequency, setFrequency] = useState('');
   const [customMeetingLink, setCustomMeetingLink] = useState('');
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [calendarAccess, setCalendarAccess] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (user?.calendarAccess) {
+      setCalendarAccess(true);
+    }
+  }, [user]);
 
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -106,7 +114,7 @@ export default function MentorAvailabilitySetup() {
         additionalInfo: step2.additionalInfo,
         university: step1.university,
         majors: step1.majors,
-        calendarAccess: false,
+        calendarAccess,
         resume: step1.resumePath,
         jobTitle: step2.jobTitle,
         employer: step2.employer,
@@ -118,10 +126,6 @@ export default function MentorAvailabilitySetup() {
         manualAvailabilitySlots: slots,
       });
       await clearSteps(['mentorStep1', 'mentorStep2', 'mentorResumeData']);
-      // Navigate straight to the dashboard rather than '/', which would
-      // re-run (app)/index.tsx's redirect based on session `user` state —
-      // that state update from refreshUser() isn't guaranteed to have landed
-      // yet, which could bounce back into onboarding on a stale read.
       router.replace('/mentor-dashboard');
       refreshUser().catch(() => {});
     } catch (err) {
@@ -165,6 +169,15 @@ export default function MentorAvailabilitySetup() {
         value={customMeetingLink}
         onChangeText={setCustomMeetingLink}
         className={inputClasses}
+      />
+
+      <GoogleCalendarButton
+        isConnected={calendarAccess}
+        connectedEmail={user?.googleCalendarTokens?.email}
+        onStatusChange={(connected) => {
+          setCalendarAccess(connected);
+          refreshUser().catch(() => {});
+        }}
       />
 
       <Text className="text-sm font-semibold text-brand-text mt-2">Weekly Availability</Text>

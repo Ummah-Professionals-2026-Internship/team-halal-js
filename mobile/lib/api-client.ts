@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || '';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.100:5000';
 
 /**
  * A wrapper around fetch that automatically attaches the JWT auth token

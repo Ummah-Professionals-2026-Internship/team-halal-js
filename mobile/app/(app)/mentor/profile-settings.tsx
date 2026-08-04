@@ -21,6 +21,7 @@ import {
   updateNotificationPreferences,
   type NotificationPreferences,
 } from '../../../lib/notifications-api';
+import { GoogleCalendarButton } from '../../../components/GoogleCalendarButton';
 import { useSession } from '../../../lib/session-context';
 
 const FREQUENCY_OPTIONS = ['Weekly', 'Bi-weekly', 'Monthly'];
@@ -368,6 +369,15 @@ export default function MentorProfileSettings() {
           />
         </View>
       </View>
+
+      <GoogleCalendarButton
+        isConnected={user?.calendarAccess}
+        connectedEmail={user?.googleCalendarTokens?.email}
+        onStatusChange={() => {
+          refreshUser().catch(() => {});
+        }}
+        containerStyle="mt-4"
+      />
 
       <Text className="text-sm text-brand-text mt-4" style={fontBoldStyle}>Availability</Text>
       {user && <AvailabilityCard initialSlots={user.manualAvailabilitySlots ?? []} />}

@@ -81,7 +81,7 @@ const generateMockBusySlots = () => {
 
 // GET /api/auth/google - Initiate OAuth Flow
 router.get('/google', async (req, res) => {
-  const { token } = req.query;
+  const { token, app_redirect } = req.query;
   if (!token) {
     return res.status(401).send('Authentication token required.');
   }
@@ -128,8 +128,14 @@ router.get('/google', async (req, res) => {
       `);
     }
 
+    const stateObj = { userId };
+    if (app_redirect) {
+      stateObj.app_redirect = app_redirect;
+    }
+    const state = encodeURIComponent(JSON.stringify(stateObj));
+
     const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${userId}&access_type=offline&prompt=consent`;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&access_type=offline&prompt=consent`;
     return res.redirect(url);
   } catch (err) {
     return res.status(401).send('Invalid or expired authentication token.');
@@ -138,16 +144,57 @@ router.get('/google', async (req, res) => {
 
 // GET /api/auth/google/callback - Handle OAuth Callback
 router.get('/google/callback', async (req, res) => {
-  const { code, state } = req.query; // state is the userId
+  const { code, state } = req.query; // state contains userId (and optional app_redirect)
   if (!state) {
-    return res.status(400).send('Missing state (userId) parameter.');
+    return res.status(400).send('Missing state parameter.');
+  }
+
+  let userId = state;
+  let appRedirect = '';
+
+  try {
+    const decodedState = decodeURIComponent(state);
+    if (decodedState.startsWith('{')) {
+      const parsed = JSON.parse(decodedState);
+      userId = parsed.userId;
+      appRedirect = parsed.app_redirect || '';
+    }
+  } catch (e) {
+    userId = state;
   }
 
   try {
-    const user = await User.findById(state);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).send('User not found.');
     }
+
+    const helperRedirect = (isError = false) => {
+      if (appRedirect) {
+        const joinChar = appRedirect.includes('?') ? '&' : '?';
+        const targetUrl = `${appRedirect}${joinChar}${isError ? 'calendarError=true' : 'calendarConnected=true'}`;
+        if (appRedirect.startsWith('exp://') || (appRedirect.includes('://') && !appRedirect.startsWith('http://') && !appRedirect.startsWith('https://'))) {
+          return res.send(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Redirecting to App...</title>
+              </head>
+              <body style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #0b132b; color: white;">
+                <p>Redirecting back to app...</p>
+                <script>
+                  window.location.href = ${JSON.stringify(targetUrl)};
+                </script>
+              </body>
+            </html>
+          `);
+        }
+        return res.redirect(targetUrl);
+      }
+      const redirectUrl = `${FRONTEND_URL}/${user.role === 'mentor' ? 'mentor/availability-setup' : 'mentee/academic-setup'}?${isError ? 'calendarError=true' : 'calendarConnected=true'}`;
+      return res.redirect(redirectUrl);
+    };
 
     const useRealGoogle = process.env.GOOGLE_CLIENT_ID && 
                           process.env.GOOGLE_CLIENT_SECRET && 
@@ -173,7 +220,7 @@ router.get('/google/callback', async (req, res) => {
 
       if (!tokenResponse.ok) {
         console.error('OAuth exchange error:', await tokenResponse.text());
-        return res.redirect(`${FRONTEND_URL}/${user.role === 'mentor' ? 'mentor/availability-setup' : 'mentee/academic-setup'}?calendarError=true`);
+        return helperRedirect(true);
       }
 
       const tokenData = await tokenResponse.json();
@@ -220,8 +267,7 @@ router.get('/google/callback', async (req, res) => {
     user.calendarBusySlots = busySlots;
     await user.save();
 
-    const redirectUrl = `${FRONTEND_URL}/${user.role === 'mentor' ? 'mentor/availability-setup' : 'mentee/academic-setup'}?calendarConnected=true`;
-    return res.redirect(redirectUrl);
+    return helperRedirect(false);
   } catch (error) {
     console.error('Google callback error:', error);
     res.status(500).send('Error during Google Calendar callback parsing.');
