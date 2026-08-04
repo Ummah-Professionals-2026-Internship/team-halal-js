@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import { apiFetch } from './api-client';
+import * as SecureStore from 'expo-secure-store';
+import { apiFetch, apiBaseUrl } from './api-client';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -36,6 +37,10 @@ export type MeUser = {
   majors?: string[];
   additionalInfo?: string;
   resume?: string;
+  calendarAccess?: boolean;
+  googleCalendarTokens?: {
+    email?: string;
+  };
   notificationPreferences?: { email: boolean; sms: boolean; inApp: boolean };
   manualAvailabilitySlots?: { day: string; startTime: string; endTime: string }[];
   mentorProfile?: {
@@ -99,7 +104,7 @@ export async function getMe(): Promise<MeUser> {
  * Returns the issued JWT token string upon successful Google authentication, or null if cancelled.
  */
 export async function promptGoogleSignIn(): Promise<string | null> {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.100:5000';
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL || apiBaseUrl || 'http://192.168.68.100:5000';
   const returnUrl = Linking.createURL('/');
   const authUrl = `${baseUrl}/api/auth/google/signin?app_redirect=${encodeURIComponent(returnUrl)}`;
 
@@ -117,4 +122,38 @@ export async function promptGoogleSignIn(): Promise<string | null> {
     return token || null;
   }
   return null;
+}
+
+/**
+ * Triggers Google Calendar OAuth flow via in-app browser sheet.
+ * Returns true if connected successfully, false if cancelled or failed.
+ */
+export async function promptConnectGoogleCalendar(): Promise<boolean> {
+  const token = await SecureStore.getItemAsync('token');
+  if (!token) {
+    throw new Error('You must be logged in to connect your Google Calendar.');
+  }
+
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL || apiBaseUrl || 'http://192.168.68.100:5000';
+  const returnUrl = Linking.createURL('/');
+  const authUrl = `${baseUrl}/api/auth/google?token=${token}&app_redirect=${encodeURIComponent(returnUrl)}`;
+
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
+  if (result.type === 'success' && result.url) {
+    return !result.url.includes('calendarError=true');
+  }
+  return false;
+}
+
+/**
+ * Disconnects Google Calendar for the authenticated user.
+ */
+export async function disconnectGoogleCalendar(): Promise<void> {
+  const res = await apiFetch('/api/auth/google/disconnect', {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || data.message || 'Failed to disconnect Google Calendar');
+  }
 }

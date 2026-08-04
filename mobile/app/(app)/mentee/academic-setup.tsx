@@ -17,6 +17,8 @@ import { loadStep, clearSteps } from '../../../lib/onboarding-storage';
 import { createMenteeProfile, type AvailabilitySlot } from '../../../lib/onboarding-api';
 import { useSession } from '../../../lib/session-context';
 
+import { GoogleCalendarButton } from '../../../components/GoogleCalendarButton';
+
 const ACADEMIC_STATUS_OPTIONS = [
   'Freshman (Year 1)',
   'Sophomore (Year 2)',
@@ -48,7 +50,7 @@ const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 const inputClasses = 'h-[56px] bg-white rounded-lg px-4 text-base text-brand-text border border-brand-border';
 
 export default function MenteeAcademicSetup() {
-  const { refreshUser } = useSession();
+  const { user, refreshUser } = useSession();
   const [university, setUniversity] = useState('');
   const [majors, setMajors] = useState<string[]>([]);
   const [academicStatus, setAcademicStatus] = useState('');
@@ -56,11 +58,18 @@ export default function MenteeAcademicSetup() {
   const [desiredServices, setDesiredServices] = useState<string[]>([]);
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [calendarAccess, setCalendarAccess] = useState(false);
   const [profilePicturePath, setProfilePicturePath] = useState('');
   const [localPhotoUri, setLocalPhotoUri] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (user?.calendarAccess) {
+      setCalendarAccess(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     loadStep<MenteeResumeData>('menteeResumeData').then((resumeData) => {
@@ -126,7 +135,7 @@ export default function MenteeAcademicSetup() {
         additionalInfo,
         university,
         majors,
-        calendarAccess: false,
+        calendarAccess,
         resume: step1.resumePath,
         academicStatus,
         desiredCareer,
@@ -222,6 +231,15 @@ export default function MenteeAcademicSetup() {
         style={fontStyle}
         className="bg-white rounded-lg px-4 py-3 text-base text-brand-text border border-brand-border min-h-[100px]"
         textAlignVertical="top"
+      />
+
+      <GoogleCalendarButton
+        isConnected={calendarAccess}
+        connectedEmail={user?.googleCalendarTokens?.email}
+        onStatusChange={(connected) => {
+          setCalendarAccess(connected);
+          refreshUser().catch(() => {});
+        }}
       />
 
       <Text className="text-sm text-brand-text mt-2" style={fontBoldStyle}>Weekly Availability</Text>

@@ -56,6 +56,16 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
     }
   }
 
+  const getBadge = () => {
+    if (status === 'completed') return { label: 'Completed', className: 'bg-blue-100 text-blue-800' }
+    if (status === 'cancelled') return { label: 'Cancelled', className: 'bg-red-100 text-red-800' }
+    return {
+      label: formatCountdown(daysUntil),
+      className: daysUntil < 0 ? 'bg-slate-200 text-slate-600' : 'bg-[#fdbb36] text-[#00212C]',
+    }
+  }
+  const badge = getBadge()
+
   return (
     <div className={`bg-white rounded-xl border p-4 mb-3 shadow-sm hover:shadow-md transition-all ${
       isPendingFeedback ? 'border-amber-300 ring-2 ring-amber-100 bg-amber-50/20' : 'border-slate-100'
@@ -99,7 +109,6 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
               ★ Leave Feedback
             </button>
           )}
-
           {status === 'scheduled' && (
             <>
               <button
@@ -128,30 +137,37 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
               </button>
             </>
           )}
+<<<<<<< HEAD
 
           <button
             onClick={() => setShowModal(false || true)}
+=======
+          <button
+            onClick={() => setShowModal(true)}
+>>>>>>> feat/mobile-google-cal
             className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             View Details
           </button>
         </div>
-        <a
-          href={link || undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-disabled={!link}
-          className={`text-xs font-bold px-4 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-            link
-              ? 'text-[#00212C] bg-[#fdbb36] hover:brightness-95 cursor-pointer'
-              : 'text-slate-400 bg-slate-100 cursor-not-allowed pointer-events-none'
-          }`}
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-          </svg>
-          {link ? 'Join Meeting' : 'No link yet'}
-        </a>
+        {status === 'scheduled' && (
+          <a
+            href={link || undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-disabled={!link}
+            className={`text-xs font-bold px-4 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+              link
+                ? 'text-[#00212C] bg-[#fdbb36] hover:brightness-95 cursor-pointer'
+                : 'text-slate-400 bg-slate-100 cursor-not-allowed pointer-events-none'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            {link ? 'Join Meeting' : 'No link yet'}
+          </a>
+        )}
       </div>
 
       {/* Details Modal */}

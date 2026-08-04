@@ -14,6 +14,20 @@ function formatCountdown(daysUntil: number) {
   return `In ${daysUntil} days`;
 }
 
+function getStatusBadge(status: string, daysUntil: number) {
+  if (status === 'completed') {
+    return { label: 'Completed', bgClass: 'bg-blue-100', textClass: 'text-blue-800' };
+  }
+  if (status === 'cancelled') {
+    return { label: 'Cancelled', bgClass: 'bg-red-100', textClass: 'text-red-800' };
+  }
+  return {
+    label: formatCountdown(daysUntil),
+    bgClass: 'bg-brand-accent',
+    textClass: 'text-brand-text',
+  };
+}
+
 function startOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -29,12 +43,6 @@ type Props = {
 // dashboards — "the other party" is session.mentee when viewed by a mentor,
 // session.mentor when viewed by a mentee, resolved below from the logged-in
 // user's role rather than assuming one fixed direction.
-//
-// Layout note: the 4 actions (Reschedule/Cancel/View Details/Join Meeting)
-// used to sit in one non-wrapping row, which reliably overflowed on narrow
-// phones. Now split into a wrapping row of the 3 secondary text actions plus
-// a full-width Join Meeting button below — fixes the overflow and gives Join
-// Meeting proper visual weight as the actual primary action on the card.
 const fontStyle = { fontFamily: 'Kollektif' };
 const fontBoldStyle = { fontFamily: 'Kollektif-Bold' };
 
@@ -55,8 +63,10 @@ export function SessionCard({ session, onCancelled }: Props) {
   const timeStr = when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   const daysUntil = Math.round((startOfDay(when).getTime() - startOfDay(new Date()).getTime()) / 86400000);
 
+  const isScheduled = status === 'scheduled';
   const beyond48hrs = when.getTime() > Date.now() + 48 * 60 * 60 * 1000;
-  const canCancel = status === 'scheduled' && beyond48hrs;
+  const canCancel = isScheduled && beyond48hrs;
+  const badge = getStatusBadge(status, daysUntil);
 
   const handleCancel = () => {
     if (!canCancel) return;
@@ -117,8 +127,8 @@ export function SessionCard({ session, onCancelled }: Props) {
           </View>
         </View>
         <View className="items-end">
-          <View className="bg-brand-accent rounded-full px-2.5 py-1">
-            <Text className="text-brand-text text-[11px]" style={fontBoldStyle}>{formatCountdown(daysUntil)}</Text>
+          <View className={`${badge.bgClass} rounded-full px-2.5 py-1`}>
+            <Text className={`${badge.textClass} text-[11px]`} style={fontBoldStyle}>{badge.label}</Text>
           </View>
           <Text className="text-xs text-slate-500 mt-1.5" style={fontStyle}>{dateStr}</Text>
           <Text className="text-xs text-slate-500" style={fontStyle}>{timeStr}</Text>
@@ -126,40 +136,46 @@ export function SessionCard({ session, onCancelled }: Props) {
       </View>
 
       <View className="flex-row flex-wrap gap-2 pt-3 border-t border-brand-cardBorder">
-        <Pressable
-          onPress={handleReschedule}
-          disabled={!canCancel}
-          className={`px-3 py-1.5 rounded-lg border ${canCancel ? 'border-slate-200' : 'border-slate-100'}`}
-        >
-          <Text className={`text-xs ${canCancel ? 'text-slate-600' : 'text-slate-300'}`} style={fontBoldStyle}>
-            Reschedule
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={handleCancel}
-          disabled={!canCancel || cancelling}
-          className={`px-3 py-1.5 rounded-lg border ${
-            canCancel && !cancelling ? 'border-red-200' : 'border-red-100'
-          }`}
-        >
-          <Text className={`text-xs ${canCancel && !cancelling ? 'text-red-600' : 'text-red-300'}`} style={fontBoldStyle}>
-            {cancelling ? 'Cancelling...' : 'Cancel'}
-          </Text>
-        </Pressable>
+        {isScheduled && (
+          <>
+            <Pressable
+              onPress={handleReschedule}
+              disabled={!canCancel}
+              className={`px-3 py-1.5 rounded-lg border ${canCancel ? 'border-slate-200' : 'border-slate-100'}`}
+            >
+              <Text className={`text-xs ${canCancel ? 'text-slate-600' : 'text-slate-300'}`} style={fontBoldStyle}>
+                Reschedule
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={handleCancel}
+              disabled={!canCancel || cancelling}
+              className={`px-3 py-1.5 rounded-lg border ${
+                canCancel && !cancelling ? 'border-red-200' : 'border-red-100'
+              }`}
+            >
+              <Text className={`text-xs ${canCancel && !cancelling ? 'text-red-600' : 'text-red-300'}`} style={fontBoldStyle}>
+                {cancelling ? 'Cancelling...' : 'Cancel'}
+              </Text>
+            </Pressable>
+          </>
+        )}
         <Pressable onPress={() => setShowModal(true)} className="px-3 py-1.5 rounded-lg border border-slate-200">
           <Text className="text-xs text-slate-600" style={fontBoldStyle}>View Details</Text>
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={handleJoin}
-        disabled={!link}
-        className={`mt-2 h-[40px] rounded-lg items-center justify-center ${link ? 'bg-brand-accent' : 'bg-slate-100'}`}
-      >
-        <Text className={`text-sm ${link ? 'text-brand-text' : 'text-slate-400'}`} style={fontBoldStyle}>
-          {link ? 'Join Meeting' : 'No link yet'}
-        </Text>
-      </Pressable>
+      {isScheduled && (
+        <Pressable
+          onPress={handleJoin}
+          disabled={!link}
+          className={`mt-2 h-[40px] rounded-lg items-center justify-center ${link ? 'bg-brand-accent' : 'bg-slate-100'}`}
+        >
+          <Text className={`text-sm ${link ? 'text-brand-text' : 'text-slate-400'}`} style={fontBoldStyle}>
+            {link ? 'Join Meeting' : 'No link yet'}
+          </Text>
+        </Pressable>
+      )}
 
       <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
         <View className="flex-1 bg-black/60 items-center justify-center p-4">
