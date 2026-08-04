@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
 const authRoutes = require('./routes/auth');
@@ -16,7 +17,12 @@ connectDB();
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
+
+
+// Serve static files from public folder (React client build)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Serve static files from uploads folder
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -33,6 +39,15 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// React SPA fallback for all non-API routes
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    return res.sendFile(path.join(__dirname, '../public/index.html'));
+  }
+  next();
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -67,9 +67,13 @@ let universities = [];
 let majors = [];
 
 try {
-  const listsPath = path.join(__dirname, '../../../client/src/constants/lists.js');
+  let listsPath = path.join(__dirname, '../constants/lists.js');
+  if (!fs.existsSync(listsPath)) {
+    listsPath = path.join(__dirname, '../../../client/src/constants/lists.js');
+  }
   if (fs.existsSync(listsPath)) {
     const content = fs.readFileSync(listsPath, 'utf8');
+
     
     // Parse UNIVERSITIES_LIST
     const universitiesMatch = content.match(/export const UNIVERSITIES_LIST = \s*\[([\s\S]*?)\];/);

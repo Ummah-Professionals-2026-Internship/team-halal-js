@@ -1,4 +1,5 @@
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://mentorship-backend-env.eba-3chfwue2.us-east-2.elasticbeanstalk.com';
+const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+
 
 
 /**
