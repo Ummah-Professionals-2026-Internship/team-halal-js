@@ -13,11 +13,7 @@ const isAdminEmail = (email) => (email || '').trim().toLowerCase().endsWith(ADMI
 // GET /api/auth/me - Get current user
 router.get('/me', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
-    const user = await User.findById(req.user.id).select('-password')
-=======
-    const user = await User.findById(req.user.id).select('firstName lastName email role profilePicture mentorProfile menteeProfile manualAvailabilitySlots linkedinUrl university majors additionalInfo timeZone')
->>>>>>> feat/admin-dashboard
+    const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' })
 
     const clientTimeZone = req.headers['x-timezone'];
@@ -156,11 +152,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-<<<<<<< HEAD
     if (user.googleId || !user.password) {
-=======
-    if (!user.password && user.googleId) {
->>>>>>> feat/admin-dashboard
       return res.status(400).json({
         isGoogleAccount: true,
         message: 'This account was created using Google Sign-In. Please sign in with Google.'
@@ -348,14 +340,10 @@ router.post('/admin/register', async (req, res) => {
 // GET /api/auth/google/signin - Initiate Google Sign-In OAuth flow (no JWT required)
 router.get('/google/signin', (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-<<<<<<< HEAD
   const host = req.headers.host || 'localhost:5000';
   const protocol = req.protocol || 'http';
   const redirectUri = process.env.GOOGLE_SIGNIN_REDIRECT_URI || `${protocol}://${host}/api/auth/google/signin/callback`;
   const { app_redirect } = req.query;
-=======
-  const redirectUri = process.env.GOOGLE_SIGNIN_REDIRECT_URI || 'http://localhost:5000/api/auth/google/signin/callback';
->>>>>>> feat/admin-dashboard
 
   if (!clientId || !redirectUri) {
     return res.status(500).json({ message: 'Google Sign-In is not configured on the server.' });
@@ -370,7 +358,6 @@ router.get('/google/signin', (req, res) => {
 
 // GET /api/auth/google/signin/callback - Handle Google Sign-In callback
 router.get('/google/signin/callback', async (req, res) => {
-<<<<<<< HEAD
   const { code, error, state } = req.query;
 
   let appRedirect = '';
@@ -470,10 +457,6 @@ router.get('/google/signin/callback', async (req, res) => {
     }
     return res.redirect(targetUrl);
   };
-=======
-  const { code, error } = req.query;
-  const redirectUri = process.env.GOOGLE_SIGNIN_REDIRECT_URI || 'http://localhost:5000/api/auth/google/signin/callback';
->>>>>>> feat/admin-dashboard
 
   if (error || !code) {
     return sendResponse('/login?googleError=cancelled');
@@ -492,11 +475,7 @@ router.get('/google/signin/callback', async (req, res) => {
         code,
         client_id: process.env.GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-<<<<<<< HEAD
         redirect_uri: usedRedirectUri,
-=======
-        redirect_uri: redirectUri,
->>>>>>> feat/admin-dashboard
         grant_type: 'authorization_code',
       }),
     });
