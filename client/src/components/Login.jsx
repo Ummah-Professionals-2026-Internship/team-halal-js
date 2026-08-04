@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import AuthCard from './AuthCard';
 import { login } from '../api-calls/auth';
+import { apiBaseUrl } from '../api-calls/client';
+
 import { getMenteeSessions } from '../api-calls/sessions';
 
 const GoogleIcon = () => (
@@ -130,7 +132,7 @@ const Login = () => {
   // Redirect to the server-side Google OAuth flow
   const handleGoogleSignIn = () => {
     const origin = window.location.origin;
-    window.location.href = `/api/auth/google/signin?app_redirect=${encodeURIComponent(origin)}`;
+    window.location.href = `${apiBaseUrl}/api/auth/google/signin?app_redirect=${encodeURIComponent(origin)}`;
   };
 
   const inputClasses = "w-full max-w-[385px] h-[70px] bg-white border border-[#CFC5B3] rounded-lg pl-5 box-border text-2xl font-normal text-[#656565] transition-all duration-200 block mx-auto hover:border-[#007CA6]/50 focus:border-[#007CA6] focus:ring-3 focus:ring-[rgba(0,124,166,0.15)] focus:shadow-[0_0_0_4px_rgba(0,124,166,0.10)] focus:outline-none placeholder:text-[#656565] placeholder:opacity-80";

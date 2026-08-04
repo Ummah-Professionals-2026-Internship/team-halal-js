@@ -11,12 +11,12 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://mentorship-backend-env.eba-3chfwue2.us-east-2.elasticbeanstalk.com',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://mentorship-backend-env.eba-3chfwue2.us-east-2.elasticbeanstalk.com',
         changeOrigin: true,
         secure: false,
       }
