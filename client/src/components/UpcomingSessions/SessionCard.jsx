@@ -137,14 +137,8 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
               </button>
             </>
           )}
-<<<<<<< HEAD
-
-          <button
-            onClick={() => setShowModal(false || true)}
-=======
           <button
             onClick={() => setShowModal(true)}
->>>>>>> feat/mobile-google-cal
             className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             View Details
