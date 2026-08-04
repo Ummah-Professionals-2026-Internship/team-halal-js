@@ -11,7 +11,7 @@ export async function login(email, password) {
 
   if (!res.ok) {
     const err = new Error(data.message || 'Login failed');
-    err.isGoogleAccount = data.isGoogleAccount;
+    err.isGoogleAccount = data.isGoogleAccount || false;
     throw err;
   }
 

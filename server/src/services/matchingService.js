@@ -121,8 +121,16 @@ async function getRankedMentors(menteeId) {
 
   if (industryFiltered.length === 0) return [];
 
-  // Hard filter 2: capacity (exclude mentors already at their maxMentees active matches)
-  const mentorIds = industryFiltered.map(m => m._id);
+  // Hard filter 2: mentee's preferred mentor gender, if they set one
+  const preferredGender = mentee.menteeProfile?.preferredMentorGender;
+  const genderFiltered = preferredGender
+    ? industryFiltered.filter(m => m.gender === preferredGender)
+    : industryFiltered;
+
+  if (genderFiltered.length === 0) return [];
+
+  // Hard filter 3: capacity (exclude mentors already at their maxMentees active matches)
+  const mentorIds = genderFiltered.map(m => m._id);
   const activeCounts = await Match.aggregate([
     { $match: { mentor: { $in: mentorIds }, status: 'active' } },
     { $group: { _id: '$mentor', count: { $sum: 1 } } }
@@ -130,7 +138,7 @@ async function getRankedMentors(menteeId) {
   const activeCountMap = {};
   for (const { _id, count } of activeCounts) activeCountMap[_id.toString()] = count;
 
-  const capacityFiltered = industryFiltered.filter(mentor => {
+  const capacityFiltered = genderFiltered.filter(mentor => {
     const max = mentor.mentorProfile?.maxMentees;
     if (!max) return true; // no cap set on this mentor — allow
     return (activeCountMap[mentor._id.toString()] || 0) < max;

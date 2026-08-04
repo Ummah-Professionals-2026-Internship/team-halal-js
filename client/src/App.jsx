@@ -18,10 +18,13 @@ import MenteeSchedulePage from './components/Mentee/MenteeSchedulePage';
 import MenteeBooking from './components/Mentee/MenteeBooking';
 import MenteeSessionsDashboard from './components/Mentee/MenteeSessionsDashboard';
 import NotificationsPage from './components/NotificationsPage';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import AdminLogin from './components/Admin/AdminLogin';
+import AdminSetup from './components/Admin/AdminSetup';
+import AdminRegister from './components/Admin/AdminRegister';
+import AdminViewProfile from './components/Admin/AdminViewProfile';
 import LegalStatement from './components/LegalStatement';
 import UsageTerms from './components/UsageTerms';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import AdminRegister from './components/Admin/AdminRegister';
 
 function App() {
   return (
@@ -30,8 +33,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/google-register" element={<GoogleRegister />} />
+
+        {/* Admin Auth & Dashboard Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/setup" element={<AdminSetup />} />
         <Route path="/admin/register" element={<AdminRegister />} />
+        <Route path="/admin/profile" element={<AdminViewProfile />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
         
         {/* Profile Wizard Routes */}
         <Route path="/create-profile" element={<MentorMenteeProfile />} />
@@ -62,3 +71,4 @@ function App() {
 }
 
 export default App;
+

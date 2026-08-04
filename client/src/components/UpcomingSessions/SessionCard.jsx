@@ -15,7 +15,7 @@ const startOfDay = (d) => {
   return x
 }
 
-const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'scheduled', service, details }) => {
+const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'scheduled', service, details, hasSubmittedFeedback = false, onLeaveFeedback }) => {
   const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
   const name = `${mentee?.firstName ?? ''} ${mentee?.lastName ?? ''}`.trim()
@@ -28,6 +28,8 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
   const daysUntil = Math.round((startOfDay(when) - startOfDay(new Date())) / 86400000)
 
   const beyond48hrs = when.getTime() > Date.now() + 48 * 60 * 60 * 1000
+  const isCompletedSession = status === 'completed' || daysUntil < 0
+  const isPendingFeedback = isCompletedSession && !hasSubmittedFeedback
   const canReschedule = status === 'scheduled' && beyond48hrs
   const canCancel = status === 'scheduled' && beyond48hrs
   const [cancelling, setCancelling] = useState(false)
@@ -55,7 +57,9 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-4 mb-3 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-xl border p-4 mb-3 shadow-sm hover:shadow-md transition-all ${
+      isPendingFeedback ? 'border-amber-300 ring-2 ring-amber-100 bg-amber-50/20' : 'border-slate-100'
+    }`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
           {photo ? (
@@ -75,43 +79,58 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
         </div>
         <div className="text-right shrink-0">
           <span className={`inline-block rounded-full text-[11px] font-bold px-2.5 py-1 ${
+            isPendingFeedback ? 'bg-amber-100 text-amber-800 border border-amber-300' :
             daysUntil < 0 ? 'bg-slate-200 text-slate-600' : 'bg-[#fdbb36] text-[#00212C]'
           }`}>
-            {formatCountdown(daysUntil)}
+            {isPendingFeedback ? '★ Feedback Needed' : formatCountdown(daysUntil)}
           </span>
           <p className="text-xs text-slate-500 mt-1.5">{dateStr}</p>
           <p className="text-xs text-slate-500">{timeStr}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {isPendingFeedback && onLeaveFeedback && (
+            <button
+              onClick={() => onLeaveFeedback({ sessionId, otherPersonName: name })}
+              className="bg-[#fdbb36] hover:bg-[#e5a72e] text-[#00212C] text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm flex items-center gap-1 cursor-pointer"
+            >
+              ★ Leave Feedback
+            </button>
+          )}
+
+          {status === 'scheduled' && (
+            <>
+              <button
+                onClick={handleReschedule}
+                disabled={!canReschedule}
+                title={!canReschedule ? 'Sessions can only be rescheduled at least 48 hours in advance' : undefined}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                  canReschedule
+                    ? 'text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer'
+                    : 'text-slate-300 border border-slate-100 cursor-not-allowed'
+                }`}
+              >
+                Reschedule
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={!canCancel || cancelling}
+                title={!canCancel ? 'Sessions can only be cancelled at least 48 hours in advance' : undefined}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                  canCancel && !cancelling
+                    ? 'text-red-600 border border-red-200 hover:bg-red-50 cursor-pointer'
+                    : 'text-red-300 border border-red-100 cursor-not-allowed'
+                }`}
+              >
+                {cancelling ? 'Cancelling...' : 'Cancel'}
+              </button>
+            </>
+          )}
+
           <button
-            onClick={handleReschedule}
-            disabled={!canReschedule}
-            title={!canReschedule && status === 'scheduled' ? 'Sessions can only be rescheduled at least 48 hours in advance' : undefined}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-              canReschedule
-                ? 'text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer'
-                : 'text-slate-300 border border-slate-100 cursor-not-allowed'
-            }`}
-          >
-            Reschedule
-          </button>
-          <button
-            onClick={handleCancel}
-            disabled={!canCancel || cancelling}
-            title={!canCancel && status === 'scheduled' ? 'Sessions can only be cancelled at least 48 hours in advance' : undefined}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-              canCancel && !cancelling
-                ? 'text-red-600 border border-red-200 hover:bg-red-50 cursor-pointer'
-                : 'text-red-300 border border-red-100 cursor-not-allowed'
-            }`}
-          >
-            {cancelling ? 'Cancelling...' : 'Cancel'}
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowModal(false || true)}
             className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             View Details

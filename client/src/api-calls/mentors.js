@@ -16,6 +16,18 @@ export async function createMentorProfile(profileData) {
   return data;
 }
 
+export async function getMentors() {
+  const res = await apiFetch('/api/mentors');
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || data.message || 'Failed to fetch mentors');
+  }
+
+  return data;
+}
+
 // Accepts any subset of mentor profile fields to update.
 // e.g. updateMentorProfile({ jobTitle: 'Engineer' }) or updateMentorProfile({ frequency: 'Weekly', maxMentees: 3 })
 export async function updateMentorProfile(updates) {

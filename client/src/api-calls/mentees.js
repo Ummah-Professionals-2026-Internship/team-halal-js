@@ -34,6 +34,18 @@ export async function updateMenteeProfile(updates) {
   return data;
 }
 
+export async function getMentees() {
+  const res = await apiFetch('/api/mentees');
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || data.message || 'Failed to fetch mentees');
+  }
+
+  return data;
+}
+
 export async function getMatchSuggestions() {
   const res = await apiFetch('/api/matches');
 

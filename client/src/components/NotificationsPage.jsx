@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayoutDashboard from './PageLayoutDashboard'
+import NotificationDetailModal from './NotificationDetailModal'
+import SessionFeedbackModal from './SessionFeedbackModal'
 import useCurrentUser from './useCurrentUser'
 import {
   getNotifications,
@@ -19,6 +21,8 @@ const NotificationsPage = () => {
   const [loading, setLoading] = useState(true)
   const [savingPrefs, setSavingPrefs] = useState(false)
   const [error, setError] = useState(null)
+  const [viewingNotification, setViewingNotification] = useState(null)
+  const [feedbackNotification, setFeedbackNotification] = useState(null)
 
   const userName = user ? `${user.firstName} ${user.lastName}` : ''
   const userRole = user?.role === 'mentor' ? 'Mentor' : 'Mentee'
@@ -128,14 +132,23 @@ const NotificationsPage = () => {
             ) : notifications.length > 0 ? (
               <div className="flex flex-col divide-y divide-slate-100">
                 {notifications.map(n => (
-                  <div 
+                  <div
                     key={n._id}
-                    className={`py-4 flex gap-4 items-start transition-colors ${!n.isRead ? 'bg-slate-50/20' : ''}`}
+                    onClick={() => {
+                      if (!n.isRead) handleToggleRead(n)
+                      if (n.type === 'feedback_requested') {
+                        setFeedbackNotification(n)
+                      } else {
+                        setViewingNotification(n)
+                      }
+                    }}
+                    className={`py-4 flex gap-4 items-start transition-colors cursor-pointer hover:bg-slate-50/60 ${!n.isRead ? 'bg-slate-50/20' : ''}`}
                   >
                     <div className="flex items-center h-5">
-                      <input 
+                      <input
                         type="checkbox"
                         checked={n.isRead}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={() => handleToggleRead(n)}
                         title={n.isRead ? "Mark as Unread" : "Mark as Read"}
                         className="w-4 h-4 text-[#007CA6] border-slate-300 rounded focus:ring-[#007CA6]/20 cursor-pointer"
@@ -224,6 +237,22 @@ const NotificationsPage = () => {
           </div>
         </div>
       </div>
+
+      {viewingNotification && (
+        <NotificationDetailModal
+          notification={viewingNotification}
+          onClose={() => setViewingNotification(null)}
+        />
+      )}
+
+      {feedbackNotification && (
+        <SessionFeedbackModal
+          sessionId={feedbackNotification.relatedId}
+          otherPersonName={feedbackNotification.sender?.firstName}
+          onClose={() => setFeedbackNotification(null)}
+          onSubmitted={() => setFeedbackNotification(null)}
+        />
+      )}
     </PageLayoutDashboard>
   )
 }

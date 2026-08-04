@@ -3,6 +3,7 @@ const router = express.Router();
 const Session = require('../models/Session');
 const User = require('../models/User');
 const Match = require('../models/Match');
+const Feedback = require('../models/Feedback');
 const requireAuth = require('../middleware/requireAuth');
 const { scheduleSessionOnGoogleCalendar, updateSessionOnGoogleCalendar, deleteSessionFromGoogleCalendar } = require('../services/googleCalendarService');
 const { sendNotification } = require('../services/notificationService');
@@ -328,7 +329,17 @@ router.get('/mentee', requireAuth, async (req, res) => {
         const sessions = await Session.find({ mentee: req.user.id })
             .populate('mentor', 'firstName lastName profilePicture email manualAvailabilitySlots mentorProfile majors university linkedinUrl')
             .sort({ scheduledTime: 1 });
-        res.json(sessions);
+
+        const userFeedbacks = await Feedback.find({ submittedBy: req.user.id }).select('session');
+        const feedbackSessionIds = new Set(userFeedbacks.map(f => String(f.session)));
+
+        const results = sessions.map(s => {
+            const obj = s.toObject();
+            obj.hasSubmittedFeedback = feedbackSessionIds.has(String(s._id));
+            return obj;
+        });
+
+        res.json(results);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -341,7 +352,52 @@ router.get('/', requireAuth, async (req, res) => {
             .populate('mentee', 'firstName lastName profilePicture email manualAvailabilitySlots menteeProfile majors university linkedinUrl additionalInfo')
             .populate('mentor', 'firstName lastName profilePicture email')
             .sort({ scheduledTime: 1 });
+
+        const userFeedbacks = await Feedback.find({ submittedBy: req.user.id }).select('session');
+        const feedbackSessionIds = new Set(userFeedbacks.map(f => String(f.session)));
+
+        const results = sessions.map(s => {
+            const obj = s.toObject();
+            obj.hasSubmittedFeedback = feedbackSessionIds.has(String(s._id));
+            return obj;
+        });
+
+        res.json(results);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/sessions/all — every session on the platform (admin only)
+router.get('/all', requireAuth, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admins can view all sessions' });
+        }
+        const sessions = await Session.find()
+            .populate('mentor', 'firstName lastName profilePicture email')
+            .populate('mentee', 'firstName lastName profilePicture email')
+            .sort({ scheduledTime: -1 });
         res.json(sessions);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/sessions/:id — single session detail, populated (participant or admin only)
+router.get('/:id', requireAuth, async (req, res) => {
+    try {
+        const session = await Session.findById(req.params.id)
+            .populate('mentor', 'firstName lastName profilePicture email manualAvailabilitySlots mentorProfile majors university linkedinUrl')
+            .populate('mentee', 'firstName lastName profilePicture email manualAvailabilitySlots menteeProfile majors university linkedinUrl additionalInfo');
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found.' });
+        }
+        const isParticipant = [String(session.mentor._id), String(session.mentee._id)].includes(req.user.id);
+        if (!isParticipant && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied.' });
+        }
+        res.json(session);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -350,16 +406,17 @@ router.get('/', requireAuth, async (req, res) => {
 // PUT /api/sessions/:id/cancel - Cancel a scheduled session (mentor or mentee)
 router.put('/:id/cancel', requireAuth, async (req, res) => {
     try {
+        const isAdmin = req.user.role === 'admin';
         const session = await Session.findOne({
             _id: req.params.id,
             status: 'scheduled',
-            $or: [{ mentee: req.user.id }, { mentor: req.user.id }]
+            ...(isAdmin ? {} : { $or: [{ mentee: req.user.id }, { mentor: req.user.id }] })
         });
         if (!session) {
             return res.status(404).json({ error: 'Session not found, already cancelled, or access denied.' });
         }
 
-        if (session.scheduledTime.getTime() < Date.now() + MIN_LEAD_TIME_MS) {
+        if (!isAdmin && session.scheduledTime.getTime() < Date.now() + MIN_LEAD_TIME_MS) {
             return res.status(400).json({ error: 'Sessions can only be cancelled at least 48 hours in advance.' });
         }
 
@@ -402,39 +459,118 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
         }
 
         // Send notifications
-        const isMentor = String(session.mentor) === req.user.id;
-        const recipientId = isMentor ? session.mentee : session.mentor;
-        const senderId = isMentor ? session.mentor : session.mentee;
-        const actorName = isMentor ? `${mentor.firstName} ${mentor.lastName}` : `${mentee.firstName} ${mentee.lastName}`;
-
         const sessionDate = new Date(session.scheduledTime);
-        const formattedDate = sessionDate.toLocaleDateString(undefined, { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const formattedDate = sessionDate.toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
-        const formattedTime = sessionDate.toLocaleTimeString(undefined, { 
-            hour: 'numeric', 
-            minute: '2-digit' 
+        const formattedTime = sessionDate.toLocaleTimeString(undefined, {
+            hour: 'numeric',
+            minute: '2-digit'
         });
 
-        const message = `${actorName} cancelled the session scheduled for ${formattedDate} at ${formattedTime}.`;
+        if (isAdmin) {
+            // Admin-initiated cancellation — notify both participants, don't misattribute it to either of them
+            const message = `The Ummah Professionals team cancelled the session scheduled for ${formattedDate} at ${formattedTime}.`;
+            [session.mentor, session.mentee].forEach(recipientId => {
+                sendNotification({
+                    recipientId,
+                    senderId: req.user.id,
+                    type: 'session_cancelled',
+                    title: 'Session Cancelled',
+                    message,
+                    relatedId: session._id,
+                    relatedModel: 'Session',
+                    metadata: { session }
+                }).catch(err => {
+                    console.error('Asynchronous notification dispatch failed:', err);
+                });
+            });
+        } else {
+            const isMentor = String(session.mentor) === req.user.id;
+            const recipientId = isMentor ? session.mentee : session.mentor;
+            const senderId = isMentor ? session.mentor : session.mentee;
+            const actorName = isMentor ? `${mentor.firstName} ${mentor.lastName}` : `${mentee.firstName} ${mentee.lastName}`;
+            const message = `${actorName} cancelled the session scheduled for ${formattedDate} at ${formattedTime}.`;
 
-        sendNotification({
-            recipientId,
-            senderId,
-            type: 'session_cancelled',
-            title: 'Session Cancelled',
-            message,
-            relatedId: session._id,
-            relatedModel: 'Session',
-            metadata: { session }
-        }).catch(err => {
-            console.error('Asynchronous notification dispatch failed:', err);
-        });
+            sendNotification({
+                recipientId,
+                senderId,
+                type: 'session_cancelled',
+                title: 'Session Cancelled',
+                message,
+                relatedId: session._id,
+                relatedModel: 'Session',
+                metadata: { session }
+            }).catch(err => {
+                console.error('Asynchronous notification dispatch failed:', err);
+            });
+        }
 
         res.status(200).json(session);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/sessions/:id/request-reschedule — admin flags an issue and asks the mentee to reschedule
+router.post('/:id/request-reschedule', requireAuth, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admins can request a reschedule' });
+        }
+
+        const { reason, recipient = 'both' } = req.body;
+        if (!['both', 'mentor', 'mentee'].includes(recipient)) {
+            return res.status(400).json({ error: 'recipient must be "both", "mentor", or "mentee"' });
+        }
+
+        const session = await Session.findOne({ _id: req.params.id, status: 'scheduled' })
+            .populate('mentor', 'firstName lastName')
+            .populate('mentee', 'firstName lastName');
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found or no longer scheduled.' });
+        }
+
+        const sessionDate = new Date(session.scheduledTime);
+        const formattedDate = sessionDate.toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const formattedTime = sessionDate.toLocaleTimeString(undefined, {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+        const reasonSuffix = reason ? ` Reason: ${reason}` : '';
+        const mentorName = `${session.mentor.firstName} ${session.mentor.lastName}`.trim();
+        const menteeName = `${session.mentee.firstName} ${session.mentee.lastName}`.trim();
+
+        const recipients = recipient === 'both'
+            ? [{ id: session.mentor._id, otherName: menteeName }, { id: session.mentee._id, otherName: mentorName }]
+            : recipient === 'mentor'
+                ? [{ id: session.mentor._id, otherName: menteeName }]
+                : [{ id: session.mentee._id, otherName: mentorName }];
+
+        recipients.forEach(({ id, otherName }) => {
+            const message = `The Ummah Professionals team has asked you to reschedule your session with ${otherName} on ${formattedDate} at ${formattedTime}.${reasonSuffix}`;
+            sendNotification({
+                recipientId: id,
+                senderId: req.user.id,
+                type: 'reschedule_requested',
+                title: 'Please Reschedule Your Session',
+                message,
+                relatedId: session._id,
+                relatedModel: 'Session'
+            }).catch(err => {
+                console.error('Asynchronous notification dispatch failed:', err);
+            });
+        });
+
+        res.json({ message: 'Reschedule request sent.' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
