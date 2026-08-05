@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PageLayoutDashboard from '../PageLayoutDashboard';
+import useCurrentUser from '../useCurrentUser';
 import { MENTOR_SERVICES } from '../../constants/services';
 import { getPhotoUrl } from '../../utils/photoUrl';
 
@@ -8,18 +9,15 @@ const MentorProfileView = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
+  const { user, refreshUser } = useCurrentUser();
   const mentor = state?.mentor;
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : {};
-  const userName = user.firstName ? `${user.firstName} ${user.lastName}` : 'Mentee';
 
-  const refreshUser = (updatedUser) => {
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-  };
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : '';
+  const userPhoto = user?.profilePicture;
 
   if (!mentor) {
     return (
-      <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
+      <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={userPhoto} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
         <div className="max-w-2xl mx-auto p-6 text-center text-slate-500">No mentor data found.</div>
       </PageLayoutDashboard>
     );
@@ -37,7 +35,7 @@ const MentorProfileView = () => {
   const topics = mentor.mentorProfile?.volunteeringFor || [];
 
   return (
-    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
+    <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={userPhoto} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
       <div className="max-w-2xl mx-auto w-full pb-4">
 
         <div className="mb-6 mt-2">
