@@ -81,7 +81,13 @@ const MentorViewProfile = () => {
     }
   }
 
-  if (!user.firstName) return <div>Loading ...</div>
+  if (!user.firstName) {
+    return (
+      <PageLayoutDashboard userName="" userRole="Mentor" userPhoto={null} onPhotoUpdate={refreshUser}>
+        <div className="max-w-6xl mx-auto w-full pt-10 text-center text-sm text-slate-400">Loading ...</div>
+      </PageLayoutDashboard>
+    );
+  }
 
   const name = `${formData.firstName} ${formData.lastName}`.trim()
   const title = [formData.jobTitle, formData.employer].filter(Boolean).join(' at ')
