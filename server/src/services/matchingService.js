@@ -2,105 +2,179 @@ const User = require('../models/User');
 const Match = require('../models/Match');
 
 const WEIGHTS = {
-  TAG_PER_MATCH:   10,
-  TAG_CAP:         40,
-  MAJOR_PER_MATCH: 10,
-  MAJOR_CAP:       30,
-  UNIVERSITY:      10,
-  STATE:           10,
-  AVAILABILITY:    20,
+  SERVICES: 30,
+  MAJORS: 30,
+  UNIVERSITY: 10,
+  STATE: 10,
+  AVAILABILITY: 20,
 };
-const MAX_SCORE = WEIGHTS.TAG_CAP + WEIGHTS.MAJOR_CAP + WEIGHTS.UNIVERSITY +
-                  WEIGHTS.STATE + WEIGHTS.AVAILABILITY; // 110
+const MAX_SCORE = Object.values(WEIGHTS).reduce((total, weight) => total + weight, 0);
+const FULL_AVAILABILITY_MINUTES = 120;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+function normalize(value) {
+  return value.trim().toLowerCase();
+}
 
 function parseMinutes(timeStr) {
-  if (!timeStr) return 0;
-  const s = timeStr.toLowerCase().trim();
-  const pm = s.includes('pm');
-  const am = s.includes('am');
-  const [h, m = '0'] = s.replace(/\s*[ap]m/i, '').split(':');
-  let hours = parseInt(h, 10);
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const value = timeStr.toLowerCase().trim();
+  const pm = value.includes('pm');
+  const am = value.includes('am');
+  const [hourPart, minutePart = '0'] = value.replace(/\s*[ap]m/i, '').split(':');
+  let hours = parseInt(hourPart, 10);
+  const minutes = parseInt(minutePart, 10);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes) || minutes < 0 || minutes > 59) return null;
   if (pm && hours !== 12) hours += 12;
   if (am && hours === 12) hours = 0;
-  return hours * 60 + parseInt(m, 10);
+  if (hours < 0 || hours > 23) return null;
+  return hours * 60 + minutes;
 }
 
-function hasAvailabilityOverlap(mentorSlots = [], menteeSlots = []) {
-  for (const ms of mentorSlots) {
-    for (const ts of menteeSlots) {
-      if (!ms.day || ms.day !== ts.day) continue;
-      const msS = parseMinutes(ms.startTime), msE = parseMinutes(ms.endTime);
-      const tsS = parseMinutes(ts.startTime), tsE = parseMinutes(ts.endTime);
-      if (msS < tsE && msE > tsS) return true;
-    }
+function mergeAvailabilityByDay(slots = []) {
+  const byDay = new Map();
+
+  for (const slot of slots || []) {
+    const day = slot.day?.trim().toLowerCase();
+    const start = parseMinutes(slot.startTime);
+    const end = parseMinutes(slot.endTime);
+    if (!day || start === null || end === null || start >= end) continue;
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push([start, end]);
   }
-  return false;
+
+  for (const [day, intervals] of byDay) {
+    intervals.sort((a, b) => a[0] - b[0]);
+    const merged = [];
+    for (const interval of intervals) {
+      const previous = merged[merged.length - 1];
+      if (!previous || interval[0] > previous[1]) merged.push([...interval]);
+      else previous[1] = Math.max(previous[1], interval[1]);
+    }
+    byDay.set(day, merged);
+  }
+
+  return byDay;
 }
 
-// Checks if mentor's industry and mentee's desired career share meaningful signal.
-// Note: Figma shows a separate 'desiredIndustry' field on mentee that isn't in the
-// schema yet. Using desiredCareer as a proxy until that field is added.
-// Returns true (skip filter) if either value is missing, so incomplete profiles
-// aren't unfairly excluded.
-function industryCareerAligns(industry, career) {
-  if (!industry || !career) return true;
-  const a = industry.toLowerCase();
-  const b = career.toLowerCase();
-  if (a.includes(b) || b.includes(a)) return true;
-  const tokens = str => str.split(/\W+/).filter(w => w.length > 3);
-  const aSet = new Set(tokens(a));
-  return tokens(b).some(t => aSet.has(t));
+function totalAvailabilityMinutes(byDay) {
+  let total = 0;
+  for (const intervals of byDay.values()) {
+    for (const [start, end] of intervals) total += end - start;
+  }
+  return total;
 }
 
-// ── Scoring ───────────────────────────────────────────────────────────────────
+function availabilityCompatibility(mentorSlots = [], menteeSlots = []) {
+  const mentorByDay = mergeAvailabilityByDay(mentorSlots);
+  const menteeByDay = mergeAvailabilityByDay(menteeSlots);
+  let overlapMinutes = 0;
 
-function scoreCandidate(mentor, mentee) {
-  // Tags are nested under profile subdocs (not top-level fields)
-  const mentorTags = new Set(mentor.mentorProfile?.volunteeringFor || []);
-  const menteeTags = mentee.menteeProfile?.desiredServices || [];
-  const sharedTagsList = menteeTags.filter(t => mentorTags.has(t));
-  const tagPoints = Math.min(sharedTagsList.length * WEIGHTS.TAG_PER_MATCH, WEIGHTS.TAG_CAP);
-
-  const mentorMajorSet = new Set((mentor.majors || []).map(m => m.toLowerCase()));
-  const sharedMajorsList = (mentee.majors || []).filter(m => mentorMajorSet.has(m.toLowerCase()));
-  const majorPoints = Math.min(sharedMajorsList.length * WEIGHTS.MAJOR_PER_MATCH, WEIGHTS.MAJOR_CAP);
-
-  const sameUniversity = !!(mentor.university && mentee.university &&
-    mentor.university.toLowerCase() === mentee.university.toLowerCase());
-  const universityPoints = sameUniversity ? WEIGHTS.UNIVERSITY : 0;
-
-  const sameState = !!(mentor.state && mentor.state === mentee.state);
-  const statePoints = sameState ? WEIGHTS.STATE : 0;
-
-  const availabilityOverlap = hasAvailabilityOverlap(
-    mentor.manualAvailabilitySlots, mentee.manualAvailabilitySlots
-  );
-  const availabilityPoints = availabilityOverlap ? WEIGHTS.AVAILABILITY : 0;
-
-  const rawTotal = tagPoints + majorPoints + universityPoints + statePoints + availabilityPoints;
-
-  return {
-    score: Math.round((rawTotal / MAX_SCORE) * 100),
-    breakdown: {
-      sharedTags:          sharedTagsList,
-      sharedMajors:        sharedMajorsList,
-      sameUniversity,
-      sameState,
-      availabilityOverlap,
-      points: {
-        tags:         tagPoints,
-        majors:       majorPoints,
-        university:   universityPoints,
-        state:        statePoints,
-        availability: availabilityPoints
+  for (const [day, menteeIntervals] of menteeByDay) {
+    const mentorIntervals = mentorByDay.get(day) || [];
+    for (const [menteeStart, menteeEnd] of menteeIntervals) {
+      for (const [mentorStart, mentorEnd] of mentorIntervals) {
+        overlapMinutes += Math.max(0, Math.min(menteeEnd, mentorEnd) - Math.max(menteeStart, mentorStart));
       }
     }
+  }
+
+  const menteeMinutes = totalAvailabilityMinutes(menteeByDay);
+  const targetMinutes = Math.min(menteeMinutes, FULL_AVAILABILITY_MINUTES);
+  return {
+    hasData: mentorByDay.size > 0 && menteeByDay.size > 0,
+    menteeHasData: menteeByDay.size > 0,
+    overlapMinutes,
+    ratio: targetMinutes > 0 ? Math.min(overlapMinutes / targetMinutes, 1) : 0,
   };
 }
 
-// ── Main export ───────────────────────────────────────────────────────────────
+// Career alignment remains an eligibility gate until both profiles collect
+// the same structured industry/career taxonomy.
+function industryCareerAligns(industry, career) {
+  if (!industry || !career) return true;
+  const mentorIndustry = normalize(industry);
+  const menteeCareer = normalize(career);
+  if (mentorIndustry.includes(menteeCareer) || menteeCareer.includes(mentorIndustry)) return true;
+  const tokens = value => value.split(/\W+/).filter(word => word.length > 3);
+  const industryTokens = new Set(tokens(mentorIndustry));
+  return tokens(menteeCareer).some(token => industryTokens.has(token));
+}
+
+function scoreCandidate(mentor, mentee) {
+  const mentorServices = new Set((mentor.mentorProfile?.volunteeringFor || []).map(normalize));
+  const desiredServices = mentee.menteeProfile?.desiredServices || [];
+  const sharedTagsList = desiredServices.filter(service => mentorServices.has(normalize(service)));
+  const servicesHaveData = mentorServices.size > 0 && desiredServices.length > 0;
+  const servicePoints = servicesHaveData
+    ? (sharedTagsList.length / desiredServices.length) * WEIGHTS.SERVICES
+    : 0;
+
+  const mentorMajors = new Set((mentor.majors || []).map(normalize));
+  const menteeMajors = mentee.majors || [];
+  const sharedMajorsList = menteeMajors.filter(major => mentorMajors.has(normalize(major)));
+  const majorsHaveData = mentorMajors.size > 0 && menteeMajors.length > 0;
+  const majorPoints = majorsHaveData
+    ? (sharedMajorsList.length / menteeMajors.length) * WEIGHTS.MAJORS
+    : 0;
+
+  const universityHasData = !!(mentor.university && mentee.university);
+  const sameUniversity = !!(
+    universityHasData && normalize(mentor.university) === normalize(mentee.university)
+  );
+  const universityPoints = sameUniversity ? WEIGHTS.UNIVERSITY : 0;
+
+  const stateHasData = !!(mentor.state && mentee.state);
+  const sameState = !!(stateHasData && mentor.state === mentee.state);
+  const statePoints = sameState ? WEIGHTS.STATE : 0;
+
+  const availability = availabilityCompatibility(
+    mentor.manualAvailabilitySlots,
+    mentee.manualAvailabilitySlots
+  );
+  const availabilityPoints = availability.ratio * WEIGHTS.AVAILABILITY;
+
+  const criteria = [
+    { label: 'mentorship services', weight: WEIGHTS.SERVICES, available: servicesHaveData, menteeHasData: desiredServices.length > 0, points: servicePoints },
+    { label: 'academic background', weight: WEIGHTS.MAJORS, available: majorsHaveData, menteeHasData: menteeMajors.length > 0, points: majorPoints },
+    { label: 'university', weight: WEIGHTS.UNIVERSITY, available: universityHasData, menteeHasData: !!mentee.university, points: universityPoints },
+    { label: 'location', weight: WEIGHTS.STATE, available: stateHasData, menteeHasData: !!mentee.state, points: statePoints },
+    { label: 'availability', weight: WEIGHTS.AVAILABILITY, available: availability.hasData, menteeHasData: availability.menteeHasData, points: availabilityPoints },
+  ];
+  const evaluated = criteria.filter(criterion => criterion.available);
+  const evaluatedWeight = evaluated.reduce((total, criterion) => total + criterion.weight, 0);
+  const earnedPoints = evaluated.reduce((total, criterion) => total + criterion.points, 0);
+  const confidencePercentage = Math.round((evaluatedWeight / MAX_SCORE) * 100);
+  const confidenceLabel = confidencePercentage >= 80
+    ? 'high'
+    : confidencePercentage >= 50 ? 'medium' : 'low';
+
+  return {
+    score: evaluatedWeight > 0 ? Math.round((earnedPoints / evaluatedWeight) * 100) : 0,
+    confidence: {
+      percentage: confidencePercentage,
+      label: confidenceLabel,
+      evaluatedCriteria: evaluated.map(criterion => criterion.label),
+      missingCriteria: criteria.filter(criterion => !criterion.available).map(criterion => criterion.label),
+      menteeMissingCriteria: criteria.filter(criterion => !criterion.menteeHasData).map(criterion => criterion.label),
+    },
+    breakdown: {
+      sharedTags: sharedTagsList,
+      sharedMajors: sharedMajorsList,
+      sameUniversity,
+      sameState,
+      availabilityOverlap: availability.overlapMinutes > 0,
+      availabilityOverlapMinutes: availability.overlapMinutes,
+      points: {
+        tags: Math.round(servicePoints * 10) / 10,
+        majors: Math.round(majorPoints * 10) / 10,
+        university: universityPoints,
+        state: statePoints,
+        availability: Math.round(availabilityPoints * 10) / 10,
+      },
+      evaluatedWeight,
+    },
+  };
+}
 
 async function getRankedMentors(menteeId) {
   const mentee = await User.findById(menteeId).select('-password');
@@ -110,48 +184,48 @@ async function getRankedMentors(menteeId) {
     throw err;
   }
 
-  // Fetch all mentors who have completed their profile
   const allMentors = await User.find({ role: 'mentor', hasCompletedProfile: true })
     .select('-password');
 
-  // Hard filter 1: industry/career alignment (gate — not a score)
-  const industryFiltered = allMentors.filter(m =>
-    industryCareerAligns(m.mentorProfile?.industry, mentee.menteeProfile?.desiredCareer)
+  const industryFiltered = allMentors.filter(mentor =>
+    industryCareerAligns(mentor.mentorProfile?.industry, mentee.menteeProfile?.desiredCareer)
   );
-
   if (industryFiltered.length === 0) return [];
 
-  // Hard filter 2: mentee's preferred mentor gender, if they set one
   const preferredGender = mentee.menteeProfile?.preferredMentorGender;
   const genderFiltered = preferredGender
-    ? industryFiltered.filter(m => m.gender === preferredGender)
+    ? industryFiltered.filter(mentor => mentor.gender === preferredGender)
     : industryFiltered;
-
   if (genderFiltered.length === 0) return [];
 
-  // Hard filter 3: capacity (exclude mentors already at their maxMentees active matches)
-  const mentorIds = genderFiltered.map(m => m._id);
+  const mentorIds = genderFiltered.map(mentor => mentor._id);
   const activeCounts = await Match.aggregate([
     { $match: { mentor: { $in: mentorIds }, status: 'active' } },
-    { $group: { _id: '$mentor', count: { $sum: 1 } } }
+    { $group: { _id: '$mentor', count: { $sum: 1 } } },
   ]);
   const activeCountMap = {};
   for (const { _id, count } of activeCounts) activeCountMap[_id.toString()] = count;
 
   const capacityFiltered = genderFiltered.filter(mentor => {
     const max = mentor.mentorProfile?.maxMentees;
-    if (!max) return true; // no cap set on this mentor — allow
+    if (!max) return true;
     return (activeCountMap[mentor._id.toString()] || 0) < max;
   });
 
-  // Score and rank survivors
   const scored = capacityFiltered.map(mentor => {
-    const { score, breakdown } = scoreCandidate(mentor, mentee);
-    return { mentor, compatibilityScore: score, breakdown };
+    const { score, confidence, breakdown } = scoreCandidate(mentor, mentee);
+    // Keep the displayed compatibility score independent, but prevent a high
+    // score based on sparse data from becoming the top recommendation.
+    const rankingScore = score * (0.5 + confidence.percentage / 200);
+    return { mentor, compatibilityScore: score, confidence, breakdown, rankingScore };
   });
-  scored.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+  scored.sort((a, b) =>
+    b.rankingScore - a.rankingScore ||
+    b.compatibilityScore - a.compatibilityScore ||
+    b.confidence.percentage - a.confidence.percentage
+  );
 
   return scored;
 }
 
-module.exports = { getRankedMentors };
+module.exports = { getRankedMentors, scoreCandidate };

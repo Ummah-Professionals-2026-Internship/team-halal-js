@@ -1,6 +1,14 @@
 import { apiFetch } from './api-client';
 import type { AvailabilitySlot } from './onboarding-api';
 
+export type MatchConfidence = {
+  percentage: number;
+  label: 'high' | 'medium' | 'low';
+  evaluatedCriteria: string[];
+  missingCriteria: string[];
+  menteeMissingCriteria: string[];
+};
+
 export type MatchedMentor = {
   _id: string;
   firstName: string;
@@ -19,8 +27,7 @@ export type MatchedMentor = {
     volunteeringFor?: string[];
   };
   compatibilityScore: number;
-  // Scoring breakdown — returned by the server but not rendered by any UI
-  // today (web or mobile); kept loosely typed since nothing consumes it yet.
+  confidence?: MatchConfidence;
   matchReasons?: unknown;
 };
 
