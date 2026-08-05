@@ -23,7 +23,7 @@ const ManageSessionModal = ({ session, onClose, onDone }) => {
     setSubmitting(true);
     setError('');
     try {
-      await cancelSession(session._id);
+      await cancelSession(session._id, reason);
       onDone();
     } catch (err) {
       setError(err.message || 'Failed to cancel session.');
@@ -80,7 +80,7 @@ const ManageSessionModal = ({ session, onClose, onDone }) => {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Reason <span className="font-normal text-slate-400">(optional, included in the reschedule request)</span>
+            Reason <span className="font-normal text-slate-400">(optional, included in the reschedule request or cancellation note)</span>
           </label>
           <textarea
             value={reason}

@@ -1,7 +1,7 @@
 import React from 'react';
 import ActionItemRow from '../rows/ActionItemRow';
 
-const ActionItemsSection = ({ actionItems, onRespond, onFollowUp, onViewHelpRequests, onViewFeedback, onViewSessions }) => (
+const ActionItemsSection = ({ actionItems, onRespond, onFollowUp, onViewHelpRequests, onViewFeedback, onViewSessions, onViewReply }) => (
   <div>
     <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
       <div className="flex items-center gap-2.5">
@@ -28,7 +28,7 @@ const ActionItemsSection = ({ actionItems, onRespond, onFollowUp, onViewHelpRequ
         </div>
       )}
       {actionItems.map(item => (
-        <ActionItemRow key={item.id} item={item} onRespond={onRespond} onFollowUp={onFollowUp} />
+        <ActionItemRow key={item.id} item={item} onRespond={onRespond} onFollowUp={onFollowUp} onViewSessions={onViewSessions} onViewReply={onViewReply} />
       ))}
     </div>
   </div>

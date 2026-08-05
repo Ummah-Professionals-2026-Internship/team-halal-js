@@ -4,6 +4,7 @@ import { getMentors } from '../../api-calls/mentors';
 import { getMentees } from '../../api-calls/mentees';
 import { getAllSessions } from '../../api-calls/sessions';
 import { getFeedback } from '../../api-calls/feedback';
+import { getNotifications, resolveNotification } from '../../api-calls/notifications';
 import { formatTimeAgo } from './adminUtils';
 import AdminHeader from './layout/AdminHeader';
 import AdminSidebar from './layout/AdminSidebar';
@@ -16,6 +17,7 @@ import FeedbackSection from './sections/FeedbackSection';
 import RespondModal from './modals/RespondModal';
 import FollowUpModal from './modals/FollowUpModal';
 import UserProfileModal from './modals/UserProfileModal';
+import FeedbackReplyModal from './modals/FeedbackReplyModal';
 
 const AdminDashboard = () => {
   const [activeNav, setActiveNav] = useState('Dashboard');
@@ -27,11 +29,17 @@ const AdminDashboard = () => {
   const [sessions, setSessions] = useState([]);
   const [feedback, setFeedback] = useState([]);
   const [viewingUser, setViewingUser] = useState(null);
+  const [viewingReply, setViewingReply] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   const loadHelpRequests = () => {
     getHelpRequests()
       .then(setHelpRequests)
       .catch(console.error);
+  };
+
+  const loadNotifications = () => {
+    getNotifications().then(setNotifications).catch(console.error);
   };
 
   const loadSessions = () => {
@@ -48,6 +56,7 @@ const AdminDashboard = () => {
     getMentees().then(setMentees).catch(console.error);
     loadSessions();
     loadFeedback();
+    loadNotifications();
   }, []);
 
   const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
@@ -97,7 +106,35 @@ const AdminDashboard = () => {
       };
     });
 
-  const actionItems = [...helpRequestItems, ...negativeFeedbackItems];
+  const pendingRescheduleItems = sessions
+    .filter(s => s.status === 'scheduled' && s.rescheduleRequestedAt)
+    .map(s => {
+      const mentorName = `${s.mentor?.firstName ?? 'Unknown'} ${s.mentor?.lastName ?? ''}`.trim();
+      const menteeName = `${s.mentee?.firstName ?? 'Unknown'} ${s.mentee?.lastName ?? ''}`.trim();
+      return {
+        id: s._id,
+        type: 'reschedule-pending',
+        raw: s,
+        title: `Reschedule Requested — ${mentorName} and ${menteeName}`,
+        detail: s.rescheduleRequestedReason ? `"${s.rescheduleRequestedReason}"` : 'Awaiting a new time',
+        time: formatTimeAgo(s.rescheduleRequestedAt),
+        action: 'View',
+      };
+    });
+
+  const replyItems = notifications
+    .filter(n => n.type === 'feedback_reply' && !n.actionResolved)
+    .map(n => ({
+      id: n._id,
+      type: 'feedback-reply',
+      raw: n,
+      title: 'Reply to Follow-Up',
+      detail: n.message,
+      time: formatTimeAgo(n.createdAt),
+      action: 'View',
+    }));
+
+  const actionItems = [...helpRequestItems, ...negativeFeedbackItems, ...pendingRescheduleItems, ...replyItems];
 
   const latestActivity = (f) => Math.max(new Date(f.createdAt), f.followUpRepliedAt ? new Date(f.followUpRepliedAt) : 0);
 
@@ -146,6 +183,7 @@ const AdminDashboard = () => {
                 onViewHelpRequests={() => setActiveNav('Help Requests')}
                 onViewFeedback={() => setActiveNav('Feedback')}
                 onViewSessions={() => setActiveNav('Sessions')}
+                onViewReply={setViewingReply}
               />
               <UpcomingSessionsSection
                 sessions={upcomingSessions}
@@ -181,6 +219,19 @@ const AdminDashboard = () => {
 
       {viewingUser && (
         <UserProfileModal person={viewingUser} onClose={() => setViewingUser(null)} />
+      )}
+
+      {viewingReply && (
+        <FeedbackReplyModal
+          notification={viewingReply}
+          onClose={() => setViewingReply(null)}
+          onDismiss={() => {
+            resolveNotification(viewingReply._id)
+              .then(loadNotifications)
+              .catch(console.error);
+            setViewingReply(null);
+          }}
+        />
       )}
     </div>
   );
