@@ -1,4 +1,4 @@
-import React from 'react';
+import { MENTOR_SERVICES } from '../../constants/services';
 
 const MentorProfileCard = ({ mentor, recommended }) => {
   const name = `${mentor.firstName} ${mentor.lastName}`;
@@ -13,7 +13,7 @@ const MentorProfileCard = ({ mentor, recommended }) => {
   const topics = mentor.mentorProfile?.volunteeringFor || [];
 
   return (
-    <div className="flex flex-col items-center bg-[#C5DCE8] rounded-xl p-6 w-64 shrink-0">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 flex flex-col items-center w-full">
       {recommended && (
         <span className="self-start inline-flex items-center gap-1 bg-[#fdbb36]/20 text-[#00212C] text-xs font-semibold px-2 py-0.5 rounded-full mb-3">
           ★ Recommended
@@ -21,19 +21,26 @@ const MentorProfileCard = ({ mentor, recommended }) => {
       )}
 
       {mentor.profilePicture
-        ? <img src={mentor.profilePicture} alt={name} className="w-24 h-24 rounded-full object-cover mb-3" />
-        : <div className="w-24 h-24 rounded-full bg-gray-300 mb-3" />
+        ? <img src={mentor.profilePicture} alt={name} className="w-24 h-24 rounded-full object-cover" />
+        : <div className="w-24 h-24 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-2xl">{name?.[0]?.toUpperCase() ?? '?'}</div>
       }
 
-      <p className="font-bold text-[#00212C] text-base text-center">{name}</p>
+      <p className="font-bold text-[#00212C] text-xl text-center mt-3">{name}</p>
       {title && <p className="text-sm text-[#00212C] text-center mt-1">{title}</p>}
       {education && <p className="text-sm text-[#00212C] text-center">({education})</p>}
       {experience && <p className="text-sm text-[#00212C] text-center mt-1">{experience}</p>}
 
-      {mentor.additionalInfo && (
-        <div className="w-full mt-3">
-          <p className="font-semibold text-[#00212C] text-sm text-center mb-1">{mentor.firstName}'s Bio:</p>
-          <div className="bg-white rounded-lg p-2 text-xs text-[#00212C]">{mentor.additionalInfo}</div>
+      {topics.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 mt-3">
+          {topics.map(id => {
+            const service = MENTOR_SERVICES.find(s => s.id === id);
+            return (
+              <span key={id} className="inline-flex items-center gap-1.5 bg-[#fdbb36]/20 text-[#00212C] text-xs font-semibold px-2.5 py-1 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-[#fdbb36]" />
+                {service?.label || id}
+              </span>
+            );
+          })}
         </div>
       )}
 
@@ -48,14 +55,10 @@ const MentorProfileCard = ({ mentor, recommended }) => {
         </a>
       )}
 
-      {topics.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2 mt-3">
-          {topics.map(topic => (
-            <span key={topic} className="inline-flex items-center gap-1.5 bg-[#fdbb36]/15 text-[#00212C] text-xs font-semibold px-2.5 py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#fdbb36]" />
-              {topic}
-            </span>
-          ))}
+      {mentor.additionalInfo && (
+        <div className="w-full mt-4">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-1.5">{mentor.firstName}'s Bio</p>
+          <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-sm text-[#00212C] whitespace-pre-wrap max-h-32 overflow-y-auto">{mentor.additionalInfo}</div>
         </div>
       )}
     </div>

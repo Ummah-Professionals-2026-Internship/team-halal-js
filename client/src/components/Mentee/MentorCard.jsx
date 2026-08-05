@@ -1,9 +1,6 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import CompatibilityRing from './CompatibilityRing';
 
 const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
-  const navigate = useNavigate();
   const name = `${mentor.firstName} ${mentor.lastName}`;
   const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer]
     .filter(Boolean).join(' at ');
@@ -50,7 +47,6 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
 
       <div className="flex flex-col items-end gap-2 shrink-0">
         <div className="flex flex-col text-sm items-end">
-          <button onClick={() => navigate('/mentee/mentor-profile', { state: { mentor } })} className="text-[#003F55] underline">View Profile</button>
           {mentor.linkedinUrl && (
             <a
               href={/^https?:\/\//i.test(mentor.linkedinUrl) ? mentor.linkedinUrl : `https://${mentor.linkedinUrl}`}
