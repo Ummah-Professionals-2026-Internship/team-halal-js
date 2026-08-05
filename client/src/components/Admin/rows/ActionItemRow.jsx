@@ -1,9 +1,11 @@
 import React from 'react';
 
-const ActionItemRow = ({ item, onRespond, onFollowUp }) => {
+const ActionItemRow = ({ item, onRespond, onFollowUp, onViewSessions, onViewReply }) => {
   const handleClick = () => {
     if (item.type === 'help-request') onRespond(item.raw);
     else if (item.type === 'feedback') onFollowUp(item.raw);
+    else if (item.type === 'reschedule-pending') onViewSessions();
+    else if (item.type === 'feedback-reply') onViewReply(item.raw);
   };
 
   return (

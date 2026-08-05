@@ -5,7 +5,7 @@ import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
 import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
-import AvailabilityPick from '../availability/AvailabilityPick'
+import AvailabilityModal from '../availability/AvailabilityModal'
 import googleCalIcon from '../../assets/google-cal-icon.png'
 import { disconnectGoogle } from '../../api-calls/auth'
 import { createMenteeProfile } from '../../api-calls/mentees'
@@ -101,6 +101,7 @@ const MenteeAcademicSetup = () => {
   const [picMessage, setPicMessage] = useState('')
   const [profilePictureName, setProfilePictureName] = useState('')
   const [manualAvailabilitySlots, setManualAvailabilitySlots] = useState([])
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false)
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target
@@ -151,6 +152,12 @@ const MenteeAcademicSetup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (loading) return
+
+    if (manualAvailabilitySlots.length === 0) {
+      alert('Please set your availability before continuing.')
+      return
+    }
+
     setLoading(true)
 
     const oldData = JSON.parse(localStorage.getItem('menteeStep1')) || {}
@@ -312,8 +319,34 @@ const MenteeAcademicSetup = () => {
           {/* Manual Availability */}
           <div className="mb-5">
             <p className="text-sm font-semibold text-slate-700 mb-3">Your Availability</p>
-            <AvailabilityPick onChange={setManualAvailabilitySlots} />
+            <div className="flex items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <p className="text-xs text-slate-500">
+                {manualAvailabilitySlots.length > 0 ? (
+                  <>
+                    <span className="font-bold text-[#00212C]">{manualAvailabilitySlots.length * 0.5}</span> hour
+                    {manualAvailabilitySlots.length === 2 ? '' : 's'} selected
+                  </>
+                ) : (
+                  'No hours selected yet'
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAvailabilityModal(true)}
+                className="shrink-0 bg-[#00212C] text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition hover:brightness-110 cursor-pointer"
+              >
+                Set Availability
+              </button>
+            </div>
           </div>
+
+          {showAvailabilityModal && (
+            <AvailabilityModal
+              initialSlots={manualAvailabilitySlots}
+              onChange={setManualAvailabilitySlots}
+              onClose={() => setShowAvailabilityModal(false)}
+            />
+          )}
 
           {/* Profile Picture Upload Card */}
           <div className="mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">

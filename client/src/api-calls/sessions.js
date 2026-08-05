@@ -66,9 +66,13 @@ export async function rescheduleSession(sessionId, sessionData){
     return data;
 }
 
-export async function cancelSession(sessionId){
+export async function cancelSession(sessionId, reason){
     const res = await apiFetch(`/api/sessions/${sessionId}/cancel`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
     });
     const data = await res.json();
     if(!res.ok){

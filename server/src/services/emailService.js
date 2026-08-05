@@ -51,7 +51,7 @@ const formatDateTimeForUser = (dateObj, timeZone) => {
  */
 const generateICSString = (mentor, mentee, session, isCancel = false) => {
   const sessionDate = new Date(session.scheduledTime);
-  const duration = session.duration || 60; // default 60 minutes
+  const duration = session.duration || 30;
   const endDate = new Date(sessionDate.getTime() + duration * 60 * 1000);
 
   const formatICSDate = (date) => {

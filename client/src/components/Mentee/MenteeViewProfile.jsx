@@ -92,7 +92,13 @@ const MenteeViewProfile = () => {
     }
   }
 
-  if (!user.firstName) return <div>Loading ...</div>
+  if (!user.firstName) {
+    return (
+      <PageLayoutDashboard userName="" userRole="Mentee" userPhoto={null} onPhotoUpdate={refreshUser}>
+        <div className="max-w-6xl mx-auto w-full pt-10 text-center text-sm text-slate-400">Loading ...</div>
+      </PageLayoutDashboard>
+    );
+  }
 
   const name = `${formData.firstName} ${formData.lastName}`.trim()
   const education = [formData.majors?.[0], formData.university].filter(Boolean).join(' from ')

@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import CompatibilityRing from './CompatibilityRing';
 import { getPhotoUrl } from '../../utils/photoUrl';
 
 const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
-  const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
   const name = `${mentor.firstName} ${mentor.lastName}`;
   const initial = mentor.firstName ? mentor.firstName[0].toUpperCase() : 'M';
@@ -62,7 +60,6 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
 
       <div className="flex flex-col items-end gap-2 shrink-0">
         <div className="flex flex-col text-sm items-end">
-          <button onClick={() => navigate('/mentee/mentor-profile', { state: { mentor } })} className="text-[#003F55] underline">View Profile</button>
           {mentor.linkedinUrl && (
             <a
               href={/^https?:\/\//i.test(mentor.linkedinUrl) ? mentor.linkedinUrl : `https://${mentor.linkedinUrl}`}
@@ -76,7 +73,7 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
         </div>
         <button
           onClick={() => onSchedule(mentor, recommended)}
-          className="bg-[#003F55] text-white font-semibold px-5 py-2 rounded-lg text-sm shrink-0"
+          className="bg-[#003F55] text-white font-semibold px-5 py-2 rounded-lg text-sm shrink-0 cursor-pointer hover:bg-[#00212C] transition-colors"
         >
           Schedule Meeting
         </button>

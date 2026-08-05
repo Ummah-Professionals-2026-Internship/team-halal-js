@@ -52,6 +52,8 @@ function App() {
         
         {/* Dashboard Routes */}
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+        <Route path="/mentor/availability" element={<Navigate to="/mentor-dashboard" replace />} />
+        <Route path="/mentor/sessions" element={<Navigate to="/mentor-dashboard" replace />} />
         <Route path="/mentor/profile" element={<MentorViewProfile />} />
         <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
         <Route path="/mentee/profile" element={<MenteeViewProfile />} />

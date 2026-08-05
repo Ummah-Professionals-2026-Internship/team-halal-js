@@ -21,14 +21,18 @@ const MenteeBooking = () => {
     const dateObj = new Date(dateStr + 'T00:00:00');
     const day = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-    const [hourStr, period] = time.split(' ');
-    let hour = parseInt(hourStr, 10);
+    const [timePart, period] = time.split(' ');
+    const [hStr, mStr = '0'] = timePart.split(':');
+    let hour = parseInt(hStr, 10);
+    const minutes = parseInt(mStr, 10);
     if (period === 'PM' && hour !== 12) hour += 12;
     if (period === 'AM' && hour === 12) hour = 0;
-    const endHour24 = (hour + 1) % 24;
+    const totalMinutes = hour * 60 + minutes + 30;
+    const endHour24 = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
     const endPeriod = endHour24 >= 12 ? 'PM' : 'AM';
     const endHour12 = endHour24 % 12 === 0 ? 12 : endHour24 % 12;
-    const endTime = `${endHour12} ${endPeriod}`;
+    const endTime = `${endHour12}:${String(endMinutes).padStart(2, '0')} ${endPeriod}`;
 
     return { day, time, endTime };
   })() : null;
@@ -41,11 +45,13 @@ const MenteeBooking = () => {
     const parts = slot.split('-');
     const dateStr = parts.slice(0, 3).join('-');
     const timeStr = parts.slice(3).join('-');
-    const [hourStr, period] = timeStr.split(' ');
-    let hour = parseInt(hourStr, 10);
+    const [timePart, period] = timeStr.split(' ');
+    const [hStr, mStr = '0'] = timePart.split(':');
+    let hour = parseInt(hStr, 10);
+    const minutes = parseInt(mStr, 10);
     if (period === 'PM' && hour !== 12) hour += 12;
     if (period === 'AM' && hour === 12) hour = 0;
-    return new Date(`${dateStr}T${String(hour).padStart(2, '0')}:00:00`).toISOString();
+    return new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`).toISOString();
   };
 
   const handleConfirm = async () => {

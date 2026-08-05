@@ -20,6 +20,17 @@ export async function markAsRead(id) {
     return data;
 }
 
+export async function resolveNotification(id) {
+    const res = await apiFetch(`/api/notifications/${id}/resolve`, {
+        method: 'PATCH'
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || 'Failed to resolve notification');
+    }
+    return data;
+}
+
 export async function markAsUnread(id) {
     const res = await apiFetch(`/api/notifications/${id}/unread`, {
         method: 'PATCH'

@@ -102,7 +102,7 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
     }
 
     const scheduledTime = new Date(session.scheduledTime);
-    const duration = session.duration || 60;
+    const duration = session.duration || 30;
     const endTime = new Date(scheduledTime.getTime() + duration * 60 * 1000);
 
     const attendees = [];
@@ -203,7 +203,7 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   }
 
   const scheduledTime = new Date(session.scheduledTime);
-  const duration = session.duration || 60; // default 60 minutes
+  const duration = session.duration || 30;
   const endTime = new Date(scheduledTime.getTime() + duration * 60 * 1000);
 
   const attendees = [];
@@ -327,7 +327,7 @@ const updateSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   }
 
   const scheduledTime = new Date(session.scheduledTime);
-  const duration = session.duration || 60;
+  const duration = session.duration || 30;
   const endTime = new Date(scheduledTime.getTime() + duration * 60 * 1000);
 
   const eventBody = {

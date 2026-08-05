@@ -6,7 +6,8 @@ import SessionFeedbackModal from './SessionFeedbackModal';
 import {
   getNotifications,
   markAsRead,
-  markAllAsRead
+  markAllAsRead,
+  resolveNotification
 } from '../api-calls/notifications';
 import { getPhotoUrl } from '../utils/photoUrl';
 
@@ -98,17 +99,17 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
   return (
     <header className="relative z-20 w-full h-[126px] bg-gradient-to-b from-[#0c4a63] to-[#00303f] flex justify-between items-center px-[42px] box-border shadow-[0_4px_18px_rgba(0,0,0,0.25)]">
       <div className="flex items-center gap-8">
-        <Link to={userRole === 'Mentor' ? '/mentor-dashboard' : userRole === 'Mentee' ? '/mentee-dashboard' : '/login'} className="flex items-center cursor-pointer">
+        <Link to={userRole === 'Mentor' ? '/mentor-dashboard' : userRole === 'Mentee' ? '/mentee/sessions' : '/login'} className="flex items-center cursor-pointer">
           <img src={logo} className="h-[74px] w-auto object-contain" alt="Ummah Professionals Logo" />
         </Link>
         {userName && (
           <nav className="flex gap-6 text-white/95 font-bold text-sm ml-4">
-            <Link to={userRole === 'Mentor' ? '/mentor-dashboard' : '/mentee-dashboard'} className="hover:text-[#fdbb36] transition-colors">
+            <Link to={userRole === 'Mentor' ? '/mentor-dashboard' : '/mentee/sessions'} className="hover:text-[#fdbb36] transition-colors">
               Dashboard
             </Link>
             {userRole === 'Mentee' && (
-              <Link to="/mentee/sessions" className="hover:text-[#fdbb36] transition-colors">
-                My Sessions
+              <Link to="/mentee-dashboard" className="hover:text-[#fdbb36] transition-colors">
+                Find Mentors
               </Link>
             )}
           </nav>
@@ -247,7 +248,10 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
           sessionId={feedbackNotification.relatedId}
           otherPersonName={feedbackNotification.sender?.firstName}
           onClose={() => setFeedbackNotification(null)}
-          onSubmitted={() => setFeedbackNotification(null)}
+          onSubmitted={() => {
+            resolveNotification(feedbackNotification._id).catch(console.error);
+            setFeedbackNotification(null);
+          }}
         />
       )}
 

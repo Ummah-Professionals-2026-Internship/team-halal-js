@@ -11,7 +11,11 @@ const UpcomingSessionCard = ({ session, onManage }) => {
 
   return (
     <div className="bg-white rounded-xl 2xl:rounded-2xl border border-slate-100 border-l-4 border-l-[#007CA6] shadow-sm hover:shadow-md transition-shadow p-4 2xl:p-6 3xl:p-8 flex flex-col gap-2 2xl:gap-3.5 shrink-0 w-64 2xl:w-80 3xl:w-96">
-      {isNew(session.createdAt) && (
+      {session.rescheduleRequestedAt ? (
+        <span className="self-start bg-red-100 text-red-700 text-[10px] 2xl:text-xs font-bold uppercase tracking-wide px-2 2xl:px-3 py-0.5 2xl:py-1 rounded-full">
+          Reschedule Requested
+        </span>
+      ) : isNew(session.createdAt) && (
         <span className="self-start bg-[#fdbb36]/20 text-[#00212C] text-[10px] 2xl:text-xs font-bold uppercase tracking-wide px-2 2xl:px-3 py-0.5 2xl:py-1 rounded-full">
           New
         </span>

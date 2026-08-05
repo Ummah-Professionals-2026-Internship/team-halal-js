@@ -25,7 +25,11 @@ const AdminSessionCard = ({ session, onViewDetails, onManage, onViewFeedback }) 
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-bold text-[#00212C] text-sm">{mentorName} and {menteeName}</p>
-          {isNew(session.createdAt) && (
+          {session.rescheduleRequestedAt ? (
+            <span className="bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">
+              Reschedule Requested
+            </span>
+          ) : isNew(session.createdAt) && (
             <span className="bg-[#fdbb36] text-[#00212C] text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">
               New
             </span>

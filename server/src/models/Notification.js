@@ -22,9 +22,13 @@ const notificationSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
-    isRead: { 
-        type: Boolean, 
-        default: false 
+    isRead: {
+        type: Boolean,
+        default: false
+    },
+    actionResolved: {
+        type: Boolean,
+        default: false
     },
     // Optional generic reference to the source entity (e.g. a Session or Match document)
     relatedId: { 

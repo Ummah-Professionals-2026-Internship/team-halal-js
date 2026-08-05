@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cancelSession } from '../../api-calls/sessions'
+import { getPhotoUrl } from '../../utils/photoUrl'
 
 const formatCountdown = (daysUntil) => {
   if (daysUntil === 0) return 'Today'
@@ -65,7 +66,6 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
       className: daysUntil < 0 ? 'bg-slate-200 text-slate-600' : 'bg-[#fdbb36] text-[#00212C]',
     }
   }
-  const badge = getBadge()
 
   return (
     <div className={`bg-white rounded-xl border p-4 mb-3 shadow-sm hover:shadow-md transition-all ${
@@ -184,7 +184,7 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
                 <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">Participant</span>
                 <div className="flex items-center gap-2.5 mt-1.5">
                   {photo ? (
-                    <img src={photo} alt={name} className="w-9 h-9 rounded-full object-cover shrink-0"></img>
+                    <img src={photo} alt={name} className="w-9 h-9 rounded-full object-cover shrink-0" />
                   ) : (
                     <div className="w-9 h-9 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-xs shrink-0">
                       {initial}
