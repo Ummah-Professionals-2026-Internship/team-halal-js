@@ -84,8 +84,8 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleReschedule}
             disabled={!canReschedule}

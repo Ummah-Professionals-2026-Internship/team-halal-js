@@ -1,4 +1,5 @@
 import SessionCard from './SessionCard'
+import CompletedSessionCard from './CompletedSessionCard'
 import SectionHeading from '../SectionHeading'
 import useSessions from './useSessions'
 
@@ -14,7 +15,7 @@ const EmptyState = ({ text }) => (
   </div>
 )
 
-const UpcomingSessions = () => {
+const UpcomingSessions = ({ showCompleted = true }) => {
   const {sessions} = useSessions();
   const isPast = s => new Date(s.scheduledTime) < new Date();
   const upcomingSessions = sessions.filter(s => s.status === 'scheduled' && !isPast(s));
@@ -37,14 +38,16 @@ const UpcomingSessions = () => {
         </div>
       </div>
 
-      <div>
-        <SectionHeading title="Completed Sessions" className="mb-4" />
-        <div className="max-h-80 overflow-y-auto pr-1 -mr-1">
-          {completedSessions.length > 0
-            ? completedSessions.map(session => <SessionCard key={session._id} sessionId={session._id} mentee={session.mentee} {...session} />)
-            : <EmptyState text="No completed sessions so far." />}
+      {showCompleted && (
+        <div>
+          <SectionHeading title="Completed Sessions" className="mb-4" />
+          <div className="max-h-80 overflow-y-auto pr-1 -mr-1 flex flex-col gap-3">
+            {completedSessions.length > 0
+              ? completedSessions.map(session => <CompletedSessionCard key={session._id} mentee={session.mentee} service={session.service} scheduledTime={session.scheduledTime} details={session.details} />)
+              : <EmptyState text="No completed sessions so far." />}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
