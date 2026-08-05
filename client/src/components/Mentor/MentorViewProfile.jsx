@@ -7,6 +7,7 @@ import useCurrentUser from '../useCurrentUser'
 import { MAJORS_LIST, INDUSTRIES_LIST } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
 import { updateMentorProfile } from '../../api-calls/mentors'
+import { getPhotoUrl } from '../../utils/photoUrl'
 
 const inputClass = "border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors"
 const labelClass = "block text-sm font-medium text-slate-700 mb-1.5"
@@ -25,8 +26,6 @@ const emptyForm = {
   additionalInfo: '',
   volunteeringFor: [],
 }
-
-import { getPhotoUrl } from '../../utils/photoUrl'
 
 const MentorViewProfile = () => {
   const navigate = useNavigate()
