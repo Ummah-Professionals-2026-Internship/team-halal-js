@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const sessionSchema = new mongoose.Schema({
     scheduledTime: {type: Date, required: true},
-    duration: {type: Number},
+    duration: {type: Number, default: 30},
     mentor: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
     mentee: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
     service:{
@@ -15,6 +15,8 @@ const sessionSchema = new mongoose.Schema({
     details: {type: String},
     status: {type: String, enum: ['scheduled', 'completed', 'cancelled'], default: 'scheduled'},
     googleCalendarEventId: {type: String},
+    rescheduleRequestedAt: {type: Date},
+    rescheduleRequestedReason: {type: String},
 
 
 

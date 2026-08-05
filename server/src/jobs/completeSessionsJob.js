@@ -10,7 +10,7 @@ async function completePastSessions() {
         const scheduledSessions = await Session.find({ status: 'scheduled' }).select('scheduledTime duration mentor mentee service');
 
         const toComplete = scheduledSessions.filter(s => {
-            const durationMin = s.duration || 60;
+            const durationMin = s.duration || 30;
             const endTime = new Date(s.scheduledTime.getTime() + durationMin * 60 * 1000);
             return endTime <= now;
         });
