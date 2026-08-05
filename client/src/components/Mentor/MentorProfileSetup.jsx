@@ -310,31 +310,45 @@ const MentorProfileSetup = () => {
             <SectionDivider label="Volunteer Services" />
 
             <p className="text-xs text-slate-500 mb-3">Select all services you'd like to offer mentees.</p>
-            <div className="mb-4 flex flex-col gap-0.5">
-              {MENTOR_SERVICES.map(service => (
-                <label key={service.id} className="flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer hover:bg-slate-50 group transition-colors">
-                  <input
-                    type="checkbox"
-                    name="volunteeringFor"
-                    value={service.id}
-                    checked={formData.volunteeringFor.includes(service.id)}
-                    onChange={handleCheckbox}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                    formData.volunteeringFor.includes(service.id)
-                      ? 'bg-[#007CA6] border-[#007CA6]'
-                      : 'border-slate-300 group-hover:border-[#007CA6]/50'
-                  }`}>
-                    {formData.volunteeringFor.includes(service.id) && (
-                      <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                        <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
+              {MENTOR_SERVICES.map(service => {
+                const isSelected = formData.volunteeringFor.includes(service.id);
+                return (
+                  <div
+                    key={service.id}
+                    onClick={() => {
+                      const e = { target: { name: 'volunteeringFor', value: service.id, checked: !isSelected } };
+                      handleCheckbox(e);
+                    }}
+                    className={`relative p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-[#007CA6] bg-[#007CA6]/10 shadow-sm ring-1 ring-[#007CA6]'
+                        : 'border-slate-200 bg-white hover:border-[#007CA6]/40 hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-[#007CA6] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {service.icon === 'bulb' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />}
+                            {service.icon === 'document' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />}
+                            {service.icon === 'chat' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />}
+                          </svg>
+                        </div>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-[#007CA6] border-[#007CA6] text-white' : 'border-slate-300'}`}>
+                          {isSelected && (
+                            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                              <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs font-bold text-[#00202b] mb-0.5">{service.label}</p>
+                      <p className="text-[11px] text-slate-500 leading-snug">{service.description}</p>
+                    </div>
                   </div>
-                  <span className="text-sm text-slate-700">{service.label}</span>
-                </label>
-              ))}
+                );
+              })}
             </div>
 
             {/* Discovery */}
