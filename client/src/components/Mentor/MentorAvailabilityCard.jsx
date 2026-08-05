@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import AvailabilityPick from '../availability/AvailabilityPick'
-import SectionHeading from '../SectionHeading'
 import useCurrentUser from '../useCurrentUser'
 import { apiFetch } from '../../api-calls/client'
 
@@ -8,8 +7,10 @@ const toDateSlotId = (scheduledTime) => {
   const d = new Date(scheduledTime)
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
   const h = d.getHours()
-  const timeStr = h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h-12} PM`
-  return `${dateStr}-${timeStr}`
+  const period = h < 12 ? 'AM' : 'PM'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  const min = d.getMinutes() < 30 ? '00' : '30'
+  return `${dateStr}-${h12}:${min} ${period}`
 }
 
 const MentorAvailabilityCard = () => {
@@ -31,7 +32,6 @@ const MentorAvailabilityCard = () => {
       })
       .catch(() => {})
   }, [])
-  
 
   const handleChange = (next) => {
     setSlots(next)
@@ -40,7 +40,7 @@ const MentorAvailabilityCard = () => {
 
   const handleSubmit = async() => {
     if (slots.length === 0) return
-    
+
     await apiFetch('/api/mentors/me',{
       method:'PATCH',
       headers:{'Content-Type':'application/json'},
@@ -50,23 +50,15 @@ const MentorAvailabilityCard = () => {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-      <SectionHeading
-        title="Mentoring Hours"
-        subtitle="Drag across the grid to set when you're available."
-        className="mb-4"
-      />
-
-      <div className="rounded-xl bg-[#8ACBDB]/25 p-3">
-        <AvailabilityPick title="" onChange={handleChange} initialSlots={user?.manualAvailabilitySlots || []} sessions={bookedSessions} sessionInfo={sessionInfo} />
-      </div>
+    <div className="w-full max-w-4xl mx-auto">
+      <AvailabilityPick title="" onChange={handleChange} initialSlots={user?.manualAvailabilitySlots || []} sessions={bookedSessions} sessionInfo={sessionInfo} />
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-xs text-slate-500">
           {slots.length > 0 ? (
             <>
-              <span className="font-bold text-[#00212C]">{slots.length}</span> hour
-              {slots.length === 1 ? '' : 's'} selected
+              <span className="font-bold text-[#00212C]">{slots.length * 0.5}</span> hour
+              {slots.length === 2 ? '' : 's'} selected
             </>
           ) : (
             'No hours selected yet'
@@ -78,7 +70,7 @@ const MentorAvailabilityCard = () => {
           disabled={slots.length === 0}
           className="bg-[#fdbb36] text-[#00212C] font-bold text-sm px-5 py-2.5 rounded-lg shadow-sm transition hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {saved ? '✓ Hours Submitted' : 'Submit New Hours'}
+          {saved ? '✓ Hours Saved' : 'Save New Hours'}
         </button>
       </div>
     </div>

@@ -97,6 +97,11 @@ const MentorAvailabilitySetup = () => {
   const handleSubmit = async () => {
     if (loading) return
 
+    if (manualAvailabilitySlots.length === 0) {
+      setError('Please set your availability before continuing.')
+      return
+    }
+
     // URL Validation if custom link is provided
     if (customMeetingLink.trim()) {
       try {
