@@ -10,9 +10,10 @@ router.get('/', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Only mentees can view match suggestions' });
     }
     const results = await getRankedMentors(req.user.id);
-    res.json(results.map(({ mentor, compatibilityScore, breakdown }) => ({
+    res.json(results.map(({ mentor, compatibilityScore, confidence, breakdown }) => ({
       ...mentor.toObject(),
       compatibilityScore,
+      confidence,
       matchReasons: breakdown
     })));
   } catch (err) {
