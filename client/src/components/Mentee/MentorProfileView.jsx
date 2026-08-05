@@ -1,29 +1,40 @@
-import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import PageLayoutDashboard from '../PageLayoutDashboard'
-import useCurrentUser from '../useCurrentUser'
-import { MENTOR_SERVICES } from '../../constants/services'
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import PageLayoutDashboard from '../PageLayoutDashboard';
+import { MENTOR_SERVICES } from '../../constants/services';
+import { getPhotoUrl } from '../../utils/photoUrl';
 
 const MentorProfileView = () => {
-  const { state } = useLocation()
-  const navigate = useNavigate()
-  const { user, refreshUser } = useCurrentUser()
-  const mentor = state?.mentor
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const [imgError, setImgError] = useState(false);
+  const mentor = state?.mentor;
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : {};
+  const userName = user.firstName ? `${user.firstName} ${user.lastName}` : 'Mentee';
+
+  const refreshUser = (updatedUser) => {
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
 
   if (!mentor) {
-    navigate('/mentee-dashboard', { replace: true })
-    return null
+    return (
+      <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
+        <div className="max-w-2xl mx-auto p-6 text-center text-slate-500">No mentor data found.</div>
+      </PageLayoutDashboard>
+    );
   }
 
-  const userName = `${user.firstName} ${user.lastName}`
-  const name = `${mentor.firstName} ${mentor.lastName}`
-  const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer].filter(Boolean).join(' at ')
-  const education = [mentor.majors?.[0], mentor.university].filter(Boolean).join(' from ')
+  const name = `${mentor.firstName || ''} ${mentor.lastName || ''}`.trim() || 'Mentor';
+  const initial = name[0]?.toUpperCase() || 'M';
+  const photo = getPhotoUrl(mentor.profilePicture);
+  const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer].filter(Boolean).join(' at ');
+  const education = [mentor.majors?.[0], mentor.university].filter(Boolean).join(' from ');
   const experience = [
     mentor.mentorProfile?.yearsOfProfExp ? `${mentor.mentorProfile.yearsOfProfExp} Years of Experience` : null,
     mentor.mentorProfile?.industry
-  ].filter(Boolean).join(' | ')
-  const topics = mentor.mentorProfile?.volunteeringFor || []
+  ].filter(Boolean).join(' | ');
+  const topics = mentor.mentorProfile?.volunteeringFor || [];
 
   return (
     <PageLayoutDashboard userName={userName} userRole="Mentee" userPhoto={user.profilePicture} onPhotoUpdate={refreshUser} onBack={() => navigate(-1)}>
@@ -35,10 +46,18 @@ const MentorProfileView = () => {
         </div>
 
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 flex flex-col items-center">
-          {mentor.profilePicture
-            ? <img src={mentor.profilePicture} alt={name} className="w-24 h-24 rounded-full object-cover" />
-            : <div className="w-24 h-24 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-2xl">{name?.[0]?.toUpperCase() ?? '?'}</div>
-          }
+          {photo && !imgError ? (
+            <img
+              src={photo}
+              alt={name}
+              onError={() => setImgError(true)}
+              className="w-24 h-24 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-2xl">
+              {initial}
+            </div>
+          )}
 
           <p className="font-bold text-[#00212C] text-xl text-center mt-3">{name}</p>
           {title && <p className="text-sm text-[#00212C] text-center mt-1">{title}</p>}

@@ -26,9 +26,13 @@ const emptyForm = {
   volunteeringFor: [],
 }
 
+import { getPhotoUrl } from '../../utils/photoUrl'
+
 const MentorViewProfile = () => {
   const navigate = useNavigate()
+  const [imgError, setImgError] = useState(false)
   const { user, refreshUser } = useCurrentUser()
+  const photo = getPhotoUrl(user?.profilePicture)
   const [formData, setFormData] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -102,8 +106,8 @@ const MentorViewProfile = () => {
           <div className="lg:sticky lg:top-4">
             <SectionHeading title="What mentees see" subtitle="A preview of your public profile card." className="mb-4" />
             <div className="max-w-sm mx-auto bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-              {user.profilePicture
-                ? <img src={user.profilePicture} alt={name} className="w-20 h-20 rounded-full object-cover mx-auto" />
+              {photo && !imgError
+                ? <img src={photo} alt={name} onError={() => setImgError(true)} className="w-20 h-20 rounded-full object-cover mx-auto" />
                 : <div className="w-20 h-20 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-xl mx-auto">{name?.[0]?.toUpperCase() ?? '?'}</div>
               }
               <p className="font-bold text-[#00212C] text-lg text-center mt-3">{name}</p>

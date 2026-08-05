@@ -3,6 +3,20 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
+const fs = require('fs');
+
+// Ensure upload directories exist
+const uploadDirs = [
+  path.join(__dirname, '../uploads'),
+  path.join(__dirname, '../uploads/profile-pictures'),
+  path.join(__dirname, '../uploads/resumes')
+];
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
 const authRoutes = require('./routes/auth');
 const mentorRoutes = require('./routes/Mentor');
 const menteeRoutes = require('./routes/Mentee');

@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { getPhotoUrl } from '../../utils/photoUrl';
 
 const MentorProfileCard = ({ mentor, recommended }) => {
+  const [imgError, setImgError] = useState(false);
   const name = `${mentor.firstName} ${mentor.lastName}`;
+  const initial = mentor.firstName ? mentor.firstName[0].toUpperCase() : 'M';
+  const photo = getPhotoUrl(mentor.profilePicture);
   const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer]
     .filter(Boolean).join(' at ');
   const education = [mentor.majors?.[0], mentor.university]
@@ -20,10 +24,18 @@ const MentorProfileCard = ({ mentor, recommended }) => {
         </span>
       )}
 
-      {mentor.profilePicture
-        ? <img src={mentor.profilePicture} alt={name} className="w-24 h-24 rounded-full object-cover mb-3" />
-        : <div className="w-24 h-24 rounded-full bg-gray-300 mb-3" />
-      }
+      {photo && !imgError ? (
+        <img
+          src={photo}
+          alt={name}
+          onError={() => setImgError(true)}
+          className="w-24 h-24 rounded-full object-cover mb-3"
+        />
+      ) : (
+        <div className="w-24 h-24 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-2xl mb-3">
+          {initial}
+        </div>
+      )}
 
       <p className="font-bold text-[#00212C] text-base text-center">{name}</p>
       {title && <p className="text-sm text-[#00212C] text-center mt-1">{title}</p>}

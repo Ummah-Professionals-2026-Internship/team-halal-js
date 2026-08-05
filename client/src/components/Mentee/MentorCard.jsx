@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CompatibilityRing from './CompatibilityRing';
+import { getPhotoUrl } from '../../utils/photoUrl';
 
 const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
   const navigate = useNavigate();
+  const [imgError, setImgError] = useState(false);
   const name = `${mentor.firstName} ${mentor.lastName}`;
+  const initial = mentor.firstName ? mentor.firstName[0].toUpperCase() : 'M';
+  const photo = getPhotoUrl(mentor.profilePicture);
   const title = [mentor.mentorProfile?.jobTitle, mentor.mentorProfile?.employer]
     .filter(Boolean).join(' at ');
   const education = [mentor.majors?.[0], mentor.university]
@@ -13,10 +17,18 @@ const MentorCard = ({ mentor, bg, recommended, onSchedule }) => {
 
   return (
     <div className={`flex items-center gap-4 rounded-xl p-4 w-full ${bg}`}>
-      {mentor.profilePicture
-        ? <img src={mentor.profilePicture} alt={name} className="w-16 h-16 rounded-full object-cover shrink-0" />
-        : <div className="w-16 h-16 rounded-full bg-gray-300 shrink-0" />
-      }
+      {photo && !imgError ? (
+        <img
+          src={photo}
+          alt={name}
+          onError={() => setImgError(true)}
+          className="w-16 h-16 rounded-full object-cover shrink-0"
+        />
+      ) : (
+        <div className="w-16 h-16 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold text-xl shrink-0">
+          {initial}
+        </div>
+      )}
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">

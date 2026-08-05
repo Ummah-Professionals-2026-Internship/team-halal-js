@@ -8,13 +8,16 @@ import {
   markAsRead,
   markAllAsRead
 } from '../api-calls/notifications';
-
+import { getPhotoUrl } from '../utils/photoUrl';
 
 const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
   const navigate = useNavigate()
   const fileInputRef = useRef(null);
+  const [imgError, setImgError] = useState(false);
   const [viewingNotification, setViewingNotification] = useState(null);
   const [feedbackNotification, setFeedbackNotification] = useState(null);
+
+  const photo = getPhotoUrl(userPhoto);
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -209,12 +212,19 @@ const Navbar = ({ userName, userRole, userPhoto, onPhotoUpdate }) => {
           />
 
           <div onClick={()=>fileInputRef.current.click()} className="cursor-pointer relative group">
-            {userPhoto
-            ? <img src={userPhoto} alt={userName} referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover shrink-0" />
-            : <div className="w-12 h-12 rounded-full bg-gray-400 shrink-0 flex items-center justify-center text-white text-lg font-bold">
+            {photo && !imgError ? (
+              <img
+                src={photo}
+                alt={userName}
+                referrerPolicy="no-referrer"
+                onError={() => setImgError(true)}
+                className="w-12 h-12 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-[#003F55] shrink-0 flex items-center justify-center text-white text-lg font-bold">
                 {userName?.[0] ?? '?'}
               </div>
-            }
+            )}
 
             <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               📷

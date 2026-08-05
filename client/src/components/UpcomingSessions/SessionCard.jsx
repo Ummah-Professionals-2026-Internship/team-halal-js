@@ -18,9 +18,10 @@ const startOfDay = (d) => {
 const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'scheduled', service, details, hasSubmittedFeedback = false, onLeaveFeedback }) => {
   const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
+  const [imgError, setImgError] = useState(false)
   const name = `${mentee?.firstName ?? ''} ${mentee?.lastName ?? ''}`.trim()
   const initial = mentee?.firstName?.[0]?.toUpperCase() ?? '?'
-  const photo = mentee?.profilePicture
+  const photo = getPhotoUrl(mentee?.profilePicture)
 
   const when = new Date(scheduledTime)
   const dateStr = when.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
@@ -72,8 +73,8 @@ const SessionCard = ({ sessionId, mentee, scheduledTime, link, status = 'schedul
     }`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
-          {photo ? (
-            <img src={photo} alt={name} className="w-11 h-11 rounded-full object-cover shrink-0"></img>
+          {photo && !imgError ? (
+            <img src={photo} alt={name} onError={() => setImgError(true)} className="w-11 h-11 rounded-full object-cover shrink-0" />
           ) : (
             <div className="w-11 h-11 rounded-full bg-[#003F55] text-white flex items-center justify-center font-bold shrink-0">
               {initial}
