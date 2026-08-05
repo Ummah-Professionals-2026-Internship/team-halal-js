@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Session = require('../models/Session');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const Match = require('../models/Match');
 const requireAuth = require('../middleware/requireAuth');
 const { scheduleSessionOnGoogleCalendar, updateSessionOnGoogleCalendar, deleteSessionFromGoogleCalendar } = require('../services/googleCalendarService');
@@ -167,8 +168,15 @@ router.put('/:id/reschedule', requireAuth, async (req, res) => {
         session.scheduledTime = new Date(scheduledTime);
         if (service !== undefined) session.service = service;
         if (details !== undefined) session.details = details;
+        session.rescheduleRequestedAt = undefined;
+        session.rescheduleRequestedReason = undefined;
 
         await session.save();
+
+        await Notification.updateMany(
+            { relatedId: session._id, relatedModel: 'Session', type: 'reschedule_requested', actionResolved: { $ne: true } },
+            { isRead: true, actionResolved: true }
+        );
 
         // Update on Google Calendar if event exists
         const mentor = await User.findById(session.mentor);
@@ -217,12 +225,32 @@ router.put('/:id/reschedule', requireAuth, async (req, res) => {
             message,
             relatedId: session._id,
             relatedModel: 'Session',
-            metadata: { 
-                session, 
-                oldScheduledTime 
+            metadata: {
+                session,
+                oldScheduledTime
             }
         }).catch(err => {
             console.error('Asynchronous notification dispatch failed:', err);
+        });
+
+        const admins = await User.find({ role: 'admin' });
+        const adminMessage = `${actorName} rescheduled their session with ${isMentor ? mentee.firstName : mentor.firstName} ${isMentor ? mentee.lastName : mentor.lastName} from ${formattedOldDate} at ${formattedOldTime} to ${formattedDate} at ${formattedTime}.`;
+        admins.forEach(admin => {
+            sendNotification({
+                recipientId: admin._id,
+                senderId,
+                type: 'session_rescheduled',
+                title: 'Session Rescheduled',
+                message: adminMessage,
+                relatedId: session._id,
+                relatedModel: 'Session',
+                metadata: {
+                    session,
+                    oldScheduledTime
+                }
+            }).catch(err => {
+                console.error('Asynchronous notification dispatch failed:', err);
+            });
         });
 
         res.status(200).json(session);
@@ -252,12 +280,11 @@ router.get('/mentor/:mentorId/booked', requireAuth, async (req, res) => {
             // Convert existing sessions' scheduled times to a Set of timestamps for quick lookup and de-duplication
             const existingBookings = new Set(sessions.map(s => new Date(s.scheduledTime).getTime()));
 
-            for (let time = startTimeLimit.getTime(); time <= endTimeLimit.getTime(); time += 60 * 60 * 1000) {
-                // If there's already a mentorship session at this hour, skip to avoid duplicates
+            for (let time = startTimeLimit.getTime(); time <= endTimeLimit.getTime(); time += 30 * 60 * 1000) {
                 if (existingBookings.has(time)) continue;
 
                 const slotStart = new Date(time);
-                const slotEnd = new Date(time + 60 * 60 * 1000);
+                const slotEnd = new Date(time + 30 * 60 * 1000);
 
                 const isBusy = mentor.calendarBusySlots.some(busy => {
                     const busyStart = new Date(busy.start);
@@ -298,12 +325,11 @@ router.get('/mentee/:menteeId/booked', requireAuth, async (req, res) => {
             // Convert existing sessions' scheduled times to a Set of timestamps for quick lookup and de-duplication
             const existingBookings = new Set(sessions.map(s => new Date(s.scheduledTime).getTime()));
 
-            for (let time = startTimeLimit.getTime(); time <= endTimeLimit.getTime(); time += 60 * 60 * 1000) {
-                // If there's already a mentorship session at this hour, skip to avoid duplicates
+            for (let time = startTimeLimit.getTime(); time <= endTimeLimit.getTime(); time += 30 * 60 * 1000) {
                 if (existingBookings.has(time)) continue;
 
                 const slotStart = new Date(time);
-                const slotEnd = new Date(time + 60 * 60 * 1000);
+                const slotEnd = new Date(time + 30 * 60 * 1000);
 
                 const isBusy = mentee.calendarBusySlots.some(busy => {
                     const busyStart = new Date(busy.start);
@@ -385,6 +411,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 // PUT /api/sessions/:id/cancel - Cancel a scheduled session (mentor or mentee)
 router.put('/:id/cancel', requireAuth, async (req, res) => {
     try {
+        const { reason } = req.body;
         const isAdmin = req.user.role === 'admin';
         const session = await Session.findOne({
             _id: req.params.id,
@@ -400,6 +427,8 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
         }
 
         session.status = 'cancelled';
+        session.rescheduleRequestedAt = undefined;
+        session.rescheduleRequestedReason = undefined;
         await session.save();
 
         const mentor = await User.findById(session.mentor);
@@ -416,7 +445,7 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
 
         // Clean up cached calendarBusySlots for both users
         const sessionStart = new Date(session.scheduledTime);
-        const durationMin = session.duration || 60;
+        const durationMin = session.duration || 30;
         const sessionEnd = new Date(sessionStart.getTime() + durationMin * 60 * 1000);
 
         if (mentor && mentor.calendarBusySlots && mentor.calendarBusySlots.length > 0) {
@@ -452,7 +481,8 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
 
         if (isAdmin) {
             // Admin-initiated cancellation — notify both participants, don't misattribute it to either of them
-            const message = `The Ummah Professionals team cancelled the session scheduled for ${formattedDate} at ${formattedTime}.`;
+            const reasonSuffix = reason ? ` Note: ${reason}` : '';
+            const message = `The Ummah Professionals team cancelled the session scheduled for ${formattedDate} at ${formattedTime}.${reasonSuffix}`;
             [session.mentor, session.mentee].forEach(recipientId => {
                 sendNotification({
                     recipientId,
@@ -512,6 +542,10 @@ router.post('/:id/request-reschedule', requireAuth, async (req, res) => {
         if (!session) {
             return res.status(404).json({ error: 'Session not found or no longer scheduled.' });
         }
+
+        session.rescheduleRequestedAt = new Date();
+        session.rescheduleRequestedReason = reason || undefined;
+        await session.save();
 
         const sessionDate = new Date(session.scheduledTime);
         const formattedDate = sessionDate.toLocaleDateString(undefined, {

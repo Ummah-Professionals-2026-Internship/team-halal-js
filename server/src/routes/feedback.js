@@ -3,6 +3,7 @@ const router = express.Router();
 const Feedback = require('../models/Feedback');
 const Session = require('../models/Session');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const requireAuth = require('../middleware/requireAuth');
 const { sendNotification } = require('../services/notificationService');
 const { sendFeedbackFollowUpEmail } = require('../services/emailService');
@@ -35,6 +36,11 @@ router.post('/', requireAuth, async (req, res) => {
             usefulAdviceRating,
             comments: comments || ''
         });
+
+        await Notification.updateMany(
+            { recipient: req.user.id, relatedId: sessionId, relatedModel: 'Session', type: 'feedback_requested', actionResolved: { $ne: true } },
+            { isRead: true, actionResolved: true }
+        );
 
         const submitter = await User.findById(req.user.id);
         const submitterName = `${submitter.firstName} ${submitter.lastName}`.trim();
@@ -160,6 +166,11 @@ router.post('/:id/reply', requireAuth, async (req, res) => {
         feedback.followUpReply = reply;
         feedback.followUpRepliedAt = new Date();
         await feedback.save();
+
+        await Notification.updateMany(
+            { recipient: req.user.id, relatedId: feedback._id, relatedModel: 'Feedback', type: 'feedback_followup', actionResolved: { $ne: true } },
+            { isRead: true, actionResolved: true }
+        );
 
         const reviewerName = `${feedback.submittedBy.firstName} ${feedback.submittedBy.lastName}`.trim();
         const admins = await User.find({ role: 'admin' });
