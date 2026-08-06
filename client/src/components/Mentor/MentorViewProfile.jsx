@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayoutDashboard from '../PageLayoutDashboard'
 import SectionHeading from '../SectionHeading'
 import SearchableSelect from '../SearchableSelect'
@@ -7,7 +7,11 @@ import useCurrentUser from '../useCurrentUser'
 import { MAJORS_LIST, INDUSTRIES_LIST, UNIVERSITIES_LIST, CAREER_CATEGORIES, POPULAR_CAREERS, POPULAR_INDUSTRIES } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
 import { updateMentorProfile } from '../../api-calls/mentors'
+import { disconnectGoogle } from '../../api-calls/auth'
 import { getPhotoUrl } from '../../utils/photoUrl'
+import googleCalIcon from '../../assets/google-cal-icon.png'
+
+const apiBaseUrl = import.meta.env.VITE_API_URL || ''
 
 const inputClass = "border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors"
 const labelClass = "block text-sm font-medium text-slate-700 mb-1.5"
@@ -30,12 +34,25 @@ const emptyForm = {
 
 const MentorViewProfile = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [imgError, setImgError] = useState(false)
   const { user, refreshUser } = useCurrentUser()
   const photo = getPhotoUrl(user?.profilePicture)
   const [formData, setFormData] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [calMessage, setCalMessage] = useState('')
+
+  useEffect(() => {
+    if (searchParams.get('calendarConnected') === 'true') {
+      setCalMessage('Successfully connected Google Calendar!')
+      refreshUser()
+      setSearchParams({}, { replace: true })
+    } else if (searchParams.get('calendarError') === 'true') {
+      setCalMessage('Failed to connect Google Calendar. Please try again.')
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (!user.firstName) return
@@ -55,6 +72,27 @@ const MentorViewProfile = () => {
       volunteeringFor: (user.mentorProfile?.volunteeringFor || []).filter(id => MENTOR_SERVICES.some(s => s.id === id)),
     })
   }, [user])
+
+  const handleConnectCalendar = () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setMessage('Please log in again to connect your calendar.')
+      return
+    }
+    const currentUrl = `${window.location.origin}${window.location.pathname}`
+    window.location.href = `${apiBaseUrl}/api/auth/google?token=${token}&app_redirect=${encodeURIComponent(currentUrl)}`
+  }
+
+  const handleDisconnectCalendar = async () => {
+    try {
+      await disconnectGoogle()
+      refreshUser()
+      setCalMessage('Disconnected Google Calendar.')
+    } catch (err) {
+      console.error(err)
+      setCalMessage('Error disconnecting calendar.')
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -232,6 +270,46 @@ const MentorViewProfile = () => {
                 onChange={handleChange}
                 isMulti={true}
               />
+
+              {/* Google Calendar Sync Card */}
+              <div className="my-5 p-4 bg-slate-50 border border-slate-200 rounded-xl text-left">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <img src={googleCalIcon} alt="Google Calendar" className="w-5 h-5 object-contain shrink-0" />
+                    <h4 className="text-sm font-semibold text-slate-800">Google Calendar Sync</h4>
+                  </div>
+                  {user?.calendarAccess ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Connected
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                      Not Connected
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                  Connect your Google account to automatically generate Google Meet rooms and sync booked sessions to your calendar.
+                </p>
+                {calMessage && (
+                  <p className="text-xs font-medium mb-3 p-2 rounded bg-sky-50 border border-sky-200 text-[#007CA6]">
+                    {calMessage}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={user?.calendarAccess ? handleDisconnectCalendar : handleConnectCalendar}
+                  className={`w-full py-2 px-4 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                    user?.calendarAccess
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                      : 'bg-[#007CA6] text-white hover:bg-[#00698d] shadow-sm'
+                  }`}
+                >
+                  <img src={googleCalIcon} alt="" className="w-4 h-4 object-contain" />
+                  {user?.calendarAccess ? 'Disconnect Google Calendar' : 'Connect Google Calendar'}
+                </button>
+              </div>
 
               {/* Video Meeting Link Card */}
               <div className="my-5 p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-center text-left">
