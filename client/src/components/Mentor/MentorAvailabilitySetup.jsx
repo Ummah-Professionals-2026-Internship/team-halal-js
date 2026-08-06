@@ -267,25 +267,34 @@ const MentorAvailabilitySetup = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-          {/* Google Calendar */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={googleCalIcon} alt="Google Calendar" className="w-9 h-9 object-contain shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Google Calendar Sync</p>
-                <p className="text-xs text-slate-400 mt-0.5">Link your calendar to simplify scheduling.</p>
+          {/* Google Calendar Card */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between text-left">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <img src={googleCalIcon} alt="Google Calendar" className="w-5 h-5 object-contain shrink-0" />
+                  <h4 className="text-sm font-semibold text-slate-800">Google Calendar Sync</h4>
+                </div>
+                {calendarAccess && (
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    ✓ Connected
+                  </span>
+                )}
               </div>
+              <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                Connect your account to automatically generate Google Meet rooms and sync booked sessions to your calendar.
+              </p>
             </div>
             <button
               type="button"
               onClick={calendarAccess ? handleDisconnectCalendar : handleConnectCalendar}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide border transition-all flex-shrink-0 ${
+              className={`w-full py-2 rounded-lg text-xs font-bold tracking-wide border transition-all text-center cursor-pointer ${
                 calendarAccess
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                  ? 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
                   : 'bg-[#007CA6] text-white border-transparent hover:bg-[#006080]'
               }`}
             >
-              {calendarAccess ? '✓ Connected' : 'Connect'}
+              {calendarAccess ? 'Disconnect Google Calendar' : 'Connect Google Calendar'}
             </button>
           </div>
 
