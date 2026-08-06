@@ -2,10 +2,11 @@ const User = require('../models/User');
 const Match = require('../models/Match');
 
 const WEIGHTS = {
-  SERVICES: 30,
-  MAJORS: 30,
-  UNIVERSITY: 10,
-  STATE: 10,
+  SERVICES: 25,
+  CAREER: 25,
+  MAJORS: 20,
+  UNIVERSITY: 5,
+  STATE: 5,
   AVAILABILITY: 20,
 };
 const MAX_SCORE = Object.values(WEIGHTS).reduce((total, weight) => total + weight, 0);
@@ -88,16 +89,34 @@ function availabilityCompatibility(mentorSlots = [], menteeSlots = []) {
   };
 }
 
-// Career alignment remains an eligibility gate until both profiles collect
-// the same structured industry/career taxonomy.
-function industryCareerAligns(industry, career) {
-  if (!industry || !career) return true;
-  const mentorIndustry = normalize(industry);
-  const menteeCareer = normalize(career);
-  if (mentorIndustry.includes(menteeCareer) || menteeCareer.includes(mentorIndustry)) return true;
-  const tokens = value => value.split(/\W+/).filter(word => word.length > 3);
-  const industryTokens = new Set(tokens(mentorIndustry));
-  return tokens(menteeCareer).some(token => industryTokens.has(token));
+function careerTextSimilarity(mentorValue, desiredCareer) {
+  if (!mentorValue || !desiredCareer) return 0;
+  const mentorText = normalize(mentorValue);
+  const desiredText = normalize(desiredCareer);
+  if (mentorText === desiredText) return 1;
+  if (mentorText.includes(desiredText) || desiredText.includes(mentorText)) return 0.9;
+
+  const tokens = value => new Set(
+    value.split(/\W+/).filter(word => word.length > 2 && !['and', 'the', 'for', 'with'].includes(word))
+  );
+  const mentorTokens = tokens(mentorText);
+  const desiredTokens = tokens(desiredText);
+  if (mentorTokens.size === 0 || desiredTokens.size === 0) return 0;
+  const sharedCount = [...desiredTokens].filter(token => mentorTokens.has(token)).length;
+  return sharedCount / desiredTokens.size;
+}
+
+function careerCompatibility(mentorProfile = {}, desiredCareer) {
+  const hasData = !!(desiredCareer && (mentorProfile.jobTitle || mentorProfile.industry));
+  if (!hasData) return { hasData: false, menteeHasData: !!desiredCareer, ratio: 0 };
+
+  // A matching job title is the strongest signal. Industry is a fallback for
+  // related roles whose titles use different wording.
+  const ratio = Math.max(
+    careerTextSimilarity(mentorProfile.jobTitle, desiredCareer),
+    careerTextSimilarity(mentorProfile.industry, desiredCareer)
+  );
+  return { hasData: true, menteeHasData: true, ratio };
 }
 
 function scoreCandidate(mentor, mentee) {
@@ -108,6 +127,12 @@ function scoreCandidate(mentor, mentee) {
   const servicePoints = servicesHaveData
     ? (sharedTagsList.length / desiredServices.length) * WEIGHTS.SERVICES
     : 0;
+
+  const career = careerCompatibility(
+    mentor.mentorProfile,
+    mentee.menteeProfile?.desiredCareer
+  );
+  const careerPoints = career.ratio * WEIGHTS.CAREER;
 
   const mentorMajors = new Set((mentor.majors || []).map(normalize));
   const menteeMajors = mentee.majors || [];
@@ -135,6 +160,7 @@ function scoreCandidate(mentor, mentee) {
 
   const criteria = [
     { label: 'mentorship services', weight: WEIGHTS.SERVICES, available: servicesHaveData, menteeHasData: desiredServices.length > 0, points: servicePoints },
+    { label: 'career alignment', weight: WEIGHTS.CAREER, available: career.hasData, menteeHasData: career.menteeHasData, points: careerPoints },
     { label: 'academic background', weight: WEIGHTS.MAJORS, available: majorsHaveData, menteeHasData: menteeMajors.length > 0, points: majorPoints },
     { label: 'university', weight: WEIGHTS.UNIVERSITY, available: universityHasData, menteeHasData: !!mentee.university, points: universityPoints },
     { label: 'location', weight: WEIGHTS.STATE, available: stateHasData, menteeHasData: !!mentee.state, points: statePoints },
@@ -164,8 +190,10 @@ function scoreCandidate(mentor, mentee) {
       sameState,
       availabilityOverlap: availability.overlapMinutes > 0,
       availabilityOverlapMinutes: availability.overlapMinutes,
+      careerAlignment: Math.round(career.ratio * 100),
       points: {
         tags: Math.round(servicePoints * 10) / 10,
+        career: Math.round(careerPoints * 10) / 10,
         majors: Math.round(majorPoints * 10) / 10,
         university: universityPoints,
         state: statePoints,
@@ -187,15 +215,10 @@ async function getRankedMentors(menteeId) {
   const allMentors = await User.find({ role: 'mentor', hasCompletedProfile: true })
     .select('-password');
 
-  const industryFiltered = allMentors.filter(mentor =>
-    industryCareerAligns(mentor.mentorProfile?.industry, mentee.menteeProfile?.desiredCareer)
-  );
-  if (industryFiltered.length === 0) return [];
-
   const preferredGender = mentee.menteeProfile?.preferredMentorGender;
   const genderFiltered = preferredGender
-    ? industryFiltered.filter(mentor => mentor.gender === preferredGender)
-    : industryFiltered;
+    ? allMentors.filter(mentor => mentor.gender === preferredGender)
+    : allMentors;
   if (genderFiltered.length === 0) return [];
 
   const mentorIds = genderFiltered.map(mentor => mentor._id);
@@ -228,4 +251,4 @@ async function getRankedMentors(menteeId) {
   return scored;
 }
 
-module.exports = { getRankedMentors, scoreCandidate };
+module.exports = { getRankedMentors, scoreCandidate, careerCompatibility };
