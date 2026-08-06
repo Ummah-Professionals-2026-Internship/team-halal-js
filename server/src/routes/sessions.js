@@ -67,11 +67,15 @@ async function createMenteeSession({ mentorId, menteeId, scheduledTime, service,
     }
     session.match = match._id;
 
-    // Generate Google Meet Link if Google Calendar integration is available
+    // Generate Google Meet Link if Google Calendar integration or custom meeting link is available
     const calendarResult = await scheduleSessionOnGoogleCalendar(mentor, mentee, session);
-    if (calendarResult) {
+    if (calendarResult && calendarResult.meetLink) {
         session.link = calendarResult.meetLink;
         session.googleCalendarEventId = calendarResult.googleCalendarEventId;
+    } else {
+        return res.status(400).json({
+            message: 'Session could not be scheduled because no video meeting link is available. The mentor must either connect their Google Calendar or provide a custom video meeting link (Zoom, Google Meet, Teams).'
+        });
     }
 
     await session.save();

@@ -253,8 +253,14 @@ const MentorViewProfile = () => {
                   className="border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors w-full text-slate-800"
                 />
                 <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
-                  💡 <strong>Note:</strong> Accepts personal Zoom, Google Meet, Teams, or Webex links. If left blank, Google Meet will automatically generate unique links for your sessions.
+                  💡 <strong>Note:</strong> Accepts personal Zoom, Google Meet, Teams, or Webex links. If left blank, Google Meet will automatically generate unique links for your sessions (if your Google Calendar is connected).
                 </p>
+                {!user?.calendarAccess && !formData.customMeetingLink.trim() && (
+                  <div className="mt-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-xs text-amber-800">
+                    <span>⚠️</span>
+                    <span><strong>Attention:</strong> You have not connected Google Calendar or set a video link. Please add a video meeting link or connect your calendar to allow mentees to book sessions.</span>
+                  </div>
+                )}
               </div>
 
               <div className="mb-5 pt-4 border-t border-slate-100">

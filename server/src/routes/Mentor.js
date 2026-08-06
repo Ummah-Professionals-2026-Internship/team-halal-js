@@ -10,6 +10,11 @@ router.post('/', requireAuth, async (req, res) => {
     if(!mentor){
       return res.status(404).json({error: "Mentor profile not found"});
     }
+    const hasCustomLink = req.body.customMeetingLink && req.body.customMeetingLink.trim();
+    if (!req.body.calendarAccess && !hasCustomLink) {
+      return res.status(400).json({ error: "You must either connect your Google Calendar or provide a custom video meeting link (Zoom, Meet, Teams)." });
+    }
+
     mentor.gender = req.body.gender;
     mentor.phone = req.body.phone;
     mentor.linkedinUrl = req.body.linkedinUrl;

@@ -98,6 +98,11 @@ const MentorAvailabilitySetup = () => {
       return
     }
 
+    if (!calendarAccess && !customMeetingLink.trim()) {
+      setError('Required: Please either Connect your Google Calendar OR provide a Custom Video Meeting Link (Zoom, Meet, Teams) so mentees can meet with you.');
+      return;
+    }
+
     // URL Validation if custom link is provided
     if (customMeetingLink.trim()) {
       try {
@@ -252,6 +257,15 @@ const MentorAvailabilitySetup = () => {
         </div>
 
         {/* Google Calendar & Custom Meeting Link */}
+        {!calendarAccess && !customMeetingLink.trim() && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-left">
+            <span className="text-amber-600 text-lg">⚠️</span>
+            <div className="text-xs text-amber-800 leading-relaxed">
+              <strong className="font-bold">Required Setup Step:</strong> Mentees need a way to join video sessions with you. Please either <strong>Connect Google Calendar</strong> or provide a <strong>Video Meeting Link</strong> below.
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           {/* Google Calendar */}
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">

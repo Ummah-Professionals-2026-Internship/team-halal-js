@@ -168,20 +168,20 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
     }
   }
 
-  // If neither has connected Google Calendar, return a mock meet link to help in testing UI
+  // If neither has connected Google Calendar and no custom link was set
   if (!host) {
-    console.log('Neither user has connected Google Calendar. Generating a mock Meet link.');
+    console.log('Neither user has connected Google Calendar and no custom meeting link is set.');
     return {
-      meetLink: `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+      meetLink: null,
       googleCalendarEventId: null
     };
   }
 
-  // If using the mock token flow
+  // If using mock token in dev
   if (host.googleCalendarTokens.accessToken === 'mock_access_token_123') {
-    console.log('Mock calendar token detected. Returning mock Google Meet link.');
+    console.log('Mock calendar token detected.');
     return {
-      meetLink: `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+      meetLink: null,
       googleCalendarEventId: null
     };
   }
@@ -194,9 +194,9 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
     try {
       accessToken = await refreshGoogleTokens(host);
     } catch (err) {
-      console.error('Error attempting to refresh host token, falling back to mock link:', err.message);
+      console.error('Error attempting to refresh host token:', err.message);
       return {
-        meetLink: `https://meet.google.com/mock-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+        meetLink: null,
         googleCalendarEventId: null
       };
     }
@@ -256,9 +256,8 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Failed to create Google Calendar event:', errorText);
-      // Fallback to mock link instead of failing the session creation outright
       return {
-        meetLink: `https://meet.google.com/mock-fallback-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+        meetLink: null,
         googleCalendarEventId: null
       };
     }
@@ -286,7 +285,7 @@ const scheduleSessionOnGoogleCalendar = async (mentor, mentee, session) => {
   } catch (error) {
     console.error('Error calling Google Calendar API:', error);
     return {
-      meetLink: `https://meet.google.com/mock-error-${mentor.firstName.toLowerCase()}-${mentee.firstName.toLowerCase()}`,
+      meetLink: null,
       googleCalendarEventId: null
     };
   }
