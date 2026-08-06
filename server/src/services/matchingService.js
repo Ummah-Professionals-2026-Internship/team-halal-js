@@ -31,11 +31,27 @@ function parseMinutes(timeStr) {
   return hours * 60 + minutes;
 }
 
+const DAY_MAP = {
+  mon: 'monday', monday: 'monday',
+  tue: 'tuesday', tues: 'tuesday', tuesday: 'tuesday',
+  wed: 'wednesday', wednesday: 'wednesday',
+  thu: 'thursday', thur: 'thursday', thurs: 'thursday', thursday: 'thursday',
+  fri: 'friday', friday: 'friday',
+  sat: 'saturday', saturday: 'saturday',
+  sun: 'sunday', sunday: 'sunday'
+};
+
+function normalizeDay(d) {
+  if (!d || typeof d !== 'string') return '';
+  const clean = d.trim().toLowerCase();
+  return DAY_MAP[clean] || clean;
+}
+
 function mergeAvailabilityByDay(slots = []) {
   const byDay = new Map();
 
   for (const slot of slots || []) {
-    const day = slot.day?.trim().toLowerCase();
+    const day = normalizeDay(slot.day);
     const start = parseMinutes(slot.startTime);
     const end = parseMinutes(slot.endTime);
     if (!day || start === null || end === null || start >= end) continue;
