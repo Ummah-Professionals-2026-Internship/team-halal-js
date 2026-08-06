@@ -8,6 +8,8 @@ const router = express.Router();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const ADMIN_EMAIL_DOMAIN = '@ummahprofessionals.com';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+const isValidEmail = (email) => typeof email === 'string' && EMAIL_REGEX.test(email.trim());
 const isAdminEmail = (email) => (email || '').trim().toLowerCase().endsWith(ADMIN_EMAIL_DOMAIN);
 
 // GET /api/auth/me - Get current user
@@ -36,6 +38,10 @@ router.patch('/me', requireAuth, async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (email && email !== user.email) {
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ message: 'Please enter a valid email address with a domain extension of at least 2 characters (e.g. .com, .org, .co).' });
+      }
+
       if (user.role === 'admin' && !isAdminEmail(email)) {
         return res.status(400).json({ message: 'Admin email addresses must end in @ummahprofessionals.com.' });
       }
@@ -60,6 +66,10 @@ router.patch('/me', requireAuth, async (req, res) => {
 // POST /api/auth/register (Public registration for Mentors and Mentees)
 router.post('/register', async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ message: 'Please enter a valid email address with a domain extension of at least 2 characters (e.g. .com, .org, .co).' });
+  }
 
   try {
     const existing = await User.findOne({ email });
@@ -98,6 +108,10 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/admin/register
 router.post('/admin/register', async (req, res) => {
   const { firstName, lastName, email, password, adminSecret } = req.body;
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ message: 'Please enter a valid email address with a domain extension of at least 2 characters (e.g. .com, .org, .co).' });
+  }
 
   const validSecret = process.env.ADMIN_SECRET || 'admin123';
   if (adminSecret !== validSecret) {

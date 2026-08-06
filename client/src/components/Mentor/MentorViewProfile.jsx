@@ -4,7 +4,7 @@ import PageLayoutDashboard from '../PageLayoutDashboard'
 import SectionHeading from '../SectionHeading'
 import SearchableSelect from '../SearchableSelect'
 import useCurrentUser from '../useCurrentUser'
-import { MAJORS_LIST, INDUSTRIES_LIST } from '../../constants/lists'
+import { MAJORS_LIST, INDUSTRIES_LIST, UNIVERSITIES_LIST, CAREER_CATEGORIES, POPULAR_CAREERS, POPULAR_INDUSTRIES } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
 import { updateMentorProfile } from '../../api-calls/mentors'
 import { getPhotoUrl } from '../../utils/photoUrl'
@@ -23,6 +23,7 @@ const emptyForm = {
   employer: '',
   industry: '',
   yearsOfProfExp: '',
+  customMeetingLink: '',
   additionalInfo: '',
   volunteeringFor: [],
 }
@@ -49,6 +50,7 @@ const MentorViewProfile = () => {
       employer: user.mentorProfile?.employer || '',
       industry: user.mentorProfile?.industry || '',
       yearsOfProfExp: user.mentorProfile?.yearsOfProfExp ?? '',
+      customMeetingLink: user.mentorProfile?.customMeetingLink || '',
       additionalInfo: user.additionalInfo || '',
       volunteeringFor: (user.mentorProfile?.volunteeringFor || []).filter(id => MENTOR_SERVICES.some(s => s.id === id)),
     })
@@ -190,8 +192,16 @@ const MentorViewProfile = () => {
               </div>
 
               <div className="mb-4">
-                <label className={labelClass}>Job Title</label>
-                <input name="jobTitle" type="text" value={formData.jobTitle} onChange={handleChange} className={inputClass} />
+                <SearchableSelect
+                  label="Job Title"
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  categories={CAREER_CATEGORIES}
+                  quickPills={POPULAR_CAREERS}
+                  placeholder="Type or select job title..."
+                  onChange={handleChange}
+                  strictMatch={false}
+                />
               </div>
 
               <SearchableSelect
@@ -199,14 +209,19 @@ const MentorViewProfile = () => {
                 name="industry"
                 value={formData.industry}
                 options={INDUSTRIES_LIST}
+                quickPills={POPULAR_INDUSTRIES}
                 placeholder="Type to search industry..."
                 onChange={handleChange}
               />
 
-              <div className="mb-4">
-                <label className={labelClass}>University</label>
-                <input name="university" type="text" value={formData.university} onChange={handleChange} className={inputClass} />
-              </div>
+              <SearchableSelect
+                label="University"
+                name="university"
+                value={formData.university}
+                options={UNIVERSITIES_LIST}
+                placeholder="Type to search university..."
+                onChange={handleChange}
+              />
 
               <SearchableSelect
                 label="Major(s)"
@@ -217,6 +232,30 @@ const MentorViewProfile = () => {
                 onChange={handleChange}
                 isMulti={true}
               />
+
+              {/* Video Meeting Link Card */}
+              <div className="my-5 p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-center text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">🎥</span>
+                  <h4 className="text-sm font-semibold text-slate-800">
+                    Video Meeting Link <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-500 mb-2 leading-relaxed">
+                  When a mentee schedules a session with you, this link will be automatically attached to the calendar invite as your meeting location.
+                </p>
+                <input
+                  type="url"
+                  name="customMeetingLink"
+                  value={formData.customMeetingLink}
+                  onChange={handleChange}
+                  placeholder="e.g. https://zoom.us/j/123456789 or https://meet.google.com/..."
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors w-full text-slate-800"
+                />
+                <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                  💡 <strong>Note:</strong> Accepts personal Zoom, Google Meet, Teams, or Webex links. If left blank, Google Meet will automatically generate unique links for your sessions.
+                </p>
+              </div>
 
               <div className="mb-5 pt-4 border-t border-slate-100">
                 <label className={labelClass}>Services You Offer</label>

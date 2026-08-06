@@ -27,6 +27,12 @@ const AdminRegister = () => {
     e.preventDefault();
     setError('');
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError('Please enter a valid email address with a domain extension of at least 2 characters (e.g. .com, .org, .co).');
+      return;
+    }
+
     if (!formData.email.toLowerCase().endsWith(ADMIN_EMAIL_DOMAIN)) {
       setError(`Admin accounts require a ${ADMIN_EMAIL_DOMAIN} email address.`);
       return;

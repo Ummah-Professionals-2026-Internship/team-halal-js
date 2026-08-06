@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { INDUSTRIES_LIST } from '../../constants/lists'
+import { INDUSTRIES_LIST, CAREER_CATEGORIES, POPULAR_CAREERS, POPULAR_INDUSTRIES } from '../../constants/lists'
 
 const inputClass = "border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors"
 const labelClass = "block text-sm font-medium text-slate-700 mb-1.5"
@@ -76,58 +76,74 @@ const MentorCareerSetup = () => {
 
           <form onSubmit={handleSubmit} className="w-full">
 
-            <div className="mb-4">
-              <label className={labelClass}>Job Title</label>
-              <input
-                type="text"
-                name="jobTitle"
-                value={formData.jobTitle}
-                onChange={handleChange}
-                placeholder="e.g. Software Engineer"
-                className={inputClass}
-                required
-              />
+            {/* Row 1: Job Title & Industry */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <SearchableSelect
+                  label="Job Title"
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  categories={CAREER_CATEGORIES}
+                  quickPills={POPULAR_CAREERS}
+                  placeholder="Type or select job title..."
+                  onChange={handleChange}
+                  strictMatch={false}
+                  required
+                />
+              </div>
+
+              <div>
+                <SearchableSelect
+                  label="Industry"
+                  name="industry"
+                  value={formData.industry}
+                  options={INDUSTRIES_LIST}
+                  quickPills={POPULAR_INDUSTRIES}
+                  placeholder="Type to search industry..."
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label className={labelClass}>Employer</label>
-              <input
-                type="text"
-                name="employer"
-                value={formData.employer}
-                onChange={handleChange}
-                placeholder="e.g. Google"
-                className={inputClass}
-                required
-              />
-            </div>
+            {/* Row 2: Employer & Years of Professional Experience */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={labelClass}>
+                  Employer <span className="text-red-500 font-bold">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="employer"
+                  value={formData.employer}
+                  onChange={handleChange}
+                  placeholder="e.g. Google"
+                  className={inputClass}
+                  required
+                />
+              </div>
 
-            <SearchableSelect
-              label="Industry"
-              name="industry"
-              value={formData.industry}
-              options={INDUSTRIES_LIST}
-              placeholder="Type to search industry..."
-              onChange={handleChange}
-              required
-            />
-
-            <div className="mb-4">
-              <label className={labelClass}>Years of Professional Experience</label>
-              <input
-                type="number"
-                name="yearsOfProfExp"
-                min="0"
-                value={formData.yearsOfProfExp}
-                onChange={handleChange}
-                placeholder="e.g. 5"
-                className={inputClass}
-                required
-              />
+              <div>
+                <label className={labelClass}>
+                  Years of Professional Experience <span className="text-red-500 font-bold">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="yearsOfProfExp"
+                  min="0"
+                  value={formData.yearsOfProfExp}
+                  onChange={handleChange}
+                  placeholder="e.g. 5"
+                  className={inputClass}
+                  required
+                />
+              </div>
             </div>
 
             <div className="mb-5">
-              <label className={labelClass}>Anything else you'd like mentees to know?</label>
+              <label className={labelClass}>
+                Anything else you'd like mentees to know? <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+              </label>
               <textarea
                 name="additionalInfo"
                 className={`${inputClass} resize-none`}
@@ -140,9 +156,9 @@ const MentorCareerSetup = () => {
 
             <button
               type="submit"
-              className="bg-[#007CA6] hover:bg-[#006080] text-white w-full py-2.5 rounded-lg font-semibold text-sm transition-colors"
+              className="bg-[#007CA6] hover:bg-[#006080] text-white w-full py-3 rounded-xl font-bold text-base shadow-sm transition-colors cursor-pointer"
             >
-              Next: Set Availability
+              Continue to Step 3 →
             </button>
           </form>
         </div>

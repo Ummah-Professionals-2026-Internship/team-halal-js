@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Email is required'],
         trim: true,
         lowercase: true,
-        unique: true
+        unique: true,
+        match: [/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email address with a domain extension of at least 2 characters (e.g. .com, .org, .co)']
     },
 
     password: {

@@ -275,25 +275,35 @@ const MentorAvailabilitySetup = () => {
             </button>
           </div>
 
-          {/* Custom Meeting Link */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-center">
-            <label className="text-sm font-semibold text-slate-800 mb-1">Custom Meeting Link (Optional)</label>
+          {/* Custom Meeting Link Card */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-center text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base">🎥</span>
+              <h4 className="text-sm font-semibold text-slate-800">
+                Video Meeting Link <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+              </h4>
+            </div>
+            <p className="text-xs text-slate-500 mb-2 leading-relaxed">
+              When a mentee schedules a session with you, this link will be automatically included in the calendar invite as your meeting location.
+            </p>
             <input
               type="url"
               value={customMeetingLink}
               onChange={(e) => setCustomMeetingLink(e.target.value)}
-              placeholder="e.g., https://zoom.us/j/... or https://meet.google.com/..."
-              className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors w-full"
+              placeholder="e.g. https://zoom.us/j/123456789 or https://meet.google.com/..."
+              className="border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors w-full text-slate-800"
             />
-            <p className="text-[9px] text-slate-400 mt-1 leading-snug">
-              Accepts any persistent video link (Zoom, Google Meet, Teams, Webex, etc.) to prioritize it for scheduled sessions.
+            <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+              💡 <strong>Note:</strong> Accepts personal Zoom, Google Meet, Teams, or Webex links. If left blank, Google Meet will automatically generate unique links for your sessions.
             </p>
           </div>
         </div>
 
         {/* Availability Picker */}
         <div className="mb-5">
-          <p className="text-sm font-semibold text-slate-700 mb-3">Your Availability</p>
+          <p className="text-sm font-semibold text-slate-700 mb-3">
+            Your Availability <span className="text-red-500 font-bold">*</span>
+          </p>
           <AvailabilityPick onChange={setManualAvailabilitySlots} />
         </div>
 
@@ -309,9 +319,9 @@ const MentorAvailabilitySetup = () => {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-[#007CA6] hover:bg-[#006080] text-white w-full py-2.5 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-[#007CA6] hover:bg-[#006080] text-white rounded-xl text-base font-bold shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Creating your profile...' : 'Confirm and Start Matching'}
+          {loading ? 'Creating your profile...' : 'Complete Profile & Start Matching'}
         </button>
       </div>
     </PageLayout>

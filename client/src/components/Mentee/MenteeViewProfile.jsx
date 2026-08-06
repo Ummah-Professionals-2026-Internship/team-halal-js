@@ -4,7 +4,7 @@ import PageLayoutDashboard from '../PageLayoutDashboard'
 import SectionHeading from '../SectionHeading'
 import SearchableSelect from '../SearchableSelect'
 import useCurrentUser from '../useCurrentUser'
-import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import { MAJORS_LIST, UNIVERSITIES_LIST, CAREER_CATEGORIES, POPULAR_CAREERS } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
 import { updateMenteeProfile } from '../../api-calls/mentees'
 import { getPhotoUrl } from '../../utils/photoUrl'
@@ -220,8 +220,16 @@ const MenteeViewProfile = () => {
               </div>
 
               <div className="mb-4 pt-4 border-t border-slate-100">
-                <label className={labelClass}>Desired Future Career</label>
-                <input name="desiredCareer" type="text" value={formData.desiredCareer} onChange={handleChange} className={inputClass} />
+                <SearchableSelect
+                  label="Desired Future Career"
+                  name="desiredCareer"
+                  value={formData.desiredCareer}
+                  categories={CAREER_CATEGORIES}
+                  quickPills={POPULAR_CAREERS}
+                  placeholder="Type or select desired career..."
+                  onChange={handleChange}
+                  strictMatch={false}
+                />
               </div>
 
               <div className="mb-4">

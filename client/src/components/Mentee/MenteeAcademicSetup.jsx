@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageLayout from '../PageLayout'
 import Card from '../Card'
 import SearchableSelect from '../SearchableSelect'
-import { MAJORS_LIST, UNIVERSITIES_LIST } from '../../constants/lists'
+import { MAJORS_LIST, UNIVERSITIES_LIST, CAREER_CATEGORIES, POPULAR_CAREERS } from '../../constants/lists'
 import { MENTOR_SERVICES } from '../../constants/services'
 import AvailabilityModal from '../availability/AvailabilityModal'
 import googleCalIcon from '../../assets/google-cal-icon.png'
@@ -207,91 +207,107 @@ const MenteeAcademicSetup = () => {
             isMulti={true}
           />
 
-          <label className="block mb-1">Current Academic Year</label>
-          <select
-            name="academicStatus"
-            value={formData.academicStatus}
-            onChange={handleChange}
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-            required
-          >
-            <option value=""></option>
-            <option value="Freshman (Year 1)">Freshman (Year 1)</option>
-            <option value="Sophomore (Year 2)">Sophomore (Year 2)</option>
-            <option value="Junior (Year 3)">Junior (Year 3)</option>
-            <option value="Senior (Year 4)">Senior (Year 4)</option>
-            <option value="Graduate Student">Graduate Student</option>
-            <option value="Not in College (Working)">Not in College (Working)</option>
-            <option value="Internship">Internship</option>
-            <option value="Other">Other</option>
-          </select>
-          
-          <label className="block mb-1">Desired Future Career</label>
-          <input
-            name="desiredCareer"
-            type="text"
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-            value={formData.desiredCareer}
-            onChange={handleChange}
-            required
-          />
-
-
-
-          <label className="block mb-1 text-sm font-semibold text-slate-700">What are you looking for in a mentor?</label>
-          <p className="text-xs text-slate-500 mb-2">Select all services you would like help with.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
-            {MENTOR_SERVICES.map(service => {
-              const isSelected = formData.desiredServices.includes(service.id);
-              return (
-                <div
-                  key={service.id}
-                  onClick={() => {
-                    const e = { target: { name: 'desiredServices', value: service.id, checked: !isSelected } };
-                    handleCheckbox(e);
-                  }}
-                  className={`relative p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? 'border-[#007CA6] bg-[#007CA6]/10 shadow-sm ring-1 ring-[#007CA6]'
-                      : 'border-slate-200 bg-white hover:border-[#007CA6]/40 hover:bg-slate-50/80'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-[#007CA6] text-white' : 'bg-slate-100 text-slate-500'}`}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {service.icon === 'bulb' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />}
-                          {service.icon === 'document' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />}
-                          {service.icon === 'chat' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />}
-                        </svg>
-                      </div>
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-[#007CA6] border-[#007CA6] text-white' : 'border-slate-300'}`}>
-                        {isSelected && (
-                          <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs font-bold text-[#00202b] mb-0.5">{service.label}</p>
-                    <p className="text-[11px] text-slate-500 leading-snug">{service.description}</p>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Current Academic Year <span className="text-red-500 font-bold">*</span>
+              </label>
+              <select
+                name="academicStatus"
+                value={formData.academicStatus}
+                onChange={handleChange}
+                className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors mb-4"
+                required
+              >
+                <option value="" disabled hidden>Select Status</option>
+                <option value="Freshman (Year 1)">Freshman (Year 1)</option>
+                <option value="Sophomore (Year 2)">Sophomore (Year 2)</option>
+                <option value="Junior (Year 3)">Junior (Year 3)</option>
+                <option value="Senior (Year 4)">Senior (Year 4)</option>
+                <option value="Graduate Student">Graduate Student</option>
+                <option value="Not in College (Working)">Not in College (Working)</option>
+                <option value="Internship">Internship</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <SearchableSelect
+                label="Desired Future Career"
+                name="desiredCareer"
+                value={formData.desiredCareer}
+                categories={CAREER_CATEGORIES}
+                quickPills={POPULAR_CAREERS}
+                placeholder="Type or select desired career..."
+                onChange={handleChange}
+                strictMatch={false}
+                required
+              />
+            </div>
           </div>
 
-          <label className="block mb-1">Mentor Gender Preference</label>
-          <select
-            name="preferredMentorGender"
-            value={formData.preferredMentorGender}
-            onChange={handleChange}
-            className="border border-gray-300 rounded px-3 py-1.5 w-full mb-3 text-sm bg-white"
-          >
-            <option value="">No Preference</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
+          <div className="mb-5">
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              What are you looking for in a mentor? <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+            </label>
+            <p className="text-xs text-slate-500 mb-3">Select all services you would like help with.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {MENTOR_SERVICES.map(service => {
+                const isSelected = formData.desiredServices.includes(service.id);
+                return (
+                  <div
+                    key={service.id}
+                    onClick={() => {
+                      const e = { target: { name: 'desiredServices', value: service.id, checked: !isSelected } };
+                      handleCheckbox(e);
+                    }}
+                    className={`relative p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-[#007CA6] bg-[#007CA6]/10 shadow-sm ring-1 ring-[#007CA6]'
+                        : 'border-slate-200 bg-white hover:border-[#007CA6]/40 hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-[#007CA6] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {service.icon === 'bulb' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />}
+                            {service.icon === 'document' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />}
+                            {service.icon === 'chat' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />}
+                          </svg>
+                        </div>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-[#007CA6] border-[#007CA6] text-white' : 'border-slate-300'}`}>
+                          {isSelected && (
+                            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                              <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs font-bold text-[#00202b] mb-0.5">{service.label}</p>
+                      <p className="text-[11px] text-slate-500 leading-snug">{service.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Mentor Gender Preference <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+            </label>
+            <select
+              name="preferredMentorGender"
+              value={formData.preferredMentorGender}
+              onChange={handleChange}
+              className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007CA6]/20 focus:border-[#007CA6] transition-colors"
+            >
+              <option value="">No Preference</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
 
           {/* Google Calendar Connection Card */}
           <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
@@ -434,9 +450,9 @@ const MenteeAcademicSetup = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="bg-[#007CA6] text-white px-5 py-2 w-full rounded font-semibold mt-2 disabled:opacity-50"
+            className="w-full py-3 bg-[#007CA6] hover:bg-[#006080] text-white rounded-xl text-base font-bold shadow-sm transition-colors cursor-pointer mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Saving Profile...' : 'Start Matching'}
+            {loading ? 'Saving Profile...' : 'Complete Profile & Start Matching'}
           </button>
         </form>
       </Card>

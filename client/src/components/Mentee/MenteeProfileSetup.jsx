@@ -136,14 +136,22 @@ const MenteeProfileSetup = () => {
 
           <form onSubmit={handleSubmit} className="w-full">
 
-            {/* Resume Upload Box */}
-            <SectionDivider label="Resume Upload" />
-            <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center sm:text-left transition-colors">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Upload Your Resume</h3>
-              <p className="text-xs text-slate-500 mb-3">Upload your resume (PDF, DOC, DOCX, or TXT) to automatically fill out details.</p>
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <label className="cursor-pointer bg-[#007CA6] hover:bg-[#006080] text-white px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors whitespace-nowrap">
-                  {uploading ? 'Uploading...' : 'Choose File'}
+            {/* Resume Upload Box — Highlighted Recommended Step */}
+            <div className="mb-6 p-4 md:p-5 bg-gradient-to-br from-[#007CA6]/10 via-sky-50 to-emerald-50/60 rounded-2xl border-2 border-[#007CA6]/30 text-left transition-all shadow-sm">
+              <div className="flex items-start gap-3 mb-2">
+                <span className="text-xl shrink-0">💡</span>
+                <div>
+                  <h3 className="text-sm font-bold text-[#003F55] uppercase tracking-wide">
+                    Recommended First Step — Upload Resume
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    Uploading your resume is the quickest way to fill out your profile! Our system auto-extracts your phone number, LinkedIn, university, and major to save you time.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-[#007CA6]/15 flex flex-col sm:flex-row items-center gap-3">
+                <label className="cursor-pointer bg-[#007CA6] hover:bg-[#006080] text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors whitespace-nowrap shadow-sm">
+                  {uploading ? 'Parsing Resume...' : formData.resumePath ? '✓ Change Resume' : 'Upload Resume (PDF, DOCX)'}
                   <input 
                     id="resume-upload"
                     type="file" 
@@ -151,12 +159,11 @@ const MenteeProfileSetup = () => {
                     className="hidden" 
                     name="resume"
                     onChange={handleResumeChange}
-                    required={!formData.resumePath}
                     disabled={uploading}
                   />
                 </label>
-                <span className="text-xs text-slate-600 font-medium truncate max-w-xs">
-                  {uploadMessage ? uploadMessage : (formData.resumeName || 'No file selected')}
+                <span className="text-xs font-medium text-slate-700 truncate max-w-xs">
+                  {uploadMessage ? uploadMessage : (formData.resumeName ? `Attached: ${formData.resumeName}` : 'No resume file chosen yet')}
                 </span>
               </div>
             </div>
@@ -165,7 +172,9 @@ const MenteeProfileSetup = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className={labelClass}>Gender</label>
+                <label className={labelClass}>
+                  Gender <span className="text-red-500 font-bold">*</span>
+                </label>
                 <select
                   name="gender"
                   value={formData.gender}
@@ -180,7 +189,9 @@ const MenteeProfileSetup = () => {
               </div>
 
               <div>
-                <label className={labelClass}>State</label>
+                <label className={labelClass}>
+                  State <span className="text-red-500 font-bold">*</span>
+                </label>
                 <select
                   name="state"
                   value={formData.state}
@@ -198,7 +209,9 @@ const MenteeProfileSetup = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className={labelClass}>Phone Number</label>
+                <label className={labelClass}>
+                  Phone Number <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   name="phone"
                   type="tel"
@@ -212,7 +225,9 @@ const MenteeProfileSetup = () => {
               </div>
 
               <div>
-                <label className={labelClass}>LinkedIn URL (Optional)</label>
+                <label className={labelClass}>
+                  LinkedIn URL <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+                </label>
                 <input
                   type="text"
                   name="linkedinUrl"
@@ -225,7 +240,9 @@ const MenteeProfileSetup = () => {
             </div>
 
             <div className="mb-6">
-              <label className={labelClass}>How did you hear about this service?</label>
+              <label className={labelClass}>
+                How did you hear about us? <span className="text-red-500 font-bold">*</span>
+              </label>
               <select
                 name="referralSource"
                 value={formData.referralSource}
@@ -242,9 +259,9 @@ const MenteeProfileSetup = () => {
 
             <button
               type="submit"
-              className="bg-[#007CA6] hover:bg-[#006080] text-white w-full py-2.5 rounded-lg font-semibold text-sm transition-colors"
+              className="bg-[#007CA6] hover:bg-[#006080] text-white w-full py-3 rounded-xl font-bold text-base shadow-sm transition-colors cursor-pointer"
             >
-              Next Step
+              Continue to Step 2 →
             </button>
           </form>
         </div>
